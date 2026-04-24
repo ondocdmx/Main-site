@@ -1,0 +1,98 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
+
+@font-face {
+  font-family: 'Raisonne Pro';
+  src: url('/fonts/Raisonne/RaisonnePro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Raisonne Pro';
+  src: url('/fonts/Raisonne/RaisonnePro-Oblique.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Raisonne Pro';
+  src: url('/fonts/Raisonne/RaisonnePro-DemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Raisonne Pro';
+  src: url('/fonts/Raisonne/RaisonnePro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Raisonne Pro';
+  src: url('/fonts/Raisonne/RaisonnePro-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino/Ronzino-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino/Ronzino-Oblique.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino/Ronzino-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino/Ronzino-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-title: 'Raisonne Pro', 'Gellix Display', 'Gellix', 'Outfit', sans-serif;
+  --font-body: 'Ronzino', 'Outfit', 'Inter', sans-serif;
+  
+  --color-ondo-yellow: #F9E070;
+  --color-ondo-orange: #F88D36;
+  --color-ondo-beige: #FFFAC9;
+  --color-ondo-green: #6E913F;
+  --color-ondo-light-green: #CFD55F;
+  --color-ondo-black: #11100F;
+  --color-ondo-white: #F8F7F4;
+  --color-ondo-red: #DE2B2B;
+  
+  --animate-marquee: marquee 25s linear infinite;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-ondo-white);
+  color: var(--color-ondo-black);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-title);
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
