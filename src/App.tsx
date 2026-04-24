@@ -97,13 +97,95 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   "tags": tags[]->{ _id, name, slug, icon, color }
 }`;
 
+// ── Mock products (fallback when Sanity has no data) ──
+const MOCK_TAG_VEG = { _id: 'mt1', name: { es: 'Vegetariano', en: 'Vegetarian' }, slug: { current: 'vegetariano' }, icon: '🥦', color: 'bg-ondo-green' };
+const MOCK_TAG_HOT = { _id: 'mt2', name: { es: 'Caliente', en: 'Hot' }, slug: { current: 'caliente' }, icon: '🔥', color: 'bg-red-500' };
+const MOCK_TAG_COLD = { _id: 'mt3', name: { es: 'Frío', en: 'Cold' }, slug: { current: 'frio' }, icon: '❄️', color: 'bg-sky-400' };
+const MOCK_TAG_VEGAN = { _id: 'mt4', name: { es: 'Vegano', en: 'Vegan' }, slug: { current: 'vegano' }, icon: '🌿', color: 'bg-ondo-light-green' };
+
+const MOCK_PRODUCTS = [
+  {
+    _id: 'mock-1',
+    title: { es: 'Crema de Elote', en: 'Corn Cream Soup' },
+    purchaseType: 'subscription',
+    price: 89,
+    tagline: { es: 'Dulce y ahumado, como debe ser.', en: 'Sweet and smoky, as it should be.' },
+    description: { es: 'Crema suave de elote asado con un toque de chile poblano y crema mexicana. Reconfortante y lista en 5 minutos.', en: 'Smooth roasted corn cream with poblano chile and Mexican crema. Comforting and ready in 5 minutes.' },
+    bgColor: 'bg-amber-50',
+    image: '/images/ondo-113.JPG',
+    hoverImage: '/images/ondo-051.JPG',
+    tags: [MOCK_TAG_VEG],
+  },
+  {
+    _id: 'mock-2',
+    title: { es: 'Pozole Rojo', en: 'Red Pozole' },
+    purchaseType: 'subscription',
+    price: 115,
+    tagline: { es: 'La fiesta en tu mesa.', en: 'The party at your table.' },
+    description: { es: 'Caldo rojo intenso con maíz cacahuazintle, chile guajillo y todo el sabor de la tradición mexicana.', en: 'Intense red broth with hominy corn, guajillo chile and all the flavor of Mexican tradition.' },
+    bgColor: 'bg-red-50',
+    image: '/images/ondo-070.JPG',
+    hoverImage: '/images/ondo-113.JPG',
+    tags: [MOCK_TAG_HOT],
+  },
+  {
+    _id: 'mock-3',
+    title: { es: 'Sopa de Lima Yucateca', en: 'Yucatan Lime Soup' },
+    purchaseType: 'subscription',
+    price: 99,
+    tagline: { es: 'El sur en cada sorbo.', en: 'The south in every sip.' },
+    description: { es: 'Caldo ligero con pollo deshebrado, chile xcatic, lima yucateca y tortilla crujiente.', en: 'Light broth with shredded chicken, xcatic chile, Yucatan lime and crispy tortilla.' },
+    bgColor: 'bg-lime-50',
+    image: '/images/ondo-051.JPG',
+    hoverImage: '/images/ondo-070.JPG',
+    tags: [MOCK_TAG_HOT],
+  },
+  {
+    _id: 'mock-4',
+    title: { es: 'Gazpacho Verde', en: 'Green Gazpacho' },
+    purchaseType: 'single',
+    price: 79,
+    tagline: { es: 'Frío y lleno de vida.', en: 'Cold and full of life.' },
+    description: { es: 'Pepino, aguacate, espinaca y limón batidos en frío. Perfecto para el verano.', en: 'Cucumber, avocado, spinach and lemon blended cold. Perfect for summer.' },
+    bgColor: 'bg-green-50',
+    image: '/images/green-soup.png',
+    hoverImage: '/images/green-soup.png',
+    tags: [MOCK_TAG_VEGAN, MOCK_TAG_COLD],
+  },
+  {
+    _id: 'mock-5',
+    title: { es: 'Caldo Tlalpeño', en: 'Tlalpeño Broth' },
+    purchaseType: 'single',
+    price: 105,
+    tagline: { es: 'Humo, garbanzo y corazón.', en: 'Smoke, chickpea and heart.' },
+    description: { es: 'Caldo de pollo ahumado con garbanzos, chile chipotle, epazote y ejotes. Un clásico chilango con alma.', en: 'Smoked chicken broth with chickpeas, chipotle chile and green beans. A soulful classic.' },
+    bgColor: 'bg-orange-50',
+    image: '/images/ondo-070.JPG',
+    hoverImage: '/images/ondo-113.JPG',
+    tags: [MOCK_TAG_HOT],
+  },
+  {
+    _id: 'mock-6',
+    title: { es: 'Vichyssoise de Huitlacoche', en: 'Huitlacoche Vichyssoise' },
+    purchaseType: 'single',
+    price: 125,
+    tagline: { es: 'Lujo mexicano frío.', en: 'Cold Mexican luxury.' },
+    description: { es: 'Crema fría de papa y poro realzada con el intenso sabor terroso del huitlacoche.', en: 'Cold cream of potato and leek elevated with the intense earthy flavor of huitlacoche.' },
+    bgColor: 'bg-stone-100',
+    image: '/images/ondo-051.JPG',
+    hoverImage: '/images/green-soup.png',
+    tags: [MOCK_TAG_VEGAN, MOCK_TAG_COLD],
+  },
+];
+
 export default function App() {
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const [purchaseMode, setPurchaseMode] = useState<'subscription' | 'single'>('subscription');
   const [cart, setCart] = useState<{product: any, quantity: number}[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [settings, setSettings] = useState<any>(null);
-  const [sanityProducts, setSanityProducts] = useState<any[]>([]);
+  // Products state: starts with mock data, replaced only if Sanity returns real products
+  const [displayProducts, setDisplayProducts] = useState<any[]>(MOCK_PRODUCTS);
 
   // Delivery modal
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
@@ -127,14 +209,18 @@ export default function App() {
   const [tags, setTags] = useState<any[]>([]);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
+  // Subscription Popup
+  const [showPopupModal, setShowPopupModal] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [siteSettings, productSettings, processSettings, manifestoSettings, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
+        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
           client.fetch('*[_type == "siteSettings"][0]'),
           client.fetch('*[_type == "productSettings"][0]'),
           client.fetch('*[_type == "processSettings"][0]'),
           client.fetch('*[_type == "manifestoSettings"][0]'),
+          client.fetch('*[_type == "popupSettings"][0]'),
           client.fetch('*[_type == "productTag"] | order(order asc)'),
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
@@ -143,13 +229,19 @@ export default function App() {
           ...siteSettings,
           ...productSettings,
           ...processSettings,
-          ...manifestoSettings
+          ...manifestoSettings,
+          ...popupSettings
         });
         setTags(fetchedTags || []);
         setDeliveryZones(fetchedZones || null);
-        setSanityProducts(fetchedProducts || []);
+        // Only replace mock data if Sanity actually has products
+        if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          setDisplayProducts(fetchedProducts);
+        }
+        // If 0 real products: keep showing mock data (already initialized)
       } catch (e) {
-        console.error(e);
+        console.error('Sanity fetch error, mock data will stay:', e);
+        // Mock data remains unchanged on error
       }
     };
     fetchData();
@@ -161,9 +253,9 @@ export default function App() {
 
   const content = t[lang];
 
-  // Derive product lists from Sanity by purchaseType
-  const singleProducts = sanityProducts.filter((p: any) => p.purchaseType === 'single');
-  const subscriptionProducts = sanityProducts.filter((p: any) => p.purchaseType === 'subscription');
+  // Always use displayProducts (starts as mock, replaced by real Sanity data when available)
+  const singleProducts = displayProducts.filter((p: any) => p.purchaseType === 'single');
+  const subscriptionProducts = displayProducts.filter((p: any) => p.purchaseType === 'subscription');
   const products = purchaseMode === 'subscription' ? subscriptionProducts : singleProducts;
 
   // Helper: resolve title/description fields that may be translationRecord or plain string
@@ -1007,6 +1099,62 @@ export default function App() {
                 className="mt-2 w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl text-sm"
               >
                 {lang === 'es' ? 'Añadir al carrito' : 'Add to cart'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STATIC FLOATING BUTTON (BOTTOM LEFT) ── */}
+      {getSetting('enabled', true) !== false && (
+        <button
+          onClick={() => setShowPopupModal(true)}
+          className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 rounded-full shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
+        >
+          <Mail className="w-5 h-5" />
+          {resolveText(getSetting('buttonText', { es: '¡Suscríbete!', en: 'Subscribe!' })) || 'Suscríbete'}
+        </button>
+      )}
+
+      {/* ── MODAL: Subscription Popup ── */}
+      {showPopupModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPopupModal(false)}>
+          <div
+            className="bg-ondo-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPopupModal(false)}
+              className="absolute top-4 right-4 bg-white/50 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition-colors z-10"
+            >
+              <X className="w-5 h-5 text-ondo-black" />
+            </button>
+            {getSetting('popupImage') && (
+              <div className="w-full aspect-[4/3] bg-ondo-beige relative shrink-0">
+                <img
+                  src={resolveImage(getSetting('popupImage'))}
+                  alt="Subscription Popup"
+                  className="w-full h-full object-cover mix-blend-multiply"
+                />
+              </div>
+            )}
+            <div className="p-8 text-center flex flex-col items-center">
+              {!getSetting('popupImage') && <Mail className="w-12 h-12 text-ondo-orange mb-4" />}
+              <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
+                {resolveText(getSetting('popupTitle', { es: '¡Únete al club de la sopa!', en: 'Join the soup club!' })) || '¡Únete al club de la sopa!'}
+              </h2>
+              <p className="font-body text-gray-500 text-[15px] leading-relaxed mb-8">
+                {resolveText(getSetting('popupMessage', { es: 'Suscríbete a nuestros envíos regulares y ahorra tiempo y dinero. ¡Nutrición lista siempre!', en: 'Subscribe to regular deliveries and save time and money. Ready nutrition always!' }))}
+              </p>
+              <button
+                onClick={() => {
+                  setShowPopupModal(false);
+                  setPurchaseMode('subscription');
+                  document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl text-[15px] transition-colors border border-transparent hover:border-ondo-black shadow-md"
+              >
+                {resolveText(getSetting('popupCTA', { es: 'Suscribirme', en: 'Subscribe' })) || 'Suscribirme'}
               </button>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { aboutSettings } from './aboutSettings'
 import manifestoSettings from './manifestoSettings'
 import { deliveryLead } from './deliveryLead'
 import { deliveryZones } from './deliveryZones'
+import { popupSettings } from './popupSettings'
 
 export const schemaTypes = [
   product, 
@@ -24,4 +25,6 @@ export const schemaTypes = [
   manifestoSettings,
   deliveryLead,
   deliveryZones,
+  popupSettings,
 ]
+
