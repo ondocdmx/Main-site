@@ -209,8 +209,10 @@ export default function App() {
   const [tags, setTags] = useState<any[]>([]);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
-  // Subscription Popup
+  // Subscription Popup / Funnel
   const [showPopupModal, setShowPopupModal] = useState(false);
+  const [funnelStep, setFunnelStep] = useState(1);
+  const [funnelData, setFunnelData] = useState({ name: '', email: '', choice: '' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -253,17 +255,14 @@ export default function App() {
 
   const content = t[lang];
 
-  // Always use displayProducts (starts as mock, replaced by real Sanity data when available)
-  const singleProducts = displayProducts.filter((p: any) => p.purchaseType === 'single');
-  const subscriptionProducts = displayProducts.filter((p: any) => p.purchaseType === 'subscription');
-  const products = purchaseMode === 'subscription' ? subscriptionProducts : singleProducts;
-
   // Helper: resolve title/description fields that may be translationRecord or plain string
   const resolveText = (field: any): string => {
     if (!field) return '';
     if (typeof field === 'string') return field;
     return field[lang] || field.es || field.en || '';
   };
+
+  const products = displayProducts;
 
   // Helper: resolve image src from Sanity image or plain URL string
   const resolveImage = (img: any): string => {
@@ -403,7 +402,7 @@ export default function App() {
           </div>
           
           <a href="#" className="absolute left-1/2 transform -translate-x-1/2">
-            <img src="/images/Group 1597787.png" alt="ONDO Logo" className="h-[36px] md:h-[46px] object-contain" />
+            <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-[36px] md:h-[46px] object-contain" />
           </a>
         
         <div className="flex items-center gap-4 sm:gap-6">
@@ -609,25 +608,25 @@ export default function App() {
             {/* Products Grid Area */}
             <div className="flex-1 flex flex-col">
               
-              {/* Purchase Mode Toggle */}
-              <div className="flex justify-center md:justify-end mb-8 relative">
-                 <div className="bg-white p-1 rounded-full flex shadow-sm relative border border-gray-100 overflow-hidden">
-                    <div 
-                      className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-ondo-orange rounded-full shadow-inner transition-all duration-300 z-0 ${purchaseMode === 'subscription' ? 'left-1' : 'left-[calc(50%+3px)]'}`}
-                    />
-                    <button 
-                      onClick={() => setPurchaseMode('subscription')}
-                      className={`relative z-10 px-6 py-2 rounded-full font-title text-[13px] font-bold uppercase tracking-wide transition-colors ${purchaseMode === 'subscription' ? 'text-white' : 'text-gray-400 hover:text-ondo-black'}`}
-                    >
-                      {getSetting('subscribeTab', content.subscribeTab)}
-                    </button>
-                    <button 
-                      onClick={() => setPurchaseMode('single')}
-                      className={`relative z-10 px-6 py-2 rounded-full font-title text-[13px] font-bold uppercase tracking-wide transition-colors ${purchaseMode === 'single' ? 'text-white' : 'text-gray-400 hover:text-ondo-black'}`}
-                    >
-                      {getSetting('singleTab', content.singleTab)}
-                    </button>
-                 </div>
+              {/* Join the Club Banner */}
+              <div className="bg-ondo-orange rounded-[30px] py-6 px-8 md:py-8 md:px-12 mb-12 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-all duration-500"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-ondo-green/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+                
+                <div className="flex-1 relative z-10 text-center md:text-left">
+                  <h2 className="font-title text-[24px] md:text-[32px] font-black text-white leading-none uppercase tracking-tight">
+                    {resolveText(getSetting('clubBannerTitle', { es: 'Únete al club y obtén un 20% descuento', en: 'Join the club and get 20% off' }))}
+                  </h2>
+                </div>
+                <button 
+                  onClick={() => {
+                    setFunnelStep(1);
+                    setShowPopupModal(true);
+                  }}
+                  className="bg-white text-ondo-orange hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 rounded-2xl text-base transition-all shadow-xl hover:scale-105 active:scale-95 shrink-0 relative z-10"
+                >
+                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
+                </button>
               </div>
 
               {/* Grid */}
@@ -752,21 +751,37 @@ export default function App() {
           <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             
             {/* Panel 1 */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-[#6ca53a] flex flex-col p-8 relative overflow-hidden">
+            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
+                 style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a') }}>
                <div className="z-10">
-                 <h2 className="text-[#f1f3b0] font-title text-[70px] lg:text-[90px] font-bold leading-[0.85] tracking-tighter uppercase break-words">
-                   {getSetting('panel1TitleTop', 'SOUP\nSOUP')}
+                 <h2 className="font-title text-[70px] lg:text-[90px] font-bold leading-[0.85] tracking-tighter uppercase break-words"
+                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
+                   {resolveText(getSetting('panel1TitleTop', 'SOUP\nSOUP'))}
                  </h2>
                </div>
                {/* Center Logo shape via mask */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120px] bg-[#bfe46b] opacity-80" 
-                    style={{ WebkitMaskImage: "url('/images/ondo-logo-orange.png')", maskImage: "url('/images/ondo-logo-orange.png')", WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "center", maskPosition: "center" }} />
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120px] opacity-80" 
+                    style={{ 
+                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')", 
+                      maskImage: "url('/images/ondo-logo-orange.png')", 
+                      WebkitMaskSize: "contain", 
+                      maskSize: "contain", 
+                      WebkitMaskRepeat: "no-repeat", 
+                      maskRepeat: "no-repeat", 
+                      WebkitMaskPosition: "center", 
+                      maskPosition: "center",
+                      backgroundColor: getSetting('panel1TextColor2', '#bfe46b')
+                    }} />
                <div className="flex flex-col items-end z-10 w-full mt-auto mb-4">
-                 <span className="text-[#f1f3b0] font-title lowercase text-2xl tracking-widest mb-4" style={{ fontFamily: 'Caveat, cursive' }}>{getSetting('panel1City', 'MEXICO CITY')}</span>
+                 <span className="font-title lowercase text-2xl tracking-widest mb-4" 
+                       style={{ fontFamily: 'Caveat, cursive', color: getSetting('panel1TextColor1', '#f1f3b0') }}>
+                   {resolveText(getSetting('panel1City', 'MEXICO CITY'))}
+                 </span>
                </div>
                <div className="z-10">
-                 <h2 className="text-[#bfe46b] font-title text-[70px] lg:text-[100px] font-bold leading-[0.8] tracking-tighter uppercase break-words">
-                   {getSetting('panel1TitleBottom', 'FIRST')}
+                 <h2 className="font-title text-[70px] lg:text-[100px] font-bold leading-[0.8] tracking-tighter uppercase break-words"
+                     style={{ color: getSetting('panel1TextColor2', '#bfe46b') }}>
+                   {resolveText(getSetting('panel1TitleBottom', 'FIRST'))}
                  </h2>
                </div>
             </div>
@@ -777,16 +792,32 @@ export default function App() {
                <div className="w-full h-full max-w-[340px] bg-ondo-white shadow-2xl flex flex-col justify-between p-6 lg:p-8 text-center relative z-10 mx-auto my-auto max-h-[85%] md:max-h-[90%]">
                   <div>
                     <img src="/images/ondo-logo-orange.png" className="h-[40px] md:h-16 mx-auto mb-6 object-contain" alt="Ondo Logo" />
-                    <h3 className="text-[#6ca53a] font-title text-[32px] md:text-[40px] font-bold uppercase leading-none tracking-tight mb-8">
-                       {getSetting('panel2Title', 'FIRST WE SOUP')}
+                    <h3 className="font-title text-[32px] md:text-[40px] font-bold uppercase leading-none tracking-tight mb-8"
+                        style={{ color: getSetting('panel2Color', '#6ca53a') }}>
+                       {resolveText(getSetting('panel2Title', 'FIRST WE SOUP'))}
                     </h3>
                   </div>
                   <div className="mt-auto">
-                    <p className="text-[#6ca53a] font-body text-[14px] font-bold leading-relaxed mb-8 px-2">
-                      {getSetting('panel2Mission', 'Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.')}
+                    <p className="font-body text-[14px] font-bold leading-relaxed mb-8 px-2"
+                       style={{ color: getSetting('panel2Color', '#6ca53a') }}>
+                      {resolveText(getSetting('panel2Mission', 'Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
                     </p>
-                    <button className="border-[3px] border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors w-full">
-                      {getSetting('panel2CTA', '¡APAPÁCHATE!')}
+                    <button className="border-[3px] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 transition-colors w-full"
+                            style={{ 
+                              borderColor: getSetting('panel2Color', '#6ca53a'), 
+                              color: getSetting('panel2Color', '#6ca53a') 
+                            }}
+                            onMouseEnter={(e) => {
+                              const target = e.currentTarget;
+                              target.style.backgroundColor = getSetting('panel2Color', '#6ca53a');
+                              target.style.color = 'white';
+                            }}
+                            onMouseLeave={(e) => {
+                              const target = e.currentTarget;
+                              target.style.backgroundColor = 'transparent';
+                              target.style.color = getSetting('panel2Color', '#6ca53a');
+                            }}>
+                      {resolveText(getSetting('panel2CTA', '¡APAPÁCHATE!'))}
                     </button>
                   </div>
                </div>
@@ -795,37 +826,57 @@ export default function App() {
             {/* Panel 3 */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col">
                <div className="flex-1 bg-ondo-black p-8 flex flex-col justify-center">
-                 <h2 className="text-ondo-white font-title text-[38px] lg:text-5xl font-bold tracking-tighter mb-6 leading-[0.9]">{getSetting('panel3Title', '¡Apapáchate!')}</h2>
+                 <h2 className="text-ondo-white font-title text-[38px] lg:text-5xl font-bold tracking-tighter mb-6 leading-[0.9]">
+                   {resolveText(getSetting('panel3Title', '¡Apapáchate!'))}
+                 </h2>
                  <p className="text-white/80 font-body text-[13px] leading-relaxed mb-10 max-w-[95%]">
-                   {getSetting('panel3Text', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.')}
+                   {resolveText(getSetting('panel3Text', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
                  </p>
                  <a href="#" className="text-white font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
-                   {getSetting('panel3CTA', 'LEARN MORE')}
+                   {resolveText(getSetting('panel3CTA', 'LEARN MORE'))}
                  </a>
                </div>
                <div className="flex-1 bg-[#bfe46b] relative overflow-hidden flex items-center justify-center min-h-[250px]">
-                 <img src="/images/green-geo.png" alt="Ondo Graphic" className="w-full h-full object-cover" />
+                 <img src={getSetting('panel3Image', null) ? urlFor(getSetting('panel3Image', null)).url() : '/images/green-geo.png'} alt="Ondo Graphic" className="w-full h-full object-cover" />
                </div>
             </div>
             
             {/* Panel 4 */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-ondo-white p-8 flex flex-col relative overflow-hidden">
-               <p className="text-[#5b9538] font-body font-bold text-[14px] leading-relaxed mb-10 max-w-[95%]">
-                 {getSetting('panel4TextTop', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.')}
+               <p className="font-body font-bold text-[14px] leading-relaxed mb-10 max-w-[95%]"
+                  style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                 {resolveText(getSetting('panel4TextTop', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
                </p>
                <div className="flex justify-between w-full mb-auto z-10">
-                 <span className="text-[#5b9538] font-title font-bold uppercase text-[12px] tracking-widest">{getSetting('panel4CityLeft', 'SOUP FIRST')}</span>
-                 <span className="text-[#5b9538] font-title font-bold uppercase text-[12px] tracking-widest">{getSetting('panel4CityRight', 'CDMX')}</span>
+                 <span className="font-title font-bold uppercase text-[12px] tracking-widest"
+                       style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                    {resolveText(getSetting('panel4CityLeft', 'SOUP FIRST'))}
+                 </span>
+                 <span className="font-title font-bold uppercase text-[12px] tracking-widest"
+                       style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                    {resolveText(getSetting('panel4CityRight', 'CDMX'))}
+                 </span>
                </div>
                
                <div className="mt-auto z-10 relative pointer-events-none flex flex-col justify-end mb-16">
-                 <h2 className="text-[#5b9538] font-title text-[50px] lg:text-[70px] font-bold leading-[0.8] tracking-tighter uppercase mb-8">
-                   {getSetting('panel4Title', 'IN SOUP WE TRUST')}
+                 <h2 className="font-title text-[50px] lg:text-[70px] font-bold leading-[0.8] tracking-tighter uppercase mb-8"
+                     style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                   {resolveText(getSetting('panel4Title', 'IN SOUP WE TRUST'))}
                  </h2>
                </div>
                {/* Massive Logo at bottom */}
-               <div className="absolute bottom-[-2%] left-1/2 -translate-x-1/2 w-full h-[150px] bg-[#5b9538] opacity-90" 
-                    style={{ WebkitMaskImage: "url('/images/ondo-logo-orange.png')", maskImage: "url('/images/ondo-logo-orange.png')", WebkitMaskSize: "contain", maskSize: "contain", WebkitMaskRepeat: "no-repeat", maskRepeat: "no-repeat", WebkitMaskPosition: "bottom center", maskPosition: "bottom center" }} />
+               <div className="absolute bottom-[-2%] left-1/2 -translate-x-1/2 w-full h-[150px] opacity-90" 
+                    style={{ 
+                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')", 
+                      maskImage: "url('/images/ondo-logo-orange.png')", 
+                      WebkitMaskSize: "contain", 
+                      maskSize: "contain", 
+                      WebkitMaskRepeat: "no-repeat", 
+                      maskRepeat: "no-repeat", 
+                      WebkitMaskPosition: "bottom center", 
+                      maskPosition: "bottom center",
+                      backgroundColor: getSetting('panel4TextColor', '#5b9538')
+                    }} />
             </div>
             
           </div>
@@ -862,20 +913,27 @@ export default function App() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-ondo-beige text-ondo-black py-16 px-6">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-           <div className="text-[40px] md:text-[52px] font-title font-bold text-ondo-black uppercase tracking-tighter">
-             ONDO
+      <footer className="bg-ondo-beige text-ondo-black py-20 px-6 border-t border-black/5">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+           <div className="flex flex-col items-center md:items-start gap-4">
+             <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-12 object-contain" />
+             <div className="text-gray-500 font-body text-sm font-medium">
+               © 2026 ONDO. All rights reserved.
+             </div>
            </div>
-           <div className="flex flex-wrap justify-center gap-8 font-title text-[14px] md:text-[16px] text-gray-400 font-bold uppercase tracking-widest">
-             <a href="#" className="hover:text-ondo-light-green transition-colors">FAQ</a>
-             <a href="#" className="hover:text-ondo-light-green transition-colors">Contact</a>
-             <a href="#" className="hover:text-ondo-light-green transition-colors">Terms</a>
-             <a href="#" className="hover:text-ondo-light-green transition-colors">Privacy</a>
-             <a href="#" className="hover:text-ondo-light-green transition-colors">Wholesale</a>
-           </div>
-           <div className="text-gray-500 font-body text-sm font-medium">
-             © 2026 ONDO. All rights reserved.
+           
+           <div className="flex flex-col items-center gap-6">
+             <div className="flex gap-8">
+               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 rounded-full text-white hover:bg-ondo-green transition-all hover:scale-110">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+               </a>
+             </div>
+             <div className="flex flex-col items-center gap-2 text-ondo-green font-title font-bold uppercase tracking-widest text-sm text-center">
+               <a href="mailto:hola@ondo.mx" className="hover:text-ondo-orange transition-colors flex items-center gap-2">
+                 <Mail className="w-4 h-4" /> HOLA@ONDO.MX
+               </a>
+               <a href="tel:+521234567890" className="hover:text-ondo-orange transition-colors">+52 1 234 567 890</a>
+             </div>
            </div>
          </div>
       </footer>
@@ -1108,7 +1166,10 @@ export default function App() {
       {/* ── STATIC FLOATING BUTTON (BOTTOM LEFT) ── */}
       {getSetting('enabled', true) !== false && (
         <button
-          onClick={() => setShowPopupModal(true)}
+          onClick={() => {
+            setFunnelStep(1);
+            setShowPopupModal(true);
+          }}
           className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 rounded-full shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
@@ -1116,7 +1177,7 @@ export default function App() {
         </button>
       )}
 
-      {/* ── MODAL: Subscription Popup ── */}
+      {/* ── MODAL: Subscription Funnel Popup ── */}
       {showPopupModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPopupModal(false)}>
           <div
@@ -1129,8 +1190,9 @@ export default function App() {
             >
               <X className="w-5 h-5 text-ondo-black" />
             </button>
-            {getSetting('popupImage') && (
-              <div className="w-full aspect-[4/3] bg-ondo-beige relative shrink-0">
+            
+            {getSetting('popupImage') && funnelStep === 1 && (
+              <div className="w-full aspect-video bg-ondo-beige relative shrink-0">
                 <img
                   src={resolveImage(getSetting('popupImage'))}
                   alt="Subscription Popup"
@@ -1138,24 +1200,95 @@ export default function App() {
                 />
               </div>
             )}
+
             <div className="p-8 text-center flex flex-col items-center">
-              {!getSetting('popupImage') && <Mail className="w-12 h-12 text-ondo-orange mb-4" />}
-              <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
-                {resolveText(getSetting('popupTitle', { es: '¡Únete al club de la sopa!', en: 'Join the soup club!' })) || '¡Únete al club de la sopa!'}
-              </h2>
-              <p className="font-body text-gray-500 text-[15px] leading-relaxed mb-8">
-                {resolveText(getSetting('popupMessage', { es: 'Suscríbete a nuestros envíos regulares y ahorra tiempo y dinero. ¡Nutrición lista siempre!', en: 'Subscribe to regular deliveries and save time and money. Ready nutrition always!' }))}
-              </p>
-              <button
-                onClick={() => {
-                  setShowPopupModal(false);
-                  setPurchaseMode('subscription');
-                  document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl text-[15px] transition-colors border border-transparent hover:border-ondo-black shadow-md"
-              >
-                {resolveText(getSetting('popupCTA', { es: 'Suscribirme', en: 'Subscribe' })) || 'Suscribirme'}
-              </button>
+              {funnelStep === 1 && (
+                <>
+                  <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
+                    {lang === 'es' ? '¿Cada cuánto te apapachamos?' : 'How often should we pamper you?'}
+                  </h2>
+                  <p className="font-body text-gray-500 text-[15px] mb-8">
+                    {lang === 'es' ? 'Selecciona tu frecuencia preferida para ahorrar un 20%.' : 'Select your preferred frequency to save 20%.'}
+                  </p>
+                  <div className="w-full flex flex-col gap-3 mb-8">
+                    {[
+                      { id: 'weekly', es: 'Cada semana', en: 'Every week' },
+                      { id: 'biweekly', es: 'Cada 2 semanas', en: 'Every 2 weeks' },
+                      { id: 'monthly', es: 'Cada mes', en: 'Every month' }
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => {
+                          setFunnelData({ ...funnelData, choice: opt.id });
+                          setFunnelStep(2);
+                        }}
+                        className={`w-full py-4 rounded-xl font-title font-bold uppercase tracking-widest border-2 transition-all ${funnelData.choice === opt.id ? 'bg-ondo-orange text-white border-ondo-orange' : 'border-ondo-orange/10 text-ondo-black hover:border-ondo-orange'}`}
+                      >
+                        {lang === 'es' ? opt.es : opt.en}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {funnelStep === 2 && (
+                <>
+                  <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
+                    {lang === 'es' ? 'Casi listo' : 'Almost ready'}
+                  </h2>
+                  <p className="font-body text-gray-500 text-[15px] mb-6">
+                    {lang === 'es' ? 'Dinos a dónde enviamos tu código de descuento.' : 'Tell us where to send your discount code.'}
+                  </p>
+                  <div className="w-full flex flex-col gap-3 mb-8 text-left">
+                    <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1">{lang === 'es' ? 'Nombre completo' : 'Full name'}</label>
+                    <input 
+                      type="text" 
+                      placeholder="John Doe"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
+                      value={funnelData.name}
+                      onChange={e => setFunnelData({ ...funnelData, name: e.target.value })}
+                    />
+                    <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1">Email</label>
+                    <input 
+                      type="email" 
+                      placeholder="hello@ondo.mx"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
+                      value={funnelData.email}
+                      onChange={e => setFunnelData({ ...funnelData, email: e.target.value })}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setFunnelStep(3)}
+                    disabled={!funnelData.name || !funnelData.email}
+                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl transition-all shadow-lg disabled:opacity-50"
+                  >
+                    {lang === 'es' ? 'RECIBIR MI 20%' : 'GET MY 20% OFF'}
+                  </button>
+                </>
+              )}
+
+              {funnelStep === 3 && (
+                <>
+                  <div className="w-20 h-20 bg-ondo-green rounded-full flex items-center justify-center mb-6">
+                    <CheckCircle className="w-10 h-10 text-white" />
+                  </div>
+                  <h2 className="font-title font-bold text-3xl uppercase leading-tight text-ondo-black mb-3">
+                    {lang === 'es' ? '¡BIENVENIDO!' : 'WELCOME!'}
+                  </h2>
+                  <p className="font-body text-gray-500 text-[15px] mb-8">
+                    {lang === 'es' ? 'Ya eres parte del club. Revisa tu email para activar tu beneficio.' : 'You are now part of the club. Check your email to activate your benefit.'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowPopupModal(false);
+                      setPurchaseMode('subscription');
+                    }}
+                    className="w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl shadow-lg"
+                  >
+                    {lang === 'es' ? 'EMPEZAR AHORA' : 'START NOW'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

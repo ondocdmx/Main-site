@@ -66,5 +66,15 @@ export const productSettings = defineType({
       type: 'string',
       initialValue: 'Una sola compra'
     }),
+    defineField({
+      name: 'clubBannerTitle',
+      title: 'Club Banner Title',
+      type: 'translationRecord',
+    }),
+    defineField({
+      name: 'clubBannerCTA',
+      title: 'Club Banner CTA',
+      type: 'translationRecord',
+    }),
   ]
 })
