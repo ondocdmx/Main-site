@@ -217,12 +217,14 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
+        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
           client.fetch('*[_type == "siteSettings"][0]'),
           client.fetch('*[_type == "productSettings"][0]'),
           client.fetch('*[_type == "processSettings"][0]'),
           client.fetch('*[_type == "manifestoSettings"][0]'),
           client.fetch('*[_type == "popupSettings"][0]'),
+          client.fetch('*[_type == "heroSettings"][0]'),
+          client.fetch('*[_type == "aboutSettings"][0]'),
           client.fetch('*[_type == "productTag"] | order(order asc)'),
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
@@ -232,7 +234,9 @@ export default function App() {
           ...productSettings,
           ...processSettings,
           ...manifestoSettings,
-          ...popupSettings
+          ...popupSettings,
+          ...heroSettings,
+          ...aboutSettings,
         });
         setTags(fetchedTags || []);
         setDeliveryZones(fetchedZones || null);
@@ -391,7 +395,7 @@ export default function App() {
       </div>
       
       {/* Navbar (Crema Suave) */}
-      <nav className="sticky top-0 z-30 bg-ondo-beige border-b border-black/5">
+      <nav className="bg-ondo-beige border-b border-black/5">
         <div className="w-full mx-auto px-6 py-5 md:py-7 flex items-center justify-between relative">
           <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[15px] tracking-wide">
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSetting('navShop', content.navShop)}</a>
@@ -412,7 +416,7 @@ export default function App() {
            </div>
 
            {/* Lang Toggle */}
-           <div className="flex items-center gap-2 font-title font-bold text-xs uppercase bg-white/40 px-2 py-1 rounded-md border border-ondo-black/5">
+           <div className="flex items-center gap-2 font-title font-bold text-xs uppercase bg-white/40 px-2 py-1 border border-ondo-black/5">
               <button 
                 onClick={() => setLang('es')} 
                 className={`${lang === 'es' ? 'text-ondo-orange' : 'text-gray-400 hover:text-ondo-black'}`}
@@ -433,7 +437,7 @@ export default function App() {
            <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => setIsCartOpen(true)}>
              <ShoppingCart className="w-6 h-6" />
              {cartItemCount > 0 && (
-               <span className="absolute -top-2 -right-2 bg-ondo-red text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors">
+               <span className="absolute -top-2 -right-2 bg-ondo-red text-white text-[10px] w-5 h-5 flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors">
                  {cartItemCount}
                </span>
              )}
@@ -452,14 +456,14 @@ export default function App() {
           <div className="flex-1" />
           <h2 className="font-title font-bold text-xl uppercase tracking-wide">ONDO</h2>
           <div className="flex-1 flex justify-end">
-             <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-ondo-light-green rounded-full transition-colors"><X className="w-6 h-6 text-ondo-black" /></button>
+             <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-ondo-light-green transition-colors"><X className="w-6 h-6 text-ondo-black" /></button>
           </div>
         </div>
 
         {/* Promo Bar */}
         <div className="bg-ondo-beige/50 p-5 border-b border-gray-100">
-          <div className="w-full bg-white rounded-full h-3 mb-2 relative">
-             <div className="bg-ondo-orange h-3 rounded-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+          <div className="w-full bg-white h-3 mb-2 relative">
+             <div className="bg-ondo-orange h-3 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
           </div>
         </div>
 
@@ -472,8 +476,8 @@ export default function App() {
             </div>
           ) : (
             cart.map(item => (
-              <div key={item.product._id} className="flex gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-50 items-center">
-                <div className={`w-16 h-20 ${item.product.bgColor || 'bg-ondo-beige'} rounded-xl overflow-hidden shrink-0`}>
+              <div key={item.product._id} className="flex gap-4 p-4 bg-white shadow-sm border border-gray-50 items-center">
+                <div className={`w-16 h-20 ${item.product.bgColor || 'bg-ondo-beige'} overflow-hidden shrink-0`}>
                    <img src={resolveImage(item.product.image)} className="w-full h-full object-cover mix-blend-multiply" alt="product" />
                 </div>
                 <div className="flex-1 flex flex-col justify-between">
@@ -484,10 +488,10 @@ export default function App() {
                       </div>
                    </div>
                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center border border-gray-100 rounded-lg bg-ondo-white">
-                         <button onClick={() => updateQuantity(item.product._id, -1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green rounded-l-lg transition-colors"><Minus className="w-3 h-3" /></button>
+                      <div className="flex items-center border border-gray-100 bg-ondo-white">
+                         <button onClick={() => updateQuantity(item.product._id, -1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Minus className="w-3 h-3" /></button>
                          <span className="font-title text-[15px] w-6 text-center">{item.quantity}</span>
-                         <button onClick={() => updateQuantity(item.product._id, 1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green rounded-r-lg transition-colors"><Plus className="w-3 h-3" /></button>
+                         <button onClick={() => updateQuantity(item.product._id, 1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Plus className="w-3 h-3" /></button>
                       </div>
                       <button onClick={() => removeItem(item.product._id)} className="text-gray-300 hover:text-ondo-red transition-colors"><Trash2 className="w-5 h-5" /></button>
                    </div>
@@ -504,7 +508,7 @@ export default function App() {
               <span className="font-title text-xl text-gray-500">{getSetting('subtotal', content.subtotal)}</span>
               <span className="font-title text-[28px] font-bold text-ondo-black">€{cartSubtotal.toFixed(2)}</span>
             </div>
-            <button className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 rounded-[14px] text-lg transition-colors shadow-md">
+            <button className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md">
               {getSetting('checkout', content.checkout)}
             </button>
           </div>
@@ -528,222 +532,21 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-16 h-full flex flex-col justify-center">
           <div className="max-w-[500px] w-full flex flex-col justify-center bg-transparent mt-[-10vh]">
              <h1 className="text-[55px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-8 text-ondo-green uppercase w-[150%] max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left">
-              {getSetting('heroTitle', content.heroTitle)}
+              {resolveText(getSetting('heroTitle', content.heroTitle))}
             </h1>
             <div>
               <p className="text-[17px] md:text-[20px] font-body mb-8 text-ondo-green leading-relaxed font-bold max-w-[420px] mix-blend-multiply">
-                 {getSetting('heroSub', content.heroSub)}
+                 {resolveText(getSetting('heroSub', content.heroSub))}
               </p>
               <div>
-                <button className="bg-ondo-green text-white hover:bg-ondo-light-green hover:text-ondo-black font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm rounded-full">
-                  {getSetting('heroCTA', content.shopNow)}
+                <button className="bg-ondo-green text-white hover:bg-ondo-light-green hover:text-ondo-black font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm">
+                  {resolveText(getSetting('heroCTA', content.shopNow))}
                 </button>
               </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Products Section */}
-      <section className="py-20 px-6 bg-ondo-beige" id="shop">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
-            {/* Sidebar Filters — dynamic from Sanity productTag */}
-             <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
-               <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
-                 {getSetting('filtersTitle', content.filtersTitle)}
-                 {activeFilters.length > 0 && (
-                   <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-orange font-bold tracking-wide normal-case underline underline-offset-2">
-                     {lang === 'es' ? 'Borrar' : 'Clear'}
-                   </button>
-                 )}
-               </h3>
-
-               {tags.length === 0 ? (
-                 <>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 font-title hover:border-ondo-orange group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-green rounded flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
-                     {getSetting('filterBundle', content.filterBundle)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl border border-gray-100 font-title hover:border-ondo-orange group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-orange rounded flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
-                     {getSetting('filterNew', content.filterNew)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 rounded-2xl border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-orange group w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-yellow rounded flex items-center justify-center text-ondo-orange shrink-0"><span className="text-[12px]">🔥</span></div>
-                     {getSetting('filterBestseller', content.filterBestseller)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 rounded-2xl border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-orange group w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-light-green rounded flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
-                     {getSetting('filterVegan', content.filterVegan)}
-                   </button>
-                 </>
-               ) : (
-                 tags.map((tag: any) => {
-                   const slug = tag?.slug?.current || tag._id;
-                   const isActive = activeFilters.includes(slug);
-                   return (
-                     <button
-                       key={tag._id}
-                       onClick={() => toggleFilter(slug)}
-                       className={`flex items-center gap-3 px-5 py-3 rounded-2xl font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-all w-full text-left border ${
-                         isActive
-                           ? 'bg-ondo-orange text-white border-ondo-orange scale-[1.02]'
-                           : 'bg-white text-ondo-black border-gray-100 hover:border-ondo-orange'
-                       }`}
-                     >
-                       <div className={`w-5 h-5 ${tag.color || 'bg-ondo-green'} rounded flex items-center justify-center shrink-0`}>
-                         <span className="text-[12px]">{tag.icon || '•'}</span>
-                       </div>
-                       {tag.name?.[lang] || tag.name?.es || tag.name?.en || slug}
-                     </button>
-                   );
-                 })
-               )}
-
-               <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 rounded-2xl border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-orange hover:text-ondo-orange transition-colors w-full justify-between">
-                 {getSetting('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
-               </div>
-            </div>
-
-            {/* Products Grid Area */}
-            <div className="flex-1 flex flex-col">
-              
-              {/* Join the Club Banner */}
-              <div className="bg-ondo-orange rounded-[30px] py-6 px-8 md:py-8 md:px-12 mb-12 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-all duration-500"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-ondo-green/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
-                
-                <div className="flex-1 relative z-10 text-center md:text-left">
-                  <h2 className="font-title text-[24px] md:text-[32px] font-black text-white leading-none uppercase tracking-tight">
-                    {resolveText(getSetting('clubBannerTitle', { es: 'Únete al club y obtén un 20% descuento', en: 'Join the club and get 20% off' }))}
-                  </h2>
-                </div>
-                <button 
-                  onClick={() => {
-                    setFunnelStep(1);
-                    setShowPopupModal(true);
-                  }}
-                  className="bg-white text-ondo-orange hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 rounded-2xl text-base transition-all shadow-xl hover:scale-105 active:scale-95 shrink-0 relative z-10"
-                >
-                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
-                </button>
-              </div>
-
-              {/* Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredProducts.map((product: any) => (
-                  <div key={product._id} className="bg-white rounded-3xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-orange flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4">
-                    
-                    {/* Hover Image Area — click opens product detail */}
-                    <div
-                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} rounded-2xl mb-5 relative overflow-hidden flex items-center justify-center p-6 cursor-pointer`}
-                      onClick={() => setSelectedProduct(product)}
-                    >
-                      <img 
-                        src={resolveImage(product.image)} 
-                        alt={resolveText(product.title)} 
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0" 
-                      />
-                      <img 
-                        src={resolveImage(product.hoverImage) || resolveImage(product.image)} 
-                        alt={`${resolveText(product.title)} hover`} 
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100" 
-                      />
-                    </div>
-
-                    <div className="flex flex-col flex-1 px-2">
-                      <div className="flex items-center text-ondo-yellow text-[11px] mb-2 tracking-widest">
-                        ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
-                      </div>
-                      {/* Tags badges */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {product.tags.map((tag: any) => (
-                            <span key={tag._id} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[9px] font-title font-bold uppercase tracking-wide px-2 py-0.5 rounded-full`}>
-                              {tag.icon} {resolveText(tag.name)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
-                      <div className="font-body text-ondo-green font-bold mb-5 text-[16px]">€{product.price?.toFixed(2)}</div>
-                      <div className="mt-auto">
-                        <div className="flex items-center justify-between w-full rounded-xl overflow-hidden shadow-sm">
-                          <button 
-                            onClick={() => {
-                              const productInCart = cart.find(item => item.product._id === product._id);
-                              if (productInCart && productInCart.quantity > 0) {
-                                updateQuantity(product._id, -1);
-                              }
-                            }} 
-                            className={`p-3.5 w-1/3 flex justify-center bg-ondo-orange text-white ${cart.find(item => item.product._id === product._id)?.quantity ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-                          
-                          <span className="font-title text-[15px] font-bold w-1/3 text-center bg-ondo-white py-3.5">
-                            {cart.find(item => item.product._id === product._id)?.quantity || 0}
-                          </span>
-                          
-                          <button 
-                            onClick={() => addToCart(product)} 
-                            className="p-3.5 w-1/3 flex justify-center cursor-pointer bg-ondo-orange text-white"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-         </div>
-      </section>
-
-      {/* NUEVO BANNER ROJO EN MEDIO */}
-      <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
-        <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSetting('midBannerText', content.midBanner)}</span>
-          <span>{getSetting('midBannerText', content.midBanner)}</span>
-        </div>
-      </div>
-
-      {/* Steps Section */}
-      <section id="steps" className="py-28 px-6 bg-ondo-beige">
-         <div className="max-w-6xl mx-auto text-center">
-            <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{content.stepsTitle}</h2>
-            <div className="grid md:grid-cols-3 gap-12">
-               
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square rounded-full overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-113.JPG" alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{content.step1Title}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{content.step1Desc}</p>
-               </div>
-               
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square rounded-full overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-051.JPG" alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{content.step2Title}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{content.step2Desc}</p>
-               </div>
-               
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square rounded-full overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-070.JPG" alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{content.step3Title}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{content.step3Desc}</p>
-               </div>
-
-            </div>
-         </div>
-      </section>
-
-      {/* Best Sellers deleted. We jump directly to Manifesto Section */}
 
       {/* Manifesto Section */}
       {getSetting('showManifesto', true) && (
@@ -775,7 +578,7 @@ export default function App() {
                <div className="flex flex-col items-end z-10 w-full mt-auto mb-4">
                  <span className="font-title lowercase text-2xl tracking-widest mb-4" 
                        style={{ fontFamily: 'Caveat, cursive', color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   {resolveText(getSetting('panel1City', 'MEXICO CITY'))}
+                   {resolveText(getSetting('panel1City', 'el club'))}
                  </span>
                </div>
                <div className="z-10">
@@ -794,13 +597,13 @@ export default function App() {
                     <img src="/images/ondo-logo-orange.png" className="h-[40px] md:h-16 mx-auto mb-6 object-contain" alt="Ondo Logo" />
                     <h3 className="font-title text-[32px] md:text-[40px] font-bold uppercase leading-none tracking-tight mb-8"
                         style={{ color: getSetting('panel2Color', '#6ca53a') }}>
-                       {resolveText(getSetting('panel2Title', 'FIRST WE SOUP'))}
+                       {resolveText(getSetting('panel2Title', 'ÚNETE AL CLUB'))}
                     </h3>
                   </div>
                   <div className="mt-auto">
                     <p className="font-body text-[14px] font-bold leading-relaxed mb-8 px-2"
                        style={{ color: getSetting('panel2Color', '#6ca53a') }}>
-                      {resolveText(getSetting('panel2Mission', 'Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
+                      {resolveText(getSetting('panel2Mission', 'Sopas artesanales de temporada, en tu puerta cada semana. Suscríbete y ahorra 20% de por vida.'))}
                     </p>
                     <button className="border-[3px] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 transition-colors w-full"
                             style={{ 
@@ -817,7 +620,7 @@ export default function App() {
                               target.style.backgroundColor = 'transparent';
                               target.style.color = getSetting('panel2Color', '#6ca53a');
                             }}>
-                      {resolveText(getSetting('panel2CTA', '¡APAPÁCHATE!'))}
+                      {resolveText(getSetting('panel2CTA', '¡QUIERO UNIRME!'))}
                     </button>
                   </div>
                </div>
@@ -827,13 +630,13 @@ export default function App() {
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col">
                <div className="flex-1 bg-ondo-black p-8 flex flex-col justify-center">
                  <h2 className="text-ondo-white font-title text-[38px] lg:text-5xl font-bold tracking-tighter mb-6 leading-[0.9]">
-                   {resolveText(getSetting('panel3Title', '¡Apapáchate!'))}
+                   {resolveText(getSetting('panel3Title', '20% OFF.\nPARA SIEMPRE.'))}
                  </h2>
                  <p className="text-white/80 font-body text-[13px] leading-relaxed mb-10 max-w-[95%]">
-                   {resolveText(getSetting('panel3Text', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
+                   {resolveText(getSetting('panel3Text', 'Los socios del Club Ondo reciben sopas artesanales de temporada cada semana con 20% de descuento permanente, envío incluido y acceso anticipado a recetas exclusivas.\n\nMás de 500 personas ya se apapachan. ¿Te unes?'))}
                  </p>
                  <a href="#" className="text-white font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
-                   {resolveText(getSetting('panel3CTA', 'LEARN MORE'))}
+                   {resolveText(getSetting('panel3CTA', 'ÚNETE AHORA'))}
                  </a>
                </div>
                <div className="flex-1 bg-[#bfe46b] relative overflow-hidden flex items-center justify-center min-h-[250px]">
@@ -845,7 +648,7 @@ export default function App() {
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-ondo-white p-8 flex flex-col relative overflow-hidden">
                <p className="font-body font-bold text-[14px] leading-relaxed mb-10 max-w-[95%]"
                   style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                 {resolveText(getSetting('panel4TextTop', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation.\n\nOur Mission is to nourish body and community with depth — in flavor, sourcing, and experience.'))}
+                 {resolveText(getSetting('panel4TextTop', 'Sin contratos largos. Sin compromiso. Cancela cuando quieras.\n\nPero una vez que lo pruebes, ya no vas a querer parar.'))}
                </p>
                <div className="flex justify-between w-full mb-auto z-10">
                  <span className="font-title font-bold uppercase text-[12px] tracking-widest"
@@ -882,6 +685,207 @@ export default function App() {
           </div>
         </section>
       )}
+
+      {/* Mid Banner — before products */}
+      <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
+        <div className="animate-marquee inline-flex w-[200%] justify-around">
+          <span>{getSetting('midBannerText', content.midBanner)}</span>
+          <span>{getSetting('midBannerText', content.midBanner)}</span>
+        </div>
+      </div>
+
+      {/* Products Section */}
+      <section className="py-20 px-6 bg-ondo-beige" id="shop">
+         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
+            {/* Sidebar Filters — dynamic from Sanity productTag */}
+             <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
+               <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
+                 {getSetting('filtersTitle', content.filtersTitle)}
+                 {activeFilters.length > 0 && (
+                   <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-green font-bold tracking-wide normal-case underline underline-offset-2">
+                     {lang === 'es' ? 'Borrar' : 'Clear'}
+                   </button>
+                 )}
+               </h3>
+
+               {tags.length === 0 ? (
+                 <>
+                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
+                     <div className="w-5 h-5 bg-ondo-green flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
+                     {getSetting('filterBundle', content.filterBundle)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
+                     <div className="w-5 h-5 bg-sky-400 flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
+                     {getSetting('filterNew', content.filterNew)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
+                     <div className="w-5 h-5 bg-red-500 flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🔥</span></div>
+                     {getSetting('filterBestseller', content.filterBestseller)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
+                     <div className="w-5 h-5 bg-ondo-light-green flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
+                     {getSetting('filterVegan', content.filterVegan)}
+                   </button>
+                 </>
+               ) : (
+                 tags.map((tag: any) => {
+                   const slug = tag?.slug?.current || tag._id;
+                   const isActive = activeFilters.includes(slug);
+                   return (
+                     <button
+                       key={tag._id}
+                       onClick={() => toggleFilter(slug)}
+                       className={`flex items-center gap-3 px-5 py-3 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-all w-full text-left border ${
+                         isActive
+                           ? 'bg-ondo-green text-white border-ondo-green scale-[1.02]'
+                           : 'bg-white text-ondo-black border-gray-100 hover:border-ondo-green'
+                       }`}
+                     >
+                       <div className={`w-5 h-5 ${tag.color || 'bg-ondo-green'} flex items-center justify-center shrink-0`}>
+                         <span className="text-[12px]">{tag.icon || '•'}</span>
+                       </div>
+                       {tag.name?.[lang] || tag.name?.es || tag.name?.en || slug}
+                     </button>
+                   );
+                 })
+               )}
+
+               <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-green hover:text-ondo-green transition-colors w-full justify-between">
+                 {getSetting('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
+               </div>
+            </div>
+
+            {/* Products Grid Area */}
+            <div className="flex-1 flex flex-col">
+              
+              {/* Join the Club Banner */}
+              <div className="bg-ondo-orange py-[15px] px-8 md:py-[20px] md:px-12 mb-12 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-all duration-500"></div>
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-ondo-green/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
+                
+                <div className="flex-1 relative z-10 text-center md:text-left">
+                  <h2 className="font-title text-[24px] md:text-[32px] font-black text-white leading-none uppercase tracking-tight">
+                    {resolveText(getSetting('clubBannerTitle', { es: 'Únete al club y obtén un 20% descuento', en: 'Join the club and get 20% off' }))}
+                  </h2>
+                </div>
+                <button 
+                  onClick={() => {
+                    setFunnelStep(1);
+                    setShowPopupModal(true);
+                  }}
+                  className="bg-white text-ondo-orange hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-xl hover:scale-105 active:scale-95 shrink-0 relative z-10"
+                >
+                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
+                </button>
+              </div>
+
+              {/* Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {filteredProducts.map((product: any) => (
+                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4">
+                    
+                    {/* Hover Image Area — click opens product detail */}
+                    <div
+                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6 cursor-pointer`}
+                      onClick={() => setSelectedProduct(product)}
+                    >
+                      <img 
+                        src={resolveImage(product.image)} 
+                        alt={resolveText(product.title)} 
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0" 
+                      />
+                      <img 
+                        src={resolveImage(product.hoverImage) || resolveImage(product.image)} 
+                        alt={`${resolveText(product.title)} hover`} 
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100" 
+                      />
+                    </div>
+
+                    <div className="flex flex-col flex-1 px-2">
+                      <div className="flex items-center text-ondo-yellow text-[11px] mb-2 tracking-widest">
+                        ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
+                      </div>
+                      {/* Tags badges */}
+                      {product.tags && product.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {product.tags.map((tag: any) => (
+                            <span key={tag._id} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[9px] font-title font-bold uppercase tracking-wide px-2 py-0.5`}>
+                              {tag.icon} {resolveText(tag.name)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
+                      <div className="font-body text-ondo-green font-bold mb-5 text-[16px]">€{product.price?.toFixed(2)}</div>
+                      <div className="mt-auto">
+                        <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
+                          <button
+                            onClick={() => {
+                              const productInCart = cart.find(item => item.product._id === product._id);
+                              if (productInCart && productInCart.quantity > 0) {
+                                updateQuantity(product._id, -1);
+                              }
+                            }}
+                            className={`p-3.5 w-1/3 flex justify-center bg-ondo-green text-white ${cart.find(item => item.product._id === product._id)?.quantity ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+
+                          <span className="font-title text-[15px] font-bold w-1/3 text-center bg-ondo-white py-3.5">
+                            {cart.find(item => item.product._id === product._id)?.quantity || 0}
+                          </span>
+
+                          <button
+                            onClick={() => addToCart(product)}
+                            className="p-3.5 w-1/3 flex justify-center cursor-pointer bg-ondo-green text-white"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Steps Section */}
+      <section id="steps" className="py-28 px-6 bg-ondo-beige">
+         <div className="max-w-6xl mx-auto text-center">
+            <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{getSetting('stepsTitle', content.stepsTitle)}</h2>
+            <div className="grid md:grid-cols-3 gap-12">
+
+               <div className="flex flex-col items-center text-center group cursor-default">
+                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
+                    <img src="/images/ondo-113.JPG" alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
+                 </div>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step1Title', content.step1Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step1Desc', content.step1Desc)}</p>
+               </div>
+
+               <div className="flex flex-col items-center text-center group cursor-default">
+                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
+                    <img src="/images/ondo-051.JPG" alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
+                 </div>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step2Title', content.step2Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step2Desc', content.step2Desc)}</p>
+               </div>
+
+               <div className="flex flex-col items-center text-center group cursor-default">
+                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
+                    <img src="/images/ondo-070.JPG" alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
+                 </div>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step3Title', content.step3Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step3Desc', content.step3Desc)}</p>
+               </div>
+
+            </div>
+         </div>
+      </section>
+
+      {/* Best Sellers deleted. We jump directly to Manifesto Section */}
 
       {/* Brand Text Section */}
       <section className="bg-ondo-beige py-20 px-6 md:px-12">
@@ -924,7 +928,7 @@ export default function App() {
            
            <div className="flex flex-col items-center gap-6">
              <div className="flex gap-8">
-               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 rounded-full text-white hover:bg-ondo-green transition-all hover:scale-110">
+               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 text-white hover:bg-ondo-green transition-all hover:scale-110">
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                </a>
              </div>
@@ -941,15 +945,15 @@ export default function App() {
       {/* ── MODAL: Delivery Address ── */}
       {showDeliveryModal && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-ondo-white rounded-3xl shadow-2xl max-w-md w-full p-8 relative">
-            <button onClick={closeDeliveryModal} className="absolute top-4 right-4 p-2 rounded-full hover:bg-ondo-beige transition-colors">
+          <div className="bg-ondo-white shadow-2xl max-w-md w-full p-8 relative">
+            <button onClick={closeDeliveryModal} className="absolute top-4 right-4 p-2 hover:bg-ondo-beige transition-colors">
               <X className="w-5 h-5 text-ondo-black" />
             </button>
 
             {deliveryStatus === 'idle' || deliveryStatus === 'checking' ? (
               <>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-ondo-orange rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-ondo-orange flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-white" />
                   </div>
                   <h2 className="font-title font-bold text-2xl uppercase text-ondo-black">
@@ -966,19 +970,19 @@ export default function App() {
                   value={deliveryAddress}
                   onChange={e => setDeliveryAddress(e.target.value)}
                   placeholder={lang === 'es' ? 'Tu dirección (opcional)' : 'Your address (optional)'}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 font-body text-sm mb-3 focus:outline-none focus:border-ondo-orange bg-white"
+                  className="w-full border border-gray-200 px-4 py-3 font-body text-sm mb-3 focus:outline-none focus:border-ondo-orange bg-white"
                 />
                 <input
                   type="text"
                   value={deliveryPostal}
                   onChange={e => setDeliveryPostal(e.target.value)}
                   placeholder={lang === 'es' ? 'Código postal *' : 'Postal code *'}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 font-body text-sm mb-5 focus:outline-none focus:border-ondo-orange bg-white"
+                  className="w-full border border-gray-200 px-4 py-3 font-body text-sm mb-5 focus:outline-none focus:border-ondo-orange bg-white"
                 />
                 <button
                   onClick={checkDelivery}
                   disabled={!deliveryPostal.trim() || deliveryStatus === 'checking'}
-                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
                 >
                   {deliveryStatus === 'checking'
                     ? (lang === 'es' ? 'Comprobando…' : 'Checking…')
@@ -999,7 +1003,7 @@ export default function App() {
                   </p>
                   <button
                     onClick={confirmDeliveryAndClose}
-                    className="bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 px-8 rounded-xl text-sm mt-2"
+                    className="bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 px-8 text-sm mt-2"
                   >
                     {lang === 'es' ? 'Continuar comprando' : 'Continue shopping'}
                   </button>
@@ -1025,12 +1029,12 @@ export default function App() {
                           value={notifyEmail}
                           onChange={e => setNotifyEmail(e.target.value)}
                           placeholder={lang === 'es' ? 'tu@correo.com' : 'your@email.com'}
-                          className="flex-1 border border-gray-200 rounded-xl px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-orange bg-white"
+                          className="flex-1 border border-gray-200 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-orange bg-white"
                         />
                         <button
                           onClick={submitNotifyEmail}
                           disabled={!notifyEmail.trim()}
-                          className="bg-ondo-green text-white font-title font-bold uppercase px-4 rounded-xl text-xs disabled:opacity-40"
+                          className="bg-ondo-green text-white font-title font-bold uppercase px-4 text-xs disabled:opacity-40"
                         >
                           <Mail className="w-4 h-4" />
                         </button>
@@ -1054,7 +1058,7 @@ export default function App() {
       {/* ── MODAL: Cart Mix Warning ── */}
       {showMixWarning && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-ondo-white rounded-3xl shadow-2xl max-w-sm w-full p-8 relative text-center">
+          <div className="bg-ondo-white shadow-2xl max-w-sm w-full p-8 relative text-center">
             <AlertTriangle className="w-12 h-12 text-ondo-orange mx-auto mb-4" />
             <h2 className="font-title font-bold text-xl uppercase text-ondo-black mb-3">
               {lang === 'es' ? 'No se puede mezclar' : 'Cannot mix types'}
@@ -1080,13 +1084,13 @@ export default function App() {
                   }
                   setMixPendingProduct(null);
                 }}
-                className="flex-1 bg-ondo-orange text-white font-title font-bold uppercase tracking-wide py-3 rounded-xl text-xs"
+                className="flex-1 bg-ondo-orange text-white font-title font-bold uppercase tracking-wide py-3 text-xs"
               >
                 {lang === 'es' ? 'Vaciar y añadir' : 'Clear & add'}
               </button>
               <button
                 onClick={() => { setShowMixWarning(false); setMixPendingProduct(null); }}
-                className="flex-1 border border-gray-200 text-gray-500 font-title font-bold uppercase tracking-wide py-3 rounded-xl text-xs hover:border-ondo-black transition-colors"
+                className="flex-1 border border-gray-200 text-gray-500 font-title font-bold uppercase tracking-wide py-3 text-xs hover:border-ondo-black transition-colors"
               >
                 {lang === 'es' ? 'Cancelar' : 'Cancel'}
               </button>
@@ -1099,7 +1103,7 @@ export default function App() {
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedProduct(null)}>
           <div
-            className="bg-ondo-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]"
+            className="bg-ondo-white shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]"
             onClick={e => e.stopPropagation()}
           >
             {/* Image */}
@@ -1111,7 +1115,7 @@ export default function App() {
               />
               <button
                 onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition-colors"
+                className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 shadow hover:bg-white transition-colors"
               >
                 <X className="w-5 h-5 text-ondo-black" />
               </button>
@@ -1145,7 +1149,7 @@ export default function App() {
               {selectedProduct.tags && selectedProduct.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-1">
                   {selectedProduct.tags.map((tag: any) => (
-                    <span key={tag._id || tag} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[11px] font-title font-bold uppercase tracking-wide px-3 py-1 rounded-full`}>
+                    <span key={tag._id || tag} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[11px] font-title font-bold uppercase tracking-wide px-3 py-1`}>
                       {tag.icon} {tag.name?.[lang] || tag.name?.es || tag}
                     </span>
                   ))}
@@ -1154,7 +1158,7 @@ export default function App() {
               {/* Add to cart from modal */}
               <button
                 onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                className="mt-2 w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl text-sm"
+                className="mt-2 w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 text-sm"
               >
                 {lang === 'es' ? 'Añadir al carrito' : 'Add to cart'}
               </button>
@@ -1170,7 +1174,7 @@ export default function App() {
             setFunnelStep(1);
             setShowPopupModal(true);
           }}
-          className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 rounded-full shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
+          className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
           {resolveText(getSetting('buttonText', { es: '¡Suscríbete!', en: 'Subscribe!' })) || 'Suscríbete'}
@@ -1181,12 +1185,12 @@ export default function App() {
       {showPopupModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPopupModal(false)}>
           <div
-            className="bg-ondo-white rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col relative"
+            className="bg-ondo-white shadow-2xl max-w-sm w-full overflow-hidden flex flex-col relative"
             onClick={e => e.stopPropagation()}
           >
             <button
               onClick={() => setShowPopupModal(false)}
-              className="absolute top-4 right-4 bg-white/50 backdrop-blur-sm p-2 rounded-full shadow hover:bg-white transition-colors z-10"
+              className="absolute top-4 right-4 bg-white/50 backdrop-blur-sm p-2 shadow hover:bg-white transition-colors z-10"
             >
               <X className="w-5 h-5 text-ondo-black" />
             </button>
@@ -1222,7 +1226,7 @@ export default function App() {
                           setFunnelData({ ...funnelData, choice: opt.id });
                           setFunnelStep(2);
                         }}
-                        className={`w-full py-4 rounded-xl font-title font-bold uppercase tracking-widest border-2 transition-all ${funnelData.choice === opt.id ? 'bg-ondo-orange text-white border-ondo-orange' : 'border-ondo-orange/10 text-ondo-black hover:border-ondo-orange'}`}
+                        className={`w-full py-4 font-title font-bold uppercase tracking-widest border-2 transition-all ${funnelData.choice === opt.id ? 'bg-ondo-orange text-white border-ondo-orange' : 'border-ondo-orange/10 text-ondo-black hover:border-ondo-orange'}`}
                       >
                         {lang === 'es' ? opt.es : opt.en}
                       </button>
@@ -1244,15 +1248,15 @@ export default function App() {
                     <input 
                       type="text" 
                       placeholder="John Doe"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
+                      className="w-full px-4 py-3 border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
                       value={funnelData.name}
                       onChange={e => setFunnelData({ ...funnelData, name: e.target.value })}
                     />
                     <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1">Email</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       placeholder="hello@ondo.mx"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
+                      className="w-full px-4 py-3 border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
                       value={funnelData.email}
                       onChange={e => setFunnelData({ ...funnelData, email: e.target.value })}
                     />
@@ -1260,7 +1264,7 @@ export default function App() {
                   <button
                     onClick={() => setFunnelStep(3)}
                     disabled={!funnelData.name || !funnelData.email}
-                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl transition-all shadow-lg disabled:opacity-50"
+                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 transition-all shadow-lg disabled:opacity-50"
                   >
                     {lang === 'es' ? 'RECIBIR MI 20%' : 'GET MY 20% OFF'}
                   </button>
@@ -1269,7 +1273,7 @@ export default function App() {
 
               {funnelStep === 3 && (
                 <>
-                  <div className="w-20 h-20 bg-ondo-green rounded-full flex items-center justify-center mb-6">
+                  <div className="w-20 h-20 bg-ondo-green flex items-center justify-center mb-6">
                     <CheckCircle className="w-10 h-10 text-white" />
                   </div>
                   <h2 className="font-title font-bold text-3xl uppercase leading-tight text-ondo-black mb-3">
@@ -1283,7 +1287,7 @@ export default function App() {
                       setShowPopupModal(false);
                       setPurchaseMode('subscription');
                     }}
-                    className="w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 rounded-xl shadow-lg"
+                    className="w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 shadow-lg"
                   >
                     {lang === 'es' ? 'EMPEZAR AHORA' : 'START NOW'}
                   </button>
