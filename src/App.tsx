@@ -211,13 +211,18 @@ export default function App() {
 
   // Subscription Popup / Funnel
   const [showPopupModal, setShowPopupModal] = useState(false);
-  const [funnelStep, setFunnelStep] = useState(1);
-  const [funnelData, setFunnelData] = useState({ name: '', email: '', choice: '' });
+  type FunnelStep = 'intro' | 'delivery' | 'plan' | 'soups' | 'summary';
+  const [funnelStep, setFunnelStep] = useState<FunnelStep>('intro');
+  const [funnelFrequency, setFunnelFrequency] = useState<'quincenal' | 'mensual'>('quincenal');
+  const [funnelQuantity, setFunnelQuantity] = useState<4 | 6 | 10>(4);
+  const [funnelSoupQty, setFunnelSoupQty] = useState<Record<string, number>>({});
+  const [funnelContingencies, setFunnelContingencies] = useState('');
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
+        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
           client.fetch('*[_type == "siteSettings"][0]'),
           client.fetch('*[_type == "productSettings"][0]'),
           client.fetch('*[_type == "processSettings"][0]'),
@@ -225,6 +230,7 @@ export default function App() {
           client.fetch('*[_type == "popupSettings"][0]'),
           client.fetch('*[_type == "heroSettings"][0]'),
           client.fetch('*[_type == "aboutSettings"][0]'),
+          client.fetch('*[_type == "funnelSettings"][0]'),
           client.fetch('*[_type == "productTag"] | order(order asc)'),
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
@@ -237,6 +243,7 @@ export default function App() {
           ...popupSettings,
           ...heroSettings,
           ...aboutSettings,
+          ...funnelSettingsData,
         });
         setTags(fetchedTags || []);
         setDeliveryZones(fetchedZones || null);
@@ -282,6 +289,70 @@ export default function App() {
           p.tags.some((tag: any) => tag?.slug?.current === slug)
         )
       );
+
+  const ONDO_CHOICE_ID = '__ondo_choice__';
+  const subscriptionProds = displayProducts.filter(
+    (p: any) => !p.purchaseType || p.purchaseType === 'subscription'
+  );
+  const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
+  const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
+  const funnelCanProceed = funnelTotal === funnelQuantity;
+
+  const openFunnel = () => {
+    setFunnelStep('intro');
+    setFunnelFrequency('quincenal');
+    setFunnelQuantity(4);
+    setFunnelSoupQty({});
+    setFunnelContingencies('');
+    // Reset delivery state for fresh check
+    setDeliveryStatus('idle');
+    setDeliveryAddress('');
+    setDeliveryPostal('');
+    setNotifyEmail('');
+    setEmailSent(false);
+    setShowPopupModal(true);
+  };
+
+  const handleCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+      const priceId = getSetting(`stripe${cap(funnelFrequency)}${funnelQuantity}`, '');
+      if (!priceId) {
+        alert(lang === 'es' ? 'Precio no configurado. Contacta al administrador.' : 'Price not configured. Contact admin.');
+        setIsCheckingOut(false);
+        return;
+      }
+      const soupNames = Object.entries(funnelSoupQty)
+        .filter(([, qty]: [string, number]) => qty > 0)
+        .map(([id, qty]: [string, number]) => {
+          if (id === ONDO_CHOICE_ID) return `Elección de ONDO x${qty}`;
+          const p = displayProducts.find((p: any) => p._id === id);
+          return p ? `${resolveText(p.title)} x${qty}` : `${id} x${qty}`;
+        });
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          frequency: funnelFrequency,
+          quantity: funnelQuantity,
+          selectedSoups: soupNames,
+          contingencies: funnelContingencies,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert(lang === 'es' ? 'Error al proceder al pago. Inténtalo de nuevo.' : 'Payment error. Please try again.');
+      setIsCheckingOut(false);
+    }
+  };
 
   const doAddToCart = (product: any) => {
     setCart(prev => {
@@ -383,6 +454,46 @@ export default function App() {
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((a, b) => a + (b.product.price * b.quantity), 0);
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
+
+  const activeDiscount = (() => {
+    const d2Min = getSetting('cartDiscount2Min', null);
+    const d1Min = getSetting('cartDiscount1Min', null);
+    if (d2Min !== null && cartItemCount >= d2Min) {
+      return { label: getSetting('cartDiscount2Label', ''), couponId: getSetting('cartDiscount2CouponId', '') };
+    }
+    if (d1Min !== null && cartItemCount >= d1Min) {
+      return { label: getSetting('cartDiscount1Label', ''), couponId: getSetting('cartDiscount1CouponId', '') };
+    }
+    return null;
+  })();
+
+  const handleCartCheckout = async () => {
+    setIsCheckingOut(true);
+    try {
+      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ priceId: item.product.stripePriceId, quantity: item.quantity }));
+      const missingPrice = cartItems.some((i: { priceId: string; quantity: number }) => !i.priceId);
+      if (missingPrice) {
+        alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
+        setIsCheckingOut(false);
+        return;
+      }
+      const res = await fetch('/api/create-cart-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cartItems, couponId: activeDiscount?.couponId || null }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Cart checkout error:', err);
+      alert(lang === 'es' ? 'Error al proceder al pago. Inténtalo de nuevo.' : 'Payment error. Please try again.');
+      setIsCheckingOut(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-ondo-beige text-ondo-black overflow-x-hidden font-body">
@@ -504,12 +615,22 @@ export default function App() {
         {/* Footer info */}
         {cart.length > 0 && (
           <div className="p-6 bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-1">
               <span className="font-title text-xl text-gray-500">{getSetting('subtotal', content.subtotal)}</span>
               <span className="font-title text-[28px] font-bold text-ondo-black">€{cartSubtotal.toFixed(2)}</span>
             </div>
-            <button className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md">
-              {getSetting('checkout', content.checkout)}
+            {activeDiscount && (
+              <div className="flex justify-between items-center mb-5">
+                <span className="font-title text-sm text-ondo-green uppercase tracking-wide">{activeDiscount.label}</span>
+              </div>
+            )}
+            {!activeDiscount && <div className="mb-5" />}
+            <button
+              onClick={handleCartCheckout}
+              disabled={isCheckingOut}
+              className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-60"
+            >
+              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : getSetting('checkout', content.checkout)}
             </button>
           </div>
         )}
@@ -539,7 +660,7 @@ export default function App() {
                  {resolveText(getSetting('heroSub', content.heroSub))}
               </p>
               <div>
-                <button className="bg-ondo-green text-white hover:bg-ondo-light-green hover:text-ondo-black font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm">
+                <button onClick={openFunnel} className="bg-ondo-green text-white hover:bg-ondo-light-green hover:text-ondo-black font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm">
                   {resolveText(getSetting('heroCTA', content.shopNow))}
                 </button>
               </div>
@@ -605,10 +726,10 @@ export default function App() {
                        style={{ color: getSetting('panel2Color', '#6ca53a') }}>
                       {resolveText(getSetting('panel2Mission', 'Sopas artesanales de temporada, en tu puerta cada semana. Suscríbete y ahorra 20% de por vida.'))}
                     </p>
-                    <button className="border-[3px] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 transition-colors w-full"
-                            style={{ 
-                              borderColor: getSetting('panel2Color', '#6ca53a'), 
-                              color: getSetting('panel2Color', '#6ca53a') 
+                    <button onClick={openFunnel} className="border-[3px] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 transition-colors w-full"
+                            style={{
+                              borderColor: getSetting('panel2Color', '#6ca53a'),
+                              color: getSetting('panel2Color', '#6ca53a')
                             }}
                             onMouseEnter={(e) => {
                               const target = e.currentTarget;
@@ -635,9 +756,9 @@ export default function App() {
                  <p className="text-white/80 font-body text-[13px] leading-relaxed mb-10 max-w-[95%]">
                    {resolveText(getSetting('panel3Text', 'Los socios del Club Ondo reciben sopas artesanales de temporada cada semana con 20% de descuento permanente, envío incluido y acceso anticipado a recetas exclusivas.\n\nMás de 500 personas ya se apapachan. ¿Te unes?'))}
                  </p>
-                 <a href="#" className="text-white font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
+                 <button onClick={openFunnel} className="text-white font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
                    {resolveText(getSetting('panel3CTA', 'ÚNETE AHORA'))}
-                 </a>
+                 </button>
                </div>
                <div className="flex-1 bg-[#bfe46b] relative overflow-hidden flex items-center justify-center min-h-[250px]">
                  <img src={getSetting('panel3Image', null) ? urlFor(getSetting('panel3Image', null)).url() : '/images/green-geo.png'} alt="Ondo Graphic" className="w-full h-full object-cover" />
@@ -768,11 +889,8 @@ export default function App() {
                     {resolveText(getSetting('clubBannerTitle', { es: 'Únete al club y obtén un 20% descuento', en: 'Join the club and get 20% off' }))}
                   </h2>
                 </div>
-                <button 
-                  onClick={() => {
-                    setFunnelStep(1);
-                    setShowPopupModal(true);
-                  }}
+                <button
+                  onClick={openFunnel}
                   className="bg-white text-ondo-orange hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-xl hover:scale-105 active:scale-95 shrink-0 relative z-10"
                 >
                   {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
@@ -782,22 +900,21 @@ export default function App() {
               {/* Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {filteredProducts.map((product: any) => (
-                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4">
-                    
-                    {/* Hover Image Area — click opens product detail */}
+                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => setSelectedProduct(product)}>
+
+                    {/* Hover Image Area */}
                     <div
-                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6 cursor-pointer`}
-                      onClick={() => setSelectedProduct(product)}
+                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6`}
                     >
-                      <img 
-                        src={resolveImage(product.image)} 
-                        alt={resolveText(product.title)} 
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0" 
+                      <img
+                        src={resolveImage(product.image)}
+                        alt={resolveText(product.title)}
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0"
                       />
-                      <img 
-                        src={resolveImage(product.hoverImage) || resolveImage(product.image)} 
-                        alt={`${resolveText(product.title)} hover`} 
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100" 
+                      <img
+                        src={resolveImage(product.hoverImage) || resolveImage(product.image)}
+                        alt={`${resolveText(product.title)} hover`}
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
                       />
                     </div>
 
@@ -817,9 +934,10 @@ export default function App() {
                       )}
                       <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
                       <div className="font-body text-ondo-green font-bold mb-5 text-[16px]">€{product.price?.toFixed(2)}</div>
-                      <div className="mt-auto">
+                      <div className="mt-auto" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
                           <button
+                            type="button"
                             onClick={() => {
                               const productInCart = cart.find(item => item.product._id === product._id);
                               if (productInCart && productInCart.quantity > 0) {
@@ -836,6 +954,7 @@ export default function App() {
                           </span>
 
                           <button
+                            type="button"
                             onClick={() => addToCart(product)}
                             className="p-3.5 w-1/3 flex justify-center cursor-pointer bg-ondo-green text-white"
                           >
@@ -1103,64 +1222,83 @@ export default function App() {
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedProduct(null)}>
           <div
-            className="bg-ondo-white shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]"
+            className="bg-ondo-white shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col md:flex-row relative"
             onClick={e => e.stopPropagation()}
           >
-            {/* Image */}
-            <div className={`${selectedProduct.bgColor || 'bg-ondo-beige'} relative w-full aspect-[4/3] shrink-0`}>
+            {/* Close button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
+            >
+              <X className="w-5 h-5 text-ondo-green" />
+            </button>
+
+            {/* Image column */}
+            <div className={`md:w-2/5 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden`} style={{ minHeight: '260px' }}>
               <img
-                src={selectedProduct.image}
-                alt={selectedProduct.title}
-                className="w-full h-full object-cover mix-blend-multiply"
+                src={resolveImage(selectedProduct.image)}
+                alt={resolveText(selectedProduct.title)}
+                className="w-full h-full object-cover mix-blend-multiply absolute inset-0"
               />
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 bg-white/80 backdrop-blur-sm p-2 shadow hover:bg-white transition-colors"
-              >
-                <X className="w-5 h-5 text-ondo-black" />
-              </button>
             </div>
-            {/* Content */}
-            <div className="p-7 overflow-y-auto flex flex-col gap-4">
-              <div className="flex items-center text-ondo-yellow text-[11px] tracking-widest">
-                ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
-              </div>
-              <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black">
-                {selectedProduct.title}
-              </h2>
-              {selectedProduct.tagline && (
-                <p className="font-body italic text-ondo-green font-bold text-[15px]">
-                  {typeof selectedProduct.tagline === 'object'
-                    ? selectedProduct.tagline[lang] || selectedProduct.tagline.es
-                    : selectedProduct.tagline}
+
+            {/* Content column */}
+            <div className="flex-1 p-8 md:p-10 flex flex-col justify-between bg-ondo-white">
+              <div>
+                {/* Label */}
+                <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">
+                  {lang === 'es' ? 'PRODUCTO' : 'PRODUCT'}
                 </p>
-              )}
-              <div className="font-body text-ondo-green font-bold text-[20px]">
-                €{selectedProduct.price?.toFixed(2)}
-              </div>
-              {selectedProduct.description && (
-                <p className="font-body text-gray-600 text-sm leading-relaxed">
-                  {typeof selectedProduct.description === 'object'
-                    ? selectedProduct.description[lang] || selectedProduct.description.es
-                    : selectedProduct.description}
-                </p>
-              )}
-              {/* Tags */}
-              {selectedProduct.tags && selectedProduct.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {selectedProduct.tags.map((tag: any) => (
-                    <span key={tag._id || tag} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[11px] font-title font-bold uppercase tracking-wide px-3 py-1`}>
-                      {tag.icon} {tag.name?.[lang] || tag.name?.es || tag}
-                    </span>
-                  ))}
+
+                {/* Stars */}
+                <div className="flex items-center text-ondo-yellow text-[11px] tracking-widest mb-4">
+                  ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
                 </div>
-              )}
-              {/* Add to cart from modal */}
+
+                {/* Title */}
+                <h2 className="font-title font-black text-[32px] md:text-[40px] uppercase leading-[0.92] text-ondo-green mb-4 tracking-tight">
+                  {resolveText(selectedProduct.title)}
+                </h2>
+                <div className="w-12 h-[3px] bg-ondo-green mb-5" />
+
+                {/* Tagline */}
+                {selectedProduct.tagline && (
+                  <p className="font-body italic text-ondo-green/80 font-bold text-[15px] mb-4">
+                    {resolveText(selectedProduct.tagline)}
+                  </p>
+                )}
+
+                {/* Price */}
+                <div className="font-title font-black text-[28px] text-ondo-green mb-5">
+                  €{selectedProduct.price?.toFixed(2)}
+                </div>
+
+                {/* Description */}
+                {selectedProduct.description && (
+                  <p className="font-body text-ondo-green/70 text-[14px] leading-relaxed mb-6">
+                    {resolveText(selectedProduct.description)}
+                  </p>
+                )}
+
+                {/* Tags */}
+                {selectedProduct.tags && selectedProduct.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {selectedProduct.tags.map((tag: any) => (
+                      <span key={tag._id || tag} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[10px] font-title font-bold uppercase tracking-wide px-3 py-1`}>
+                        {tag.icon} {resolveText(tag.name)}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* CTA */}
               <button
+                type="button"
                 onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                className="mt-2 w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 text-sm"
+                className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
               >
-                {lang === 'es' ? 'Añadir al carrito' : 'Add to cart'}
+                {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
               </button>
             </div>
           </div>
@@ -1170,10 +1308,7 @@ export default function App() {
       {/* ── STATIC FLOATING BUTTON (BOTTOM LEFT) ── */}
       {getSetting('enabled', true) !== false && (
         <button
-          onClick={() => {
-            setFunnelStep(1);
-            setShowPopupModal(true);
-          }}
+          onClick={openFunnel}
           className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
@@ -1183,117 +1318,568 @@ export default function App() {
 
       {/* ── MODAL: Subscription Funnel Popup ── */}
       {showPopupModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowPopupModal(false)}>
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowPopupModal(false)}
+        >
           <div
-            className="bg-ondo-white shadow-2xl max-w-sm w-full overflow-hidden flex flex-col relative"
+            className="bg-ondo-white shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col relative"
             onClick={e => e.stopPropagation()}
           >
             <button
               onClick={() => setShowPopupModal(false)}
-              className="absolute top-4 right-4 bg-white/50 backdrop-blur-sm p-2 shadow hover:bg-white transition-colors z-10"
+              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
             >
-              <X className="w-5 h-5 text-ondo-black" />
+              <X className="w-5 h-5 text-ondo-green" />
             </button>
-            
-            {getSetting('popupImage') && funnelStep === 1 && (
-              <div className="w-full aspect-video bg-ondo-beige relative shrink-0">
-                <img
-                  src={resolveImage(getSetting('popupImage'))}
-                  alt="Subscription Popup"
-                  className="w-full h-full object-cover mix-blend-multiply"
-                />
+
+            {/* ── PASO 1: INTRO — estética sección About ────────────────── */}
+            {funnelStep === 'intro' && (
+              <div className="flex flex-col md:flex-row min-h-[480px]">
+                {/* Imagen lateral (si existe en Sanity) */}
+                {getSetting('introImage') && (
+                  <div className="md:w-2/5 shrink-0 overflow-hidden">
+                    <img
+                      src={resolveImage(getSetting('introImage'))}
+                      alt="ONDO Club"
+                      className="w-full h-full object-cover"
+                      style={{ minHeight: '220px' }}
+                    />
+                  </div>
+                )}
+                <div className="flex-1 p-8 md:p-10 flex flex-col justify-between bg-ondo-white">
+                  {/* Etiqueta sección */}
+                  <div>
+                    <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">
+                      {lang === 'es' ? 'SUSCRIPCIÓN' : 'SUBSCRIPTION'}
+                    </p>
+                    {/* Título grande */}
+                    <h2 className="font-title font-black text-[48px] md:text-[62px] uppercase leading-[0.88] text-ondo-green mb-6 tracking-tight">
+                      {resolveText(getSetting('introTitle', { es: 'ÚNETE\nAL CLUB\nONDO', en: 'JOIN\nTHE ONDO\nCLUB' }))}
+                    </h2>
+                    <div className="w-12 h-[3px] bg-ondo-green mb-6" />
+                    <p className="font-body text-ondo-green text-[15px] md:text-[17px] font-bold leading-relaxed mb-8">
+                      {resolveText(getSetting('introDescription', { es: 'Sopas artesanales de temporada directamente en tu puerta.', en: 'Seasonal artisan soups delivered straight to your door.' }))}
+                    </p>
+                    {/* Beneficios con guión */}
+                    <ul className="mb-10 space-y-2">
+                      {(getSetting('introBenefits') || [
+                        { es: '20% de descuento en cada pedido', en: '20% off every order' },
+                        { es: 'Entrega a domicilio incluida', en: 'Free home delivery included' },
+                        { es: 'Cancela cuando quieras', en: 'Cancel anytime' },
+                        { es: 'Acceso anticipado a recetas exclusivas', en: 'Early access to exclusive recipes' },
+                      ]).map((b: any, i: number) => (
+                        <li key={i} className="font-body text-ondo-green text-[14px] flex gap-3 leading-snug">
+                          <span className="font-title font-black shrink-0 mt-0.5">—</span>
+                          <span>{b[lang] || b.es || b.en || ''}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {/* CTA estilo outlined */}
+                  <button
+                    onClick={() => setFunnelStep('delivery')}
+                    className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
+                  >
+                    {resolveText(getSetting('introCtaText', { es: 'COMENZAR', en: 'GET STARTED' }))} &rarr;
+                  </button>
+                </div>
               </div>
             )}
 
-            <div className="p-8 text-center flex flex-col items-center">
-              {funnelStep === 1 && (
-                <>
-                  <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
-                    {lang === 'es' ? '¿Cada cuánto te apapachamos?' : 'How often should we pamper you?'}
-                  </h2>
-                  <p className="font-body text-gray-500 text-[15px] mb-8">
-                    {lang === 'es' ? 'Selecciona tu frecuencia preferida para ahorrar un 20%.' : 'Select your preferred frequency to save 20%.'}
+            {/* ── PASO 2: ZONA DE REPARTO ───────────────────────────────── */}
+            {funnelStep === 'delivery' && (
+              <div className="p-8 md:p-10 bg-ondo-white">
+                <button
+                  onClick={() => setFunnelStep('intro')}
+                  className="text-ondo-green/50 font-body text-sm mb-8 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                >
+                  ← {lang === 'es' ? 'Atrás' : 'Back'}
+                </button>
+
+                {deliveryStatus === 'idle' || deliveryStatus === 'checking' ? (
+                  <>
+                    <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">
+                      {lang === 'es' ? 'ZONA DE REPARTO' : 'DELIVERY ZONE'}
+                    </p>
+                    <h2 className="font-title font-black text-[28px] md:text-[34px] uppercase leading-tight text-ondo-green mb-3">
+                      {lang === 'es' ? '¿REPARTIMOS\nEN TU ZONA?' : 'DO WE DELIVER\nTO YOUR AREA?'}
+                    </h2>
+                    <div className="w-12 h-[3px] bg-ondo-green mb-6" />
+                    <p className="font-body text-ondo-green/70 text-[14px] leading-relaxed mb-8">
+                      {lang === 'es'
+                        ? 'Introduce tu código postal para confirmar que hacemos reparto en tu área.'
+                        : 'Enter your postal code to confirm we deliver to your area.'}
+                    </p>
+                    <div className="flex flex-col gap-3 mb-6">
+                      <input
+                        type="text"
+                        value={deliveryAddress}
+                        onChange={e => setDeliveryAddress(e.target.value)}
+                        placeholder={lang === 'es' ? 'Dirección (opcional)' : 'Address (optional)'}
+                        className="w-full border border-ondo-green/20 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30"
+                      />
+                      <input
+                        type="text"
+                        value={deliveryPostal}
+                        onChange={e => setDeliveryPostal(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && deliveryPostal.trim() && checkDelivery()}
+                        placeholder={lang === 'es' ? 'Código postal *' : 'Postal code *'}
+                        className="w-full border border-ondo-green/20 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30"
+                      />
+                    </div>
+                    <button
+                      onClick={checkDelivery}
+                      disabled={!deliveryPostal.trim() || deliveryStatus === 'checking'}
+                      className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {deliveryStatus === 'checking'
+                        ? (lang === 'es' ? 'Comprobando...' : 'Checking...')
+                        : (lang === 'es' ? 'VERIFICAR ZONA' : 'CHECK ZONE')}
+                    </button>
+                  </>
+                ) : deliveryStatus === 'ok' ? (
+                  <div className="flex flex-col gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-ondo-green flex items-center justify-center shrink-0">
+                        <CheckCircle className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="font-title font-black text-[22px] uppercase leading-tight text-ondo-green">
+                          {lang === 'es' ? 'GENIAL, REPARTIMOS AHÍ' : 'GREAT, WE DELIVER THERE'}
+                        </h2>
+                        <p className="font-body text-[13px] text-gray-500 mt-1">
+                          {deliveryZones?.inZoneMessageEs && lang === 'es'
+                            ? deliveryZones.inZoneMessageEs
+                            : deliveryZones?.inZoneMessageEn || (lang === 'es' ? 'Podemos llegar hasta tu puerta.' : 'We can reach your door.')}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setFunnelStep('plan')}
+                      className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px]"
+                    >
+                      {lang === 'es' ? 'ELEGIR MI PLAN' : 'CHOOSE MY PLAN'} &rarr;
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-ondo-orange flex items-center justify-center shrink-0">
+                        <AlertTriangle className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h2 className="font-title font-black text-[20px] uppercase leading-tight text-ondo-black">
+                          {lang === 'es' ? 'AÚN NO LLEGAMOS AHÍ' : 'NOT IN OUR AREA YET'}
+                        </h2>
+                        <p className="font-body text-[13px] text-gray-500 mt-1">
+                          {deliveryZones?.outOfZoneMessageEs && lang === 'es'
+                            ? deliveryZones.outOfZoneMessageEs
+                            : deliveryZones?.outOfZoneMessageEn || (lang === 'es' ? 'Pronto repartiremos en tu zona.' : "We'll be in your area soon.")}
+                        </p>
+                      </div>
+                    </div>
+                    {!emailSent ? (
+                      <div className="flex flex-col gap-3">
+                        <p className="font-body text-[13px] text-gray-500">
+                          {lang === 'es' ? 'Déjanos tu correo y te avisamos cuando lleguemos.' : "Leave your email and we'll notify you when we arrive."}
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="email"
+                            value={notifyEmail}
+                            onChange={e => setNotifyEmail(e.target.value)}
+                            placeholder={lang === 'es' ? 'tu@correo.com' : 'your@email.com'}
+                            className="flex-1 border border-gray-200 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-orange"
+                          />
+                          <button
+                            onClick={submitNotifyEmail}
+                            disabled={!notifyEmail.trim()}
+                            className="bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-5 py-3 text-[11px] disabled:opacity-40 hover:bg-ondo-green transition-colors"
+                          >
+                            {lang === 'es' ? 'AVISAR' : 'NOTIFY'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 bg-ondo-beige px-4 py-3">
+                        <CheckCircle className="w-5 h-5 text-ondo-green shrink-0" />
+                        <p className="font-body text-[13px] text-ondo-green font-bold">
+                          {lang === 'es' ? 'Te avisamos en cuanto lleguemos.' : "We'll notify you as soon as we arrive."}
+                        </p>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => { setDeliveryStatus('idle'); setDeliveryPostal(''); }}
+                      className="font-body text-[12px] text-gray-400 underline underline-offset-2 text-left hover:text-ondo-black transition-colors"
+                    >
+                      {lang === 'es' ? 'Probar con otro código postal' : 'Try a different postal code'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── PASO 3: PLAN — selector visual con dots ───────────────── */}
+            {funnelStep === 'plan' && (() => {
+              const deliveries = funnelFrequency === 'quincenal' ? 6 : 3;
+              const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+              const planPrice = getSetting(`price${cap(funnelFrequency)}${funnelQuantity}`, '') as string;
+              return (
+                <div className="p-8 md:p-10 bg-ondo-white">
+                  <button
+                    onClick={() => setFunnelStep('delivery')}
+                    className="text-ondo-green/50 font-body text-sm mb-8 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                  >
+                    ← {lang === 'es' ? 'Atrás' : 'Back'}
+                  </button>
+
+                  <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-1 inline-block pr-6">
+                    {resolveText(getSetting('planTitle', { es: 'TU PLAN', en: 'YOUR PLAN' }))}
                   </p>
-                  <div className="w-full flex flex-col gap-3 mb-8">
-                    {[
-                      { id: 'weekly', es: 'Cada semana', en: 'Every week' },
-                      { id: 'biweekly', es: 'Cada 2 semanas', en: 'Every 2 weeks' },
-                      { id: 'monthly', es: 'Cada mes', en: 'Every month' }
-                    ].map(opt => (
-                      <button
-                        key={opt.id}
-                        onClick={() => {
-                          setFunnelData({ ...funnelData, choice: opt.id });
-                          setFunnelStep(2);
-                        }}
-                        className={`w-full py-4 font-title font-bold uppercase tracking-widest border-2 transition-all ${funnelData.choice === opt.id ? 'bg-ondo-orange text-white border-ondo-orange' : 'border-ondo-orange/10 text-ondo-black hover:border-ondo-orange'}`}
+                  <p className="font-body text-gray-400 text-[12px] mt-2 mb-8">
+                    {resolveText(getSetting('subscriptionDurationLabel', { es: '3 meses · sin compromiso · cancela cuando quieras', en: '3 months · no commitment · cancel anytime' }))}
+                  </p>
+
+                  {/* Frecuencia — dos cards con info de entregas */}
+                  <p className="font-title text-[10px] uppercase tracking-widest text-gray-400 mb-3">
+                    {resolveText(getSetting('frequencyLabel', { es: 'Frecuencia de entrega', en: 'Delivery frequency' }))}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                    {(['quincenal', 'mensual'] as const).map(freq => {
+                      const sel = funnelFrequency === freq;
+                      const freqDeliveries = freq === 'quincenal' ? 6 : 3;
+                      const freqDeliveriesLabel = freq === 'quincenal'
+                        ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
+                        : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
+                      return (
+                        <button
+                          key={freq}
+                          onClick={() => { setFunnelFrequency(freq); setFunnelSoupQty({}); }}
+                          className={`p-5 border-2 flex flex-col gap-1 text-left transition-all ${sel ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
+                        >
+                          <span className={`font-title font-black uppercase text-[15px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
+                            {freq === 'quincenal'
+                              ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
+                              : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
+                          </span>
+                          <span className={`font-body text-[12px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
+                            {freqDeliveriesLabel}
+                          </span>
+                          <div className="flex gap-1 mt-2">
+                            {Array.from({ length: freqDeliveries }).map((_, i) => (
+                              <span key={i} className={`w-2 h-2 rounded-full ${sel ? 'bg-white/60' : 'bg-ondo-green/20'}`} />
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Cantidad — cards con total acumulado */}
+                  <p className="font-title text-[10px] uppercase tracking-widest text-gray-400 mb-4">
+                    {resolveText(getSetting('quantityLabel', { es: 'Sopas por envío', en: 'Soups per delivery' }))}
+                  </p>
+                  <div className="grid grid-cols-3 gap-3 mb-8">
+                    {([4, 6, 10] as const).map(qty => {
+                      const selected = funnelQuantity === qty;
+                      const total = qty * deliveries;
+                      return (
+                        <button
+                          key={qty}
+                          onClick={() => { setFunnelQuantity(qty); setFunnelSoupQty({}); }}
+                          className={`relative p-4 border-2 flex flex-col gap-2 transition-all text-left ${selected ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
+                        >
+                          {qty === 6 && (
+                            <span className={`absolute top-2 right-2 font-title font-black text-[7px] uppercase tracking-widest px-1.5 py-0.5 ${selected ? 'bg-white text-ondo-green' : 'bg-ondo-orange text-white'}`}>
+                              {lang === 'es' ? 'Popular' : 'Popular'}
+                            </span>
+                          )}
+                          {/* Dot grid — sopas por envío */}
+                          <div className="flex flex-wrap gap-1 min-h-[24px]">
+                            {Array.from({ length: qty }).map((_, i) => (
+                              <span key={i} className={`w-2.5 h-2.5 rounded-full ${selected ? 'bg-white/80' : 'bg-ondo-green/25'}`} />
+                            ))}
+                          </div>
+                          {/* Cantidad por envío */}
+                          <div className="leading-none">
+                            <span className={`font-title font-black text-[36px] leading-none ${selected ? 'text-white' : 'text-ondo-black'}`}>{qty}</span>
+                            <span className={`font-body text-[10px] block mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
+                              {lang === 'es' ? 'sopas/envío' : 'soups/delivery'}
+                            </span>
+                          </div>
+                          {/* Total acumulado */}
+                          <div className={`text-[11px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
+                            {total} {lang === 'es' ? 'en total' : 'total'}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Botón con precio */}
+                  <button
+                    onClick={() => setFunnelStep('soups')}
+                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] flex items-center justify-center gap-3"
+                  >
+                    <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
+                    {planPrice && (
+                      <span className="font-body font-normal text-[13px] text-white/80 normal-case tracking-normal">
+                        · {planPrice}
+                      </span>
+                    )}
+                    <span>&rarr;</span>
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* ── PASO 3: SELECCIÓN CON CANTIDAD ───────────────────────── */}
+            {/* ── PASO 4: SELECCIÓN CON CANTIDAD ───────────────────────── */}
+            {funnelStep === 'soups' && (
+              <div className="p-6 md:p-8 bg-ondo-white">
+                <button
+                  onClick={() => setFunnelStep('plan')}
+                  className="text-ondo-green/50 font-body text-sm mb-4 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                >
+                  ← {lang === 'es' ? 'Atrás' : 'Back'}
+                </button>
+
+                <h2 className="font-title font-black text-[22px] md:text-[26px] uppercase leading-tight text-ondo-green mb-1">
+                  {resolveText(getSetting('selectionTitle', { es: '¿QUÉ SOPAS QUIERES?', en: 'PICK YOUR SOUPS' }))}
+                </h2>
+
+                {/* Barra de progreso */}
+                <div className="mb-6 mt-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="font-title font-bold text-[11px] uppercase tracking-widest text-ondo-green">
+                      {funnelTotal}/{funnelQuantity} {lang === 'es' ? 'sopas' : 'soups'}
+                    </span>
+                    {funnelRemaining > 0 && (
+                      <span className="font-body text-[12px] text-gray-400">
+                        {lang === 'es' ? `${funnelRemaining} por elegir` : `${funnelRemaining} left`}
+                      </span>
+                    )}
+                    {funnelRemaining === 0 && (
+                      <span className="font-body text-[12px] text-ondo-green font-bold">
+                        {lang === 'es' ? 'Listo' : 'Done'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 bg-gray-100">
+                    <div
+                      className="h-full bg-ondo-green transition-all duration-300"
+                      style={{ width: `${Math.min((funnelTotal / funnelQuantity) * 100, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Grid de productos con stepper — ONDO choice es la primera card */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {/* Card "Elección de ONDO" — integrada en el grid */}
+                  {(() => {
+                    const ondoQty = funnelSoupQty[ONDO_CHOICE_ID] || 0;
+                    const ondoImg = getSetting('ondoChoiceImage');
+                    const ondoBg = getSetting('ondoChoiceBgColor', 'bg-ondo-beige');
+                    return (
+                      <div className={`border transition-all ${ondoQty > 0 ? 'border-ondo-green' : 'border-gray-100'}`}>
+                        <div className={`aspect-[4/3] ${ondoBg} relative overflow-hidden`}>
+                          {ondoImg ? (
+                            <img
+                              src={resolveImage(ondoImg)}
+                              alt={resolveText(getSetting('ondoChoiceTitle', { es: 'Elección de ONDO', en: "ONDO's Choice" }))}
+                              className="w-full h-full object-cover mix-blend-multiply"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+                              <span className="font-title font-black text-[32px] text-ondo-orange/40 leading-none">?</span>
+                              <span className="font-title font-black text-[9px] uppercase tracking-widest text-ondo-orange/40">ONDO</span>
+                            </div>
+                          )}
+                          {ondoQty > 0 && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ondo-green flex items-center justify-center">
+                              <span className="font-title font-black text-white text-[10px]">{ondoQty}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="font-title font-bold uppercase text-[10px] truncate text-ondo-black leading-tight">
+                            {resolveText(getSetting('ondoChoiceTitle', { es: 'Elección de ONDO', en: "ONDO's Choice" }))}
+                          </p>
+                          <p className="font-body text-[9px] text-gray-400 mt-0.5 leading-tight line-clamp-2 mb-2">
+                            {resolveText(getSetting('ondoChoiceDescription', { es: 'Sorpresa de temporada seleccionada por nuestro chef', en: 'Seasonal surprise selected by our chef' }))}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => setFunnelSoupQty(prev => { const n = { ...prev }; if ((n[ONDO_CHOICE_ID] || 0) > 0) n[ONDO_CHOICE_ID]--; if (n[ONDO_CHOICE_ID] === 0) delete n[ONDO_CHOICE_ID]; return n; })}
+                              disabled={ondoQty === 0}
+                              className="w-7 h-7 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="font-title font-bold text-[16px] text-ondo-black w-6 text-center">{ondoQty}</span>
+                            <button
+                              onClick={() => { if (funnelRemaining <= 0) return; setFunnelSoupQty(prev => ({ ...prev, [ONDO_CHOICE_ID]: (prev[ONDO_CHOICE_ID] || 0) + 1 })); }}
+                              disabled={funnelRemaining <= 0}
+                              className="w-7 h-7 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {subscriptionProds.map((p: any) => {
+                    const qty = funnelSoupQty[p._id] || 0;
+                    return (
+                      <div
+                        key={p._id}
+                        className={`border transition-all ${qty > 0 ? 'border-ondo-green' : 'border-gray-100'}`}
                       >
-                        {lang === 'es' ? opt.es : opt.en}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
+                        <div className={`aspect-[4/3] ${p.bgColor || 'bg-ondo-beige'} relative overflow-hidden`}>
+                          <img
+                            src={resolveImage(p.image)}
+                            alt={resolveText(p.title)}
+                            className="w-full h-full object-cover mix-blend-multiply"
+                          />
+                          {qty > 0 && (
+                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ondo-green flex items-center justify-center">
+                              <span className="font-title font-black text-white text-[10px]">{qty}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="font-title font-bold uppercase text-[10px] truncate text-ondo-black leading-tight mb-2">
+                            {resolveText(p.title)}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => setFunnelSoupQty(prev => { const n = { ...prev }; if ((n[p._id] || 0) > 0) n[p._id]--; if (n[p._id] === 0) delete n[p._id]; return n; })}
+                              disabled={qty === 0}
+                              className="w-7 h-7 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className="font-title font-bold text-[16px] text-ondo-black w-6 text-center">{qty}</span>
+                            <button
+                              onClick={() => { if (funnelRemaining <= 0) return; setFunnelSoupQty(prev => ({ ...prev, [p._id]: (prev[p._id] || 0) + 1 })); }}
+                              disabled={funnelRemaining <= 0}
+                              className="w-7 h-7 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-              {funnelStep === 2 && (
-                <>
-                  <h2 className="font-title font-bold text-2xl uppercase leading-tight text-ondo-black mb-3">
-                    {lang === 'es' ? 'Casi listo' : 'Almost ready'}
-                  </h2>
-                  <p className="font-body text-gray-500 text-[15px] mb-6">
-                    {lang === 'es' ? 'Dinos a dónde enviamos tu código de descuento.' : 'Tell us where to send your discount code.'}
-                  </p>
-                  <div className="w-full flex flex-col gap-3 mb-8 text-left">
-                    <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1">{lang === 'es' ? 'Nombre completo' : 'Full name'}</label>
-                    <input 
-                      type="text" 
-                      placeholder="John Doe"
-                      className="w-full px-4 py-3 border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
-                      value={funnelData.name}
-                      onChange={e => setFunnelData({ ...funnelData, name: e.target.value })}
-                    />
-                    <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 px-1">Email</label>
-                    <input
-                      type="email"
-                      placeholder="hello@ondo.mx"
-                      className="w-full px-4 py-3 border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange"
-                      value={funnelData.email}
-                      onChange={e => setFunnelData({ ...funnelData, email: e.target.value })}
-                    />
-                  </div>
-                  <button
-                    onClick={() => setFunnelStep(3)}
-                    disabled={!funnelData.name || !funnelData.email}
-                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 transition-all shadow-lg disabled:opacity-50"
-                  >
-                    {lang === 'es' ? 'RECIBIR MI 20%' : 'GET MY 20% OFF'}
-                  </button>
-                </>
-              )}
+                {/* Contingencias */}
+                <div className="mb-6">
+                  <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                    {resolveText(getSetting('contingenciesLabel', { es: 'Alergias o preferencias especiales', en: 'Allergies or special preferences' }))}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={funnelContingencies}
+                    onChange={e => setFunnelContingencies(e.target.value)}
+                    placeholder={resolveText(getSetting('contingenciesPlaceholder', { es: 'Ej: sin gluten, sin picante, sin lácteos...', en: 'E.g. gluten-free, no spice, dairy-free...' })) || ''}
+                    className="w-full px-4 py-3 border border-gray-100 font-body text-sm focus:outline-none focus:border-ondo-orange resize-none"
+                  />
+                </div>
 
-              {funnelStep === 3 && (
-                <>
-                  <div className="w-20 h-20 bg-ondo-green flex items-center justify-center mb-6">
-                    <CheckCircle className="w-10 h-10 text-white" />
+                <button
+                  onClick={() => setFunnelStep('summary')}
+                  disabled={!funnelCanProceed}
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {lang === 'es' ? 'SIGUIENTE' : 'NEXT'} &rarr;
+                </button>
+              </div>
+            )}
+
+            {/* ── PASO 4: RESUMEN + CHECKOUT ────────────────────────────── */}
+            {/* ── PASO 5: RESUMEN + CHECKOUT ────────────────────────────── */}
+            {funnelStep === 'summary' && (
+              <div className="p-8 md:p-10 bg-ondo-white">
+                <button
+                  onClick={() => setFunnelStep('soups')}
+                  className="text-ondo-green/50 font-body text-sm mb-6 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                >
+                  ← {lang === 'es' ? 'Atrás' : 'Back'}
+                </button>
+                <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">
+                  {resolveText(getSetting('summaryTitle', { es: 'RESUMEN', en: 'SUMMARY' }))}
+                </p>
+
+                <div className="border border-ondo-green/20 divide-y divide-ondo-green/10 mb-8">
+                  {/* Plan */}
+                  <div className="flex justify-between items-center px-5 py-4">
+                    <span className="font-title text-[11px] uppercase tracking-widest text-gray-400">
+                      {lang === 'es' ? 'Plan' : 'Plan'}
+                    </span>
+                    <span className="font-title font-bold text-ondo-black text-[14px]">
+                      {funnelFrequency === 'quincenal'
+                        ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
+                        : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
+                      {' · '}{funnelQuantity} {lang === 'es' ? 'sopas' : 'soups'}
+                    </span>
                   </div>
-                  <h2 className="font-title font-bold text-3xl uppercase leading-tight text-ondo-black mb-3">
-                    {lang === 'es' ? '¡BIENVENIDO!' : 'WELCOME!'}
-                  </h2>
-                  <p className="font-body text-gray-500 text-[15px] mb-8">
-                    {lang === 'es' ? 'Ya eres parte del club. Revisa tu email para activar tu beneficio.' : 'You are now part of the club. Check your email to activate your benefit.'}
-                  </p>
-                  <button
-                    onClick={() => {
-                      setShowPopupModal(false);
-                      setPurchaseMode('subscription');
-                    }}
-                    className="w-full bg-ondo-green text-white font-title font-bold uppercase tracking-widest py-4 shadow-lg"
-                  >
-                    {lang === 'es' ? 'EMPEZAR AHORA' : 'START NOW'}
-                  </button>
-                </>
-              )}
-            </div>
+
+                  {/* Sopas */}
+                  <div className="px-5 py-4">
+                    <span className="font-title text-[11px] uppercase tracking-widest text-gray-400 block mb-3">
+                      {lang === 'es' ? 'Sopas' : 'Soups'}
+                    </span>
+                    <ul className="space-y-1.5">
+                      {Object.entries(funnelSoupQty)
+                        .filter(([, qty]: [string, number]) => qty > 0)
+                        .map(([id, qty]: [string, number]) => {
+                          const name = id === ONDO_CHOICE_ID
+                            ? resolveText(getSetting('letOndoChooseText', { es: 'Elección de ONDO', en: "ONDO's Choice" }))
+                            : resolveText(displayProducts.find((p: any) => p._id === id)?.title) || id;
+                          return (
+                            <li key={id} className="font-body text-[14px] text-ondo-black flex items-center justify-between">
+                              <span className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-ondo-green rounded-full shrink-0" />
+                                {name}
+                              </span>
+                              <span className="font-title font-bold text-ondo-green text-[13px]">x{qty}</span>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </div>
+
+                  {/* Notas */}
+                  {funnelContingencies && (
+                    <div className="px-5 py-4">
+                      <span className="font-title text-[11px] uppercase tracking-widest text-gray-400 block mb-1">
+                        {lang === 'es' ? 'Notas' : 'Notes'}
+                      </span>
+                      <p className="font-body text-sm text-gray-600 italic">{funnelContingencies}</p>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut}
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] mb-4 disabled:opacity-60"
+                >
+                  {isCheckingOut
+                    ? (lang === 'es' ? 'Procesando...' : 'Processing...')
+                    : resolveText(getSetting('checkoutButtonText', { es: 'PROCEDER AL PAGO', en: 'PROCEED TO PAYMENT' }))}
+                  {!isCheckingOut && ' →'}
+                </button>
+                <p className="text-center font-body text-[11px] text-gray-400">
+                  {resolveText(getSetting('termsText', { es: 'Al continuar aceptas nuestros términos y condiciones. Cancela cuando quieras.', en: 'By continuing you accept our terms and conditions. Cancel anytime.' }))}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

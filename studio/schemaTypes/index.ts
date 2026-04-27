@@ -11,9 +11,10 @@ import manifestoSettings from './manifestoSettings'
 import { deliveryLead } from './deliveryLead'
 import { deliveryZones } from './deliveryZones'
 import { popupSettings } from './popupSettings'
+import { funnelSettings } from './funnelSettings'
 
 export const schemaTypes = [
-  product, 
+  product,
   productTag,
   translationRecord,
   bannerSettings,
@@ -26,5 +27,6 @@ export const schemaTypes = [
   deliveryLead,
   deliveryZones,
   popupSettings,
+  funnelSettings,
 ]
 
