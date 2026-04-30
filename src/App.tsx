@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, X, ChevronRight, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Search, User, X, ChevronRight, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
 
 const t = {
@@ -504,7 +504,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-ondo-beige text-ondo-black overflow-x-hidden font-body">
+    <div className="min-h-screen bg-ondo-beige text-ondo-black font-body">
       {/* Top Banner (ROJO BANNER) */}
       <div className="bg-ondo-red text-white py-2 text-xs md:text-sm font-bold tracking-wider uppercase font-title leading-none overflow-hidden whitespace-nowrap">
         <div className="animate-marquee inline-flex w-[200%] justify-around">
@@ -514,7 +514,7 @@ export default function App() {
       </div>
       
       {/* Navbar (Crema Suave) */}
-      <nav className="bg-ondo-beige border-b border-black/5">
+      <nav className="bg-ondo-beige border-b border-black/5 sticky top-0 z-30">
         <div className="w-full mx-auto px-6 py-5 md:py-7 flex items-center justify-between relative">
           <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[15px] tracking-wide">
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSetting('navShop', content.navShop)}</a>
@@ -661,12 +661,11 @@ export default function App() {
         <div className="absolute inset-0 bg-ondo-beige/10 z-0 transition-opacity duration-300"></div>
         
         {/* Render hero images centered in the right half */}
-        <div className="absolute inset-y-0 right-0 flex items-center justify-center pointer-events-none z-0 w-full md:w-1/2">
+        <div className="absolute bottom-0 right-0 flex items-end justify-center pointer-events-none z-0 h-[50vh] w-full md:inset-y-0 md:h-auto md:w-1/2 md:items-center pr-4 md:pr-12 lg:pr-20">
             <img
               src={getSetting('heroImages', null)?.[0] ? urlFor(getSetting('heroImages', null)[0]).url() : '/images/green-soup.png'}
               alt="Hero Soup"
-              className="w-auto object-contain scale-100 md:scale-110"
-              style={{ maxHeight: '85vh', maxWidth: '90%' }}
+              className="h-full w-auto object-contain md:h-auto md:w-[90%] lg:w-[85%] md:max-h-[90vh]"
             />
         </div>
 
@@ -694,17 +693,56 @@ export default function App() {
         <section id="manifesto" className="bg-ondo-beige py-8 lg:py-16 px-4 lg:px-6">
           <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             
-            {/* Panel 1 */}
+            {/* Panel 1 — CTA Column */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
                  style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a') }}>
-               <div className="z-10">
-                 <h2 className="font-title text-[70px] lg:text-[90px] font-bold leading-[0.85] tracking-tighter uppercase break-words"
-                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   {resolveText(getSetting('panel1TitleTop', 'SOUP\nSOUP'))}
+               {/* Top eyebrow */}
+               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
+                  style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
+                 EL CLUB · MEMBRESÍA
+               </p>
+
+               {/* Main Title */}
+               <div className="z-10 flex-1">
+                 <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
+                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
+                   EL<br />CLUB
                  </h2>
+                 <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
+                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
+                   ONDO.
+                 </h2>
+
+                 {/* Divider */}
+                 <div className="w-10 h-[3px] my-6" style={{ backgroundColor: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.4 }} />
+
+                 {/* Subheadline */}
+                 <p className="font-body font-bold text-[15px] leading-snug mb-3"
+                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
+                   Échate un clavado<br />a la <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>soupscripción</span><br />de Ondo.
+                 </p>
+
+                 {/* Tagline italic */}
+                 <p className="font-body italic text-[14px] leading-relaxed mt-6 mb-8"
+                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.85 }}>
+                   Para los que saben que una<br />buena sopa cambia el día.
+                 </p>
                </div>
+
+               {/* CTA at bottom */}
+               <div className="z-10 mt-auto">
+                 <button
+                   onClick={openFunnel}
+                   className="group flex items-center gap-3 font-title font-bold text-[13px] uppercase tracking-widest transition-all hover:gap-5"
+                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}
+                 >
+                   ÚNETE AL CLUB
+                   <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                 </button>
+               </div>
+
                {/* Center Logo shape via mask */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120px] opacity-80" 
+               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120px] opacity-10" 
                     style={{ 
                       WebkitMaskImage: "url('/images/ondo-logo-orange.png')", 
                       maskImage: "url('/images/ondo-logo-orange.png')", 
@@ -714,84 +752,138 @@ export default function App() {
                       maskRepeat: "no-repeat", 
                       WebkitMaskPosition: "center", 
                       maskPosition: "center",
-                      backgroundColor: getSetting('panel1TextColor2', '#bfe46b')
+                      backgroundColor: getSetting('panel1TextColor1', '#f1f3b0')
                     }} />
-               <div className="flex flex-col items-end z-10 w-full mt-auto mb-4">
-                 <span className="font-title lowercase text-2xl tracking-widest mb-4" 
-                       style={{ fontFamily: 'Caveat, cursive', color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   {resolveText(getSetting('panel1City', 'el club'))}
-                 </span>
-               </div>
-               <div className="z-10">
-                 <h2 className="font-title text-[70px] lg:text-[100px] font-bold leading-[0.8] tracking-tighter uppercase break-words"
-                     style={{ color: getSetting('panel1TextColor2', '#bfe46b') }}>
-                   {resolveText(getSetting('panel1TitleBottom', 'FIRST'))}
-                 </h2>
-               </div>
             </div>
             
-            {/* Panel 2 */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-cover bg-center flex flex-col items-center justify-center p-4 relative"
-                 style={{ backgroundImage: `url('${getSetting('panel2Image', null) ? urlFor(getSetting('panel2Image', null)).url() : '/images/ondo-113.JPG'}')` }}>
-               <div className="w-full h-full max-w-[340px] bg-ondo-white shadow-2xl flex flex-col justify-between p-6 lg:p-8 text-center relative z-10 mx-auto my-auto max-h-[85%] md:max-h-[90%]">
-                  <div>
-                    <img src="/images/ondo-logo-orange.png" className="h-[40px] md:h-16 mx-auto mb-6 object-contain" alt="Ondo Logo" />
-                    <h3 className="font-title text-[32px] md:text-[40px] font-bold uppercase leading-none tracking-tight mb-8"
-                        style={{ color: getSetting('panel2Color', '#6ca53a') }}>
-                       {resolveText(getSetting('panel2Title', 'ÚNETE AL CLUB'))}
-                    </h3>
-                  </div>
-                  <div className="mt-auto">
-                    <p className="font-body text-[14px] font-bold leading-relaxed mb-8 px-2"
-                       style={{ color: getSetting('panel2Color', '#6ca53a') }}>
-                      {resolveText(getSetting('panel2Mission', 'Sopas artesanales de temporada, en tu puerta cada semana. Suscríbete y ahorra 20% de por vida.'))}
-                    </p>
-                    <button onClick={openFunnel} className="border-[3px] uppercase font-title font-bold text-sm tracking-widest px-6 py-3 transition-colors w-full"
-                            style={{
-                              borderColor: getSetting('panel2Color', '#6ca53a'),
-                              color: getSetting('panel2Color', '#6ca53a')
-                            }}
-                            onMouseEnter={(e) => {
-                              const target = e.currentTarget;
-                              target.style.backgroundColor = getSetting('panel2Color', '#6ca53a');
-                              target.style.color = 'white';
-                            }}
-                            onMouseLeave={(e) => {
-                              const target = e.currentTarget;
-                              target.style.backgroundColor = 'transparent';
-                              target.style.color = getSetting('panel2Color', '#6ca53a');
-                            }}>
-                      {resolveText(getSetting('panel2CTA', '¡QUIERO UNIRME!'))}
-                    </button>
-                  </div>
-               </div>
-            </div>
-            
-            {/* Panel 3 */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col">
-               <div className="flex-1 bg-ondo-black p-8 flex flex-col justify-center">
-                 <h2 className="text-ondo-white font-title text-[38px] lg:text-5xl font-bold tracking-tighter mb-6 leading-[0.9]">
-                   {resolveText(getSetting('panel3Title', '20% OFF.\nPARA SIEMPRE.'))}
-                 </h2>
-                 <p className="text-white/80 font-body text-[13px] leading-relaxed mb-10 max-w-[95%]">
-                   {resolveText(getSetting('panel3Text', 'Los socios del Club Ondo reciben sopas artesanales de temporada cada semana con 20% de descuento permanente, envío incluido y acceso anticipado a recetas exclusivas.\n\nMás de 500 personas ya se apapachan. ¿Te unes?'))}
-                 </p>
-                 <button onClick={openFunnel} className="text-white font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
-                   {resolveText(getSetting('panel3CTA', 'ÚNETE AHORA'))}
-                 </button>
-               </div>
-               <div className="flex-1 bg-[#bfe46b] relative overflow-hidden flex items-center justify-center min-h-[250px]">
-                 <img src={getSetting('panel3Image', null) ? urlFor(getSetting('panel3Image', null)).url() : '/images/green-geo.png'} alt="Ondo Graphic" className="w-full h-full object-cover" />
-               </div>
-            </div>
-            
-            {/* Panel 4 */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-ondo-white p-8 flex flex-col relative overflow-hidden">
-               <p className="font-body font-bold text-[14px] leading-relaxed mb-10 max-w-[95%]"
-                  style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                 {resolveText(getSetting('panel4TextTop', 'Sin contratos largos. Sin compromiso. Cancela cuando quieras.\n\nPero una vez que lo pruebes, ya no vas a querer parar.'))}
+            {/* Panel 2 — Lo que incluye */}
+            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
+                 style={{ backgroundColor: getSetting('panel2BgColor', '#2d4a1e') }}>
+               {/* Eyebrow */}
+               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
+                  style={{ color: '#f1f3b0', opacity: 0.65 }}>
+                 LO QUE INCLUYE
                </p>
-               <div className="flex justify-between w-full mb-auto z-10">
+
+               {/* Headline */}
+               <div className="z-10 mb-8">
+                 <h2 className="font-title font-black text-[32px] lg:text-[42px] leading-[0.9] tracking-tight">
+                   <span style={{ color: '#f1f3b0' }}>Todo lo que</span><br />
+                   <span style={{ color: '#f1f3b0' }}>necesitas. </span>
+                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>Nada que no.</span>
+                 </h2>
+               </div>
+
+               {/* Benefits list */}
+               <div className="z-10 flex flex-col gap-5 flex-1">
+                 {[
+                   { n: '01', title: 'Envío incluido', sub: 'sin sorpresas ni cargos ocultos' },
+                   { n: '02', title: 'Sopas exclusivas de socio', sub: 'nunca en el menú regular' },
+                   { n: '03', title: 'Primero en probar lo nuevo', sub: 'beta taster oficial' },
+                   { n: '04', title: 'Recetas de temporada', sub: 'cada semana en tu correo' },
+                 ].map(({ n, title, sub }) => (
+                   <div key={n} className="flex gap-4 items-start">
+                     <span className="font-title font-bold text-[11px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{n}</span>
+                     <div>
+                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{title}</p>
+                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{sub}</p>
+                     </div>
+                   </div>
+                 ))}
+               </div>
+
+               {/* Subtle logo watermark */}
+               <div className="absolute bottom-[-2%] right-[-5%] w-[55%] h-[110px] opacity-5"
+                    style={{
+                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')",
+                      maskImage: "url('/images/ondo-logo-orange.png')",
+                      WebkitMaskSize: "contain",
+                      maskSize: "contain",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskPosition: "bottom right",
+                      maskPosition: "bottom right",
+                      backgroundColor: '#f1f3b0'
+                    }} />
+            </div>
+            
+            {/* Panel 3 — Founders + Orange Aspirational */}
+            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
+               {/* Top: Founders card (dark green) */}
+               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
+                    style={{ backgroundColor: '#2d4a1e' }}>
+                 {/* Eyebrow */}
+                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-auto"
+                    style={{ color: '#f1f3b0', opacity: 0.55 }}>
+                   QUIÉNES SOMOS
+                 </p>
+
+                 {/* Avatars + name */}
+                 <div className="mt-auto">
+                   <div className="flex gap-3 mb-4">
+                     <div className="w-11 h-11 rounded-full bg-[#bfe46b] flex items-center justify-center font-title font-black text-[#2d4a1e] text-[15px] shadow-md">A</div>
+                     <div className="w-11 h-11 rounded-full bg-[#e8632a] flex items-center justify-center font-title font-black text-white text-[15px] shadow-md -ml-2">O</div>
+                   </div>
+                   <p className="font-title font-bold text-[16px] leading-none mb-1" style={{ color: '#f1f3b0' }}>Ana & Omar</p>
+                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>Cofundadores · Ondo · Roma CDMX</p>
+                 </div>
+               </div>
+
+               {/* Bottom: Orange aspirational */}
+               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
+                    style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
+                 {/* Eyebrow */}
+                 <p className="font-title text-[11px] uppercase tracking-[0.25em]"
+                    style={{ color: '#f1f3b0', opacity: 0.7 }}>
+                   TU MEMBRESÍA
+                 </p>
+
+                 {/* Aspirational headline */}
+                 <div className="mt-auto">
+                   <h3 className="font-title font-black text-[28px] lg:text-[32px] leading-[0.9] tracking-tight mb-3"
+                       style={{ color: '#f1f3b0' }}>
+                     Tú decides el cómo y el cuándo.
+                   </h3>
+                 </div>
+
+                 {/* Watermark */}
+                 <div className="absolute bottom-0 right-0 w-[60%] h-[90px] opacity-10"
+                      style={{
+                        WebkitMaskImage: "url('/images/ondo-logo-orange.png')",
+                        maskImage: "url('/images/ondo-logo-orange.png')",
+                        WebkitMaskSize: "contain",
+                        maskSize: "contain",
+                        WebkitMaskRepeat: "no-repeat",
+                        maskRepeat: "no-repeat",
+                        WebkitMaskPosition: "bottom right",
+                        maskPosition: "bottom right",
+                        backgroundColor: '#f1f3b0'
+                      }} />
+               </div>
+            </div>
+            
+            {/* Panel 4 — About / Quote */}
+            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-ondo-white p-8 flex flex-col relative overflow-hidden">
+               {/* Eyebrow */}
+               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-8"
+                  style={{ color: getSetting('panel4TextColor', '#5b9538'), opacity: 0.6 }}>
+                 NUESTRA MISIÓN
+               </p>
+
+               {/* Main quote */}
+               <blockquote className="flex-1 flex flex-col justify-center z-10">
+                 <p className="font-body font-bold italic text-[20px] lg:text-[24px] leading-[1.3] mb-8"
+                    style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                   "Hacemos estas sopas porque creemos que comer bien no debería ser complicado."
+                 </p>
+                 <footer className="font-title font-bold text-[12px] uppercase tracking-widest"
+                         style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
+                   — Ana & Omar
+                 </footer>
+               </blockquote>
+
+               {/* Bottom labels */}
+               <div className="flex justify-between w-full mt-auto z-10">
                  <span className="font-title font-bold uppercase text-[12px] tracking-widest"
                        style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
                     {resolveText(getSetting('panel4CityLeft', 'SOUP FIRST'))}
@@ -801,13 +893,7 @@ export default function App() {
                     {resolveText(getSetting('panel4CityRight', 'CDMX'))}
                  </span>
                </div>
-               
-               <div className="mt-auto z-10 relative pointer-events-none flex flex-col justify-end mb-16">
-                 <h2 className="font-title text-[50px] lg:text-[70px] font-bold leading-[0.8] tracking-tighter uppercase mb-8"
-                     style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   {resolveText(getSetting('panel4Title', 'IN SOUP WE TRUST'))}
-                 </h2>
-               </div>
+
                {/* Massive Logo at bottom */}
                <div className="absolute bottom-[-2%] left-1/2 -translate-x-1/2 w-full h-[150px] opacity-90" 
                     style={{ 
@@ -955,7 +1041,19 @@ export default function App() {
                         </div>
                       )}
                       <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
-                      <div className="font-body text-ondo-green font-bold mb-5 text-[16px]">€{product.price?.toFixed(2)}</div>
+                      <div className="font-body font-bold mb-5 text-[16px]">
+                        {cartItemCount >= 5 ? (
+                          <div className="flex items-center gap-2">
+                            <span className="line-through text-gray-400 text-[14px]">€{product.price?.toFixed(2)}</span>
+                            <span className="text-ondo-orange">€{(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                            <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+                              -{cartItemCount > 9 ? '20' : '10'}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-ondo-green">€{product.price?.toFixed(2)}</span>
+                        )}
+                      </div>
                       <div className="mt-auto" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
                           <button
@@ -984,13 +1082,15 @@ export default function App() {
                           </button>
                         </div>
                         {cartItemCount === 4 && (
-                          <div className="mt-2 bg-ondo-orange text-white text-[11px] font-title font-bold uppercase tracking-wider text-center py-2 px-1 rounded-sm shadow-sm animate-pulse">
-                            ¡Añade 1 más para -10%!
+                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>¡Añade 1 más para -10%!</span>
                           </div>
                         )}
                         {cartItemCount === 9 && (
-                          <div className="mt-2 bg-ondo-orange text-white text-[11px] font-title font-bold uppercase tracking-wider text-center py-2 px-1 rounded-sm shadow-sm animate-pulse">
-                            ¡Añade 1 más para -20%!
+                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>¡Añade 1 más para -20%!</span>
                           </div>
                         )}
                       </div>
@@ -1303,8 +1403,18 @@ export default function App() {
                 )}
 
                 {/* Price */}
-                <div className="font-title font-black text-[28px] text-ondo-green mb-5">
-                  €{selectedProduct.price?.toFixed(2)}
+                <div className="font-title font-black text-[28px] mb-5">
+                  {cartItemCount >= 5 ? (
+                    <div className="flex items-center gap-3">
+                      <span className="line-through text-gray-400 text-[20px]">€{selectedProduct.price?.toFixed(2)}</span>
+                      <span className="text-ondo-orange">€{(selectedProduct.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                      <span className="bg-ondo-orange text-white text-[12px] px-2 py-1 rounded-sm uppercase tracking-wide self-center mb-1">
+                        -{cartItemCount > 9 ? '20' : '10'}%
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-ondo-green">€{selectedProduct.price?.toFixed(2)}</span>
+                  )}
                 </div>
 
                 {/* Description */}

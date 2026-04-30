@@ -1,7 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap');
-
 @font-face {
   font-family: 'Raisonne Pro';
   src: url('/fonts/Raisonne/RaisonnePro-Regular.ttf') format('truetype');
@@ -80,7 +77,7 @@
 
   --color-ondo-yellow: #F9E070;
   --color-ondo-orange: #F88D36;
-  --color-ondo-beige: #F8F7F4;
+  --color-ondo-beige: #EBEBD3;
   --color-ondo-green: #6E913F;
   --color-ondo-light-green: #CFD55F;
   --color-ondo-black: #11100F;
@@ -94,6 +91,7 @@ body {
   font-family: var(--font-body);
   background-color: var(--color-ondo-white);
   color: var(--color-ondo-black);
+  overflow-x: hidden;
 }
 
 h1,

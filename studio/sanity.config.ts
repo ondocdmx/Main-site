@@ -23,9 +23,6 @@ export default defineConfig({
               .title('Site Settings')
               .child(S.document().schemaType('siteSettings').documentId('siteSettings')),
             S.listItem()
-              .title('Banners')
-              .child(S.document().schemaType('bannerSettings').documentId('bannerSettings')),
-            S.listItem()
               .title('Hero Section')
               .child(S.document().schemaType('heroSettings').documentId('heroSettings')),
             S.listItem()
