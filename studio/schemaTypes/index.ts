@@ -1,7 +1,6 @@
 import { product } from './product'
 import { productTag } from './productTag'
 import { translationRecord } from './translationRecord'
-import { bannerSettings } from './bannerSettings'
 import { heroSettings } from './heroSettings'
 import { productSettings } from './productSettings'
 import { processSettings } from './processSettings'
@@ -17,7 +16,6 @@ export const schemaTypes = [
   product,
   productTag,
   translationRecord,
-  bannerSettings,
   heroSettings,
   productSettings,
   processSettings,

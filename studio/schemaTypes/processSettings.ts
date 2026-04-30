@@ -53,5 +53,23 @@ export const processSettings = defineType({
       type: 'text',
       initialValue: 'Sigue simples instrucciones y disfruta deliciosos platillos caseros sin estrés.',
     }),
+    defineField({
+      name: 'step1Image',
+      title: 'Step 1 Image',
+      type: 'image',
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: 'step2Image',
+      title: 'Step 2 Image',
+      type: 'image',
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: 'step3Image',
+      title: 'Step 3 Image',
+      type: 'image',
+      options: { hotspot: true },
+    }),
   ]
 })

@@ -12,6 +12,12 @@ export const siteSettings = defineType({
       initialValue: 'APAPÁCHATE | ENVÍO GRATIS EN 12+ CARTONES',
     }),
     defineField({
+      name: 'showMidBanner',
+      title: 'Show Middle Banner',
+      type: 'boolean',
+      initialValue: true,
+    }),
+    defineField({
       name: 'midBannerText',
       title: 'Middle Banner Text',
       type: 'string',
