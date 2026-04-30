@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingCart, Search, User, X, ChevronRight, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
 
 const t = {
@@ -89,6 +89,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   title,
   purchaseType,
   price,
+  stripePriceId,
   description,
   tagline,
   bgColor,
@@ -204,6 +205,7 @@ export default function App() {
 
   // Product detail popup
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [popupImageIndex, setPopupImageIndex] = useState(0);
 
   // Tags / filtering
   const [tags, setTags] = useState<any[]>([]);
@@ -222,15 +224,16 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
-          client.fetch('*[_type == "siteSettings"][0]'),
-          client.fetch('*[_type == "productSettings"][0]'),
-          client.fetch('*[_type == "processSettings"][0]'),
-          client.fetch('*[_type == "manifestoSettings"][0]'),
-          client.fetch('*[_type == "popupSettings"][0]'),
-          client.fetch('*[_type == "heroSettings"][0]'),
-          client.fetch('*[_type == "aboutSettings"][0]'),
-          client.fetch('*[_type == "funnelSettings"][0]'),
+        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, footerSettingsData, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
+          client.fetch('*[_id == "siteSettings" || _type == "siteSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "productSettings" || _type == "productSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "processSettings" || _type == "processSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "manifestoSettings" || _type == "manifestoSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "popupSettings" || _type == "popupSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "heroSettings" || _type == "heroSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "aboutSettings" || _type == "aboutSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "funnelSettings" || _type == "funnelSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "footerSettings" || _type == "footerSettings"] | order(_updatedAt desc)[0]'),
           client.fetch('*[_type == "productTag"] | order(order asc)'),
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
@@ -246,6 +249,7 @@ export default function App() {
           ...heroSettings,
           ...aboutSettings,
           ...funnelSettingsData,
+          ...footerSettingsData,
         };
         console.log('[Sanity] merged settings step1Title:', merged.step1Title);
         setSettings(merged);
@@ -699,18 +703,18 @@ export default function App() {
                {/* Top eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
-                 EL CLUB · MEMBRESÍA
+                 {getSetting('panel1Eyebrow', 'EL CLUB · MEMBRESÍA')}
                </p>
 
                {/* Main Title */}
                <div className="z-10 flex-1">
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
                      style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
-                   EL<br />CLUB
+                   {(getSetting('panel1TitleLine1', 'EL\nCLUB') || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
                  </h2>
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
                      style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
-                   ONDO.
+                   {getSetting('panel1TitleLine2', 'ONDO.')}
                  </h2>
 
                  {/* Divider */}
@@ -719,13 +723,13 @@ export default function App() {
                  {/* Subheadline */}
                  <p className="font-body font-bold text-[15px] leading-snug mb-3"
                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   Échate un clavado<br />a la <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>soupscripción</span><br />de Ondo.
+                   {(() => { const txt = getSetting('panel1Subheadline', 'Échate un clavado a la soupscripción de Ondo.'); const accent = getSetting('panel1SubAccentWord', 'soupscripción'); if (!accent || !txt.includes(accent)) return txt; const parts = txt.split(accent); return <>{parts[0]}<span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{accent}</span>{parts[1]}</>; })()}
                  </p>
 
                  {/* Tagline italic */}
                  <p className="font-body italic text-[14px] leading-relaxed mt-6 mb-8"
                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.85 }}>
-                   Para los que saben que una<br />buena sopa cambia el día.
+                   {getSetting('panel1Tagline', 'Para los que saben que una buena sopa cambia el día.')}
                  </p>
                </div>
 
@@ -733,10 +737,13 @@ export default function App() {
                <div className="z-10 mt-auto">
                  <button
                    onClick={openFunnel}
-                   className="group flex items-center gap-3 font-title font-bold text-[13px] uppercase tracking-widest transition-all hover:gap-5"
-                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}
+                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max"
+                   style={{ 
+                     backgroundColor: getSetting('panel1TextColor1', '#f1f3b0'), 
+                     color: getSetting('panel1BgColor', '#6ca53a') 
+                   }}
                  >
-                   ÚNETE AL CLUB
+                   {getSetting('panel1CTAText', 'ÚNETE AL CLUB')}
                    <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                  </button>
                </div>
@@ -762,31 +769,30 @@ export default function App() {
                {/* Eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: '#f1f3b0', opacity: 0.65 }}>
-                 LO QUE INCLUYE
+                 {getSetting('panel2Eyebrow', 'LO QUE INCLUYE')}
                </p>
 
                {/* Headline */}
                <div className="z-10 mb-8">
                  <h2 className="font-title font-black text-[32px] lg:text-[42px] leading-[0.9] tracking-tight">
-                   <span style={{ color: '#f1f3b0' }}>Todo lo que</span><br />
-                   <span style={{ color: '#f1f3b0' }}>necesitas. </span>
-                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>Nada que no.</span>
+                   <span style={{ color: '#f1f3b0' }}>{getSetting('panel2HeadlinePrimary', 'Todo lo que necesitas.')}</span>{' '}
+                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{getSetting('panel2HeadlineAccent', 'Nada que no.')}</span>
                  </h2>
                </div>
 
                {/* Benefits list */}
                <div className="z-10 flex flex-col gap-5 flex-1">
-                 {[
-                   { n: '01', title: 'Envío incluido', sub: 'sin sorpresas ni cargos ocultos' },
-                   { n: '02', title: 'Sopas exclusivas de socio', sub: 'nunca en el menú regular' },
-                   { n: '03', title: 'Primero en probar lo nuevo', sub: 'beta taster oficial' },
-                   { n: '04', title: 'Recetas de temporada', sub: 'cada semana en tu correo' },
-                 ].map(({ n, title, sub }) => (
-                   <div key={n} className="flex gap-4 items-start">
-                     <span className="font-title font-bold text-[11px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{n}</span>
+                 {(getSetting('panel2Benefits', null) || [
+                   { title: 'Envío incluido', subtitle: 'sin sorpresas ni cargos ocultos' },
+                   { title: 'Sopas exclusivas de socio', subtitle: 'nunca en el menú regular' },
+                   { title: 'Primero en probar lo nuevo', subtitle: 'beta taster oficial' },
+                   { title: 'Recetas de temporada', subtitle: 'cada semana en tu correo' },
+                 ]).map((item: any, i: number) => (
+                   <div key={i} className="flex gap-4 items-start">
+                     <span className="font-title font-bold text-[11px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{String(i + 1).padStart(2, '0')}</span>
                      <div>
-                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{title}</p>
-                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{sub}</p>
+                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{item.title}</p>
+                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{item.subtitle || item.sub}</p>
                      </div>
                    </div>
                  ))}
@@ -809,40 +815,20 @@ export default function App() {
             
             {/* Panel 3 — Founders + Orange Aspirational */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
-               {/* Top: Founders card (dark green) */}
-               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
-                    style={{ backgroundColor: '#2d4a1e' }}>
-                 {/* Eyebrow */}
-                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-auto"
-                    style={{ color: '#f1f3b0', opacity: 0.55 }}>
-                   QUIÉNES SOMOS
-                 </p>
-
-                 {/* Avatars + name */}
-                 <div className="mt-auto">
-                   <div className="flex gap-3 mb-4">
-                     <div className="w-11 h-11 rounded-full bg-[#bfe46b] flex items-center justify-center font-title font-black text-[#2d4a1e] text-[15px] shadow-md">A</div>
-                     <div className="w-11 h-11 rounded-full bg-[#e8632a] flex items-center justify-center font-title font-black text-white text-[15px] shadow-md -ml-2">O</div>
-                   </div>
-                   <p className="font-title font-bold text-[16px] leading-none mb-1" style={{ color: '#f1f3b0' }}>Ana & Omar</p>
-                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>Cofundadores · Ondo · Roma CDMX</p>
-                 </div>
-               </div>
-
-               {/* Bottom: Orange aspirational */}
+               {/* Top: Orange aspirational */}
                <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
                     style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
                  {/* Eyebrow */}
                  <p className="font-title text-[11px] uppercase tracking-[0.25em]"
                     style={{ color: '#f1f3b0', opacity: 0.7 }}>
-                   TU MEMBRESÍA
+                   {getSetting('panel3OrangeEyebrow', 'TU MEMBRESÍA')}
                  </p>
 
                  {/* Aspirational headline */}
                  <div className="mt-auto">
                    <h3 className="font-title font-black text-[28px] lg:text-[32px] leading-[0.9] tracking-tight mb-3"
                        style={{ color: '#f1f3b0' }}>
-                     Tú decides el cómo y el cuándo.
+                     {getSetting('panel3OrangeHeadline', 'Tú decides el cómo y el cuándo.')}
                    </h3>
                  </div>
 
@@ -860,6 +846,27 @@ export default function App() {
                         backgroundColor: '#f1f3b0'
                       }} />
                </div>
+
+               {/* Bottom: Founders card (dark green) */}
+               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
+                    style={{ backgroundColor: getSetting('panel3TopBgColor', '#2d4a1e') }}>
+                 {/* Eyebrow */}
+                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-auto"
+                    style={{ color: '#f1f3b0', opacity: 0.55 }}>
+                   {getSetting('panel3Eyebrow', 'QUIÉNES SOMOS')}
+                 </p>
+
+                 {/* Avatars + name */}
+                 <div className="mt-auto">
+                   <div className="flex gap-3 mb-4">
+                     {(getSetting('panel3FounderInitials', 'A,O') || 'A,O').split(',').map((init: string, i: number) => (
+                       <div key={i} className={`w-11 h-11 rounded-full flex items-center justify-center font-title font-black text-[15px] shadow-md ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: i === 0 ? '#bfe46b' : '#e8632a', color: i === 0 ? '#2d4a1e' : 'white' }}>{init.trim()}</div>
+                     ))}
+                   </div>
+                   <p className="font-title font-bold text-[16px] leading-none mb-1" style={{ color: '#f1f3b0' }}>{getSetting('panel3FounderName', 'Ana & Omar')}</p>
+                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>{getSetting('panel3FounderRole', 'Cofundadores · Ondo · Roma CDMX')}</p>
+                 </div>
+               </div>
             </div>
             
             {/* Panel 4 — About / Quote */}
@@ -867,20 +874,35 @@ export default function App() {
                {/* Eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-8"
                   style={{ color: getSetting('panel4TextColor', '#5b9538'), opacity: 0.6 }}>
-                 NUESTRA MISIÓN
+                 {getSetting('panel4Eyebrow', 'NUESTRA MISIÓN')}
                </p>
 
                {/* Main quote */}
                <blockquote className="flex-1 flex flex-col justify-center z-10">
                  <p className="font-body font-bold italic text-[20px] lg:text-[24px] leading-[1.3] mb-8"
                     style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   "Hacemos estas sopas porque creemos que comer bien no debería ser complicado."
+                   {getSetting('panel4Quote', '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."')}
                  </p>
                  <footer className="font-title font-bold text-[12px] uppercase tracking-widest"
                          style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   — Ana & Omar
+                   {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
                  </footer>
                </blockquote>
+
+               {/* CTA at bottom */}
+               <div className="z-10 mb-6">
+                 <a
+                   href={getSetting('panel4CTALink', '#about')}
+                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max"
+                   style={{ 
+                     backgroundColor: getSetting('panel4TextColor', '#5b9538'),
+                     color: '#ffffff'
+                   }}
+                 >
+                   {getSetting('panel4CTAText', 'CONÓCENOS')}
+                   <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                 </a>
+               </div>
 
                {/* Bottom labels */}
                <div className="flex justify-between w-full mt-auto z-10">
@@ -1008,7 +1030,7 @@ export default function App() {
               {/* Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {filteredProducts.map((product: any) => (
-                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => setSelectedProduct(product)}>
+                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => { setSelectedProduct(product); setPopupImageIndex(0); }}>
 
                     {/* Hover Image Area */}
                     <div
@@ -1173,23 +1195,27 @@ export default function App() {
       <footer className="bg-ondo-beige text-ondo-black py-20 px-6 border-t border-black/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
            <div className="flex flex-col items-center md:items-start gap-4">
-             <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-12 object-contain" />
+             <img src={getSetting('footerLogo', null) ? urlFor(getSetting('footerLogo')).url() : '/images/ondo-logo-orange.png'} alt="ONDO Logo" className="h-12 object-contain" />
              <div className="text-gray-500 font-body text-sm font-medium">
-               © 2026 ONDO. All rights reserved.
+               {getSetting('copyrightText', '© 2026 ONDO. All rights reserved.')}
              </div>
            </div>
            
            <div className="flex flex-col items-center gap-6">
+             {getSetting('showInstagram', true) !== false && (
              <div className="flex gap-8">
-               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 text-white hover:bg-ondo-green transition-all hover:scale-110">
+               <a href={getSetting('instagramUrl', 'https://instagram.com')} target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 text-white hover:bg-ondo-green transition-all hover:scale-110">
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
                </a>
              </div>
+             )}
              <div className="flex flex-col items-center gap-2 text-ondo-green font-title font-bold uppercase tracking-widest text-sm text-center">
-               <a href="mailto:hola@ondo.mx" className="hover:text-ondo-orange transition-colors flex items-center gap-2">
-                 <Mail className="w-4 h-4" /> HOLA@ONDO.MX
+               <a href={`mailto:${getSetting('contactEmail', 'hola@ondo.mx')}`} className="hover:text-ondo-orange transition-colors flex items-center gap-2">
+                 <Mail className="w-4 h-4" /> {(getSetting('contactEmail', 'hola@ondo.mx') || '').toUpperCase()}
                </a>
-               <a href="tel:+521234567890" className="hover:text-ondo-orange transition-colors">+52 1 234 567 890</a>
+               {getSetting('contactPhone', '+52 1 234 567 890') && (
+                 <a href={`tel:${(getSetting('contactPhone', '+52 1 234 567 890') || '').replace(/\s/g, '')}`} className="hover:text-ondo-orange transition-colors">{getSetting('contactPhone', '+52 1 234 567 890')}</a>
+               )}
              </div>
            </div>
          </div>
@@ -1356,28 +1382,68 @@ export default function App() {
       {selectedProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedProduct(null)}>
           <div
-            className="bg-ondo-white shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col md:flex-row relative"
+            className="bg-ondo-white shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto flex flex-col md:flex-row relative"
             onClick={e => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
+              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity bg-white/50 rounded-full md:bg-transparent"
             >
               <X className="w-5 h-5 text-ondo-green" />
             </button>
 
-            {/* Image column */}
-            <div className={`md:w-2/5 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden`} style={{ minHeight: '260px' }}>
-              <img
-                src={resolveImage(selectedProduct.image)}
-                alt={resolveText(selectedProduct.title)}
-                className="w-full h-full object-cover mix-blend-multiply absolute inset-0"
-              />
+            {/* Image column - Now more square and with Carousel */}
+            <div className={`md:w-1/2 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden group`} style={{ minHeight: '300px' }}>
+              <div 
+                className="w-full h-full flex transition-transform duration-500 ease-out absolute inset-0"
+                style={{ transform: `translateX(-${popupImageIndex * 100}%)` }}
+              >
+                <div className="w-full h-full shrink-0 relative">
+                  <img
+                    src={resolveImage(selectedProduct.image)}
+                    alt={resolveText(selectedProduct.title)}
+                    className="w-full h-full object-cover mix-blend-multiply"
+                  />
+                </div>
+                {selectedProduct.hoverImage && (
+                  <div className="w-full h-full shrink-0 relative">
+                    <img
+                      src={resolveImage(selectedProduct.hoverImage)}
+                      alt={`${resolveText(selectedProduct.title)} alternate`}
+                      className="w-full h-full object-cover mix-blend-multiply"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Carousel Controls */}
+              {selectedProduct.hoverImage && (
+                <>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => prev === 0 ? 1 : 0); }}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => prev === 0 ? 1 : 0); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                  
+                  {/* Indicators */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    <div className={`w-2 h-2 rounded-full transition-colors ${popupImageIndex === 0 ? 'bg-ondo-green' : 'bg-ondo-green/30'}`} />
+                    <div className={`w-2 h-2 rounded-full transition-colors ${popupImageIndex === 1 ? 'bg-ondo-green' : 'bg-ondo-green/30'}`} />
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Content column */}
-            <div className="flex-1 p-8 md:p-10 flex flex-col justify-between bg-ondo-white">
+            <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-ondo-white">
               <div>
                 {/* Label */}
                 <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">

@@ -11,6 +11,7 @@ import { deliveryLead } from './deliveryLead'
 import { deliveryZones } from './deliveryZones'
 import { popupSettings } from './popupSettings'
 import { funnelSettings } from './funnelSettings'
+import { footerSettings } from './footerSettings'
 
 export const schemaTypes = [
   product,
@@ -26,5 +27,5 @@ export const schemaTypes = [
   deliveryZones,
   popupSettings,
   funnelSettings,
+  footerSettings,
 ]
-

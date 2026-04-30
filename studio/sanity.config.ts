@@ -37,6 +37,16 @@ export default defineConfig({
             S.listItem()
               .title('Manifesto Section')
               .child(S.document().schemaType('manifestoSettings').documentId('manifestoSettings')),
+            S.listItem()
+              .title('Footer')
+              .child(S.document().schemaType('footerSettings').documentId('footerSettings')),
+            S.divider(),
+            S.listItem()
+              .title('Subscription Popup')
+              .child(S.document().schemaType('popupSettings').documentId('popupSettings')),
+            S.listItem()
+              .title('Subscription Funnel')
+              .child(S.document().schemaType('funnelSettings').documentId('funnelSettings')),
             S.divider(),
             S.listItem()
               .title('Delivery Zones')
