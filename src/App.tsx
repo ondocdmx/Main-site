@@ -235,7 +235,9 @@ export default function App() {
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
         ]);
-        setSettings({
+        console.log('[Sanity] processSettings raw:', processSettings);
+        console.log('[Sanity] siteSettings raw:', siteSettings);
+        const merged = {
           ...siteSettings,
           ...productSettings,
           ...processSettings,
@@ -244,7 +246,9 @@ export default function App() {
           ...heroSettings,
           ...aboutSettings,
           ...funnelSettingsData,
-        });
+        };
+        console.log('[Sanity] merged settings step1Title:', merged.step1Title);
+        setSettings(merged);
         setTags(fetchedTags || []);
         setDeliveryZones(fetchedZones || null);
         // Only replace mock data if Sanity actually has products
@@ -452,7 +456,11 @@ export default function App() {
   };
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const cartSubtotal = cart.reduce((a, b) => a + (b.product.price * b.quantity), 0);
+
+  const cartSubtotal = cart.reduce((a, b) => {
+    const discountMult = cartItemCount > 9 ? 0.8 : (cartItemCount >= 5 ? 0.9 : 1);
+    return a + (b.product.price * discountMult * b.quantity);
+  }, 0);
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
 
   const activeDiscount = (() => {
@@ -594,8 +602,20 @@ export default function App() {
                 <div className="flex-1 flex flex-col justify-between">
                    <div className="flex justify-between gap-2 mb-2">
                       <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
-                      <div className="font-body font-semibold text-sm whitespace-nowrap text-right">
-                         €{(item.product.price * item.quantity).toFixed(2)}
+                      <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
+                         {cartItemCount >= 5 ? (
+                           <>
+                             <span className="line-through text-gray-400 text-xs">€{(item.product.price * item.quantity).toFixed(2)}</span>
+                             <span className="text-ondo-orange flex items-center gap-1">
+                               €{(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
+                               <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
+                                 -{cartItemCount > 9 ? '20' : '10'}%
+                               </span>
+                             </span>
+                           </>
+                         ) : (
+                           <span>€{(item.product.price * item.quantity).toFixed(2)}</span>
+                         )}
                       </div>
                    </div>
                    <div className="flex items-center justify-between mt-3">
@@ -642,9 +662,9 @@ export default function App() {
         
         {/* Render hero images centered in the right half */}
         <div className="absolute inset-y-0 right-0 flex items-center justify-center pointer-events-none z-0 w-full md:w-1/2">
-            <img 
-              src="/images/green-soup.png" 
-              alt="Hero Soup" 
+            <img
+              src={getSetting('heroImages', null)?.[0] ? urlFor(getSetting('heroImages', null)[0]).url() : '/images/green-soup.png'}
+              alt="Hero Soup"
               className="w-auto object-contain scale-100 md:scale-110"
               style={{ maxHeight: '85vh', maxWidth: '90%' }}
             />
@@ -808,12 +828,14 @@ export default function App() {
       )}
 
       {/* Mid Banner — before products */}
+      {getSetting('showMidBanner', true) !== false && (
       <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
         <div className="animate-marquee inline-flex w-[200%] justify-around">
           <span>{getSetting('midBannerText', content.midBanner)}</span>
           <span>{getSetting('midBannerText', content.midBanner)}</span>
         </div>
       </div>
+      )}
 
       {/* Products Section */}
       <section className="py-20 px-6 bg-ondo-beige" id="shop">
@@ -961,6 +983,16 @@ export default function App() {
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
+                        {cartItemCount === 4 && (
+                          <div className="mt-2 bg-ondo-orange text-white text-[11px] font-title font-bold uppercase tracking-wider text-center py-2 px-1 rounded-sm shadow-sm animate-pulse">
+                            ¡Añade 1 más para -10%!
+                          </div>
+                        )}
+                        {cartItemCount === 9 && (
+                          <div className="mt-2 bg-ondo-orange text-white text-[11px] font-title font-bold uppercase tracking-wider text-center py-2 px-1 rounded-sm shadow-sm animate-pulse">
+                            ¡Añade 1 más para -20%!
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -971,6 +1003,7 @@ export default function App() {
       </section>
 
       {/* Steps Section */}
+      {getSetting('showSteps', true) !== false && (
       <section id="steps" className="py-28 px-6 bg-ondo-beige">
          <div className="max-w-6xl mx-auto text-center">
             <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{getSetting('stepsTitle', content.stepsTitle)}</h2>
@@ -978,7 +1011,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-113.JPG" alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step1Image', null) ? urlFor(getSetting('step1Image', null)).url() : '/images/ondo-113.JPG'} alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step1Title', content.step1Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step1Desc', content.step1Desc)}</p>
@@ -986,7 +1019,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-051.JPG" alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step2Image', null) ? urlFor(getSetting('step2Image', null)).url() : '/images/ondo-051.JPG'} alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step2Title', content.step2Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step2Desc', content.step2Desc)}</p>
@@ -994,7 +1027,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src="/images/ondo-070.JPG" alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step3Image', null) ? urlFor(getSetting('step3Image', null)).url() : '/images/ondo-070.JPG'} alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step3Title', content.step3Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step3Desc', content.step3Desc)}</p>
@@ -1003,6 +1036,7 @@ export default function App() {
             </div>
          </div>
       </section>
+      )}
 
       {/* Best Sellers deleted. We jump directly to Manifesto Section */}
 
@@ -1014,13 +1048,13 @@ export default function App() {
           </div>
           <div className="flex-1">
              <h2 className="text-[#6ca53a] font-title text-[40px] md:text-[50px] lg:text-[65px] font-bold leading-[0.95] tracking-tight mb-16 whitespace-pre-line">
-               {getSetting('aboutTitle', 'Ondo is a soup-first\nbrand in Mexico City')}
+               {getSetting('aboutTitle', content.aboutTitle)}
              </h2>
-             
+
              <h4 className="text-[#6ca53a] font-title text-[12px] font-bold uppercase tracking-[0.2em] mb-6">{getSetting('aboutHeader', 'ABOUT')}</h4>
-             
+
              <p className="text-[#5b9538] font-body text-[16px] md:text-[18px] font-bold leading-relaxed mb-12 max-w-[80%] whitespace-pre-line">
-               {getSetting('aboutSub', 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation. Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.')}
+               {getSetting('aboutSub', content.aboutSub)}
              </p>
              
              <div className="flex items-center gap-8 border-t border-[#6ca53a]/20 pt-8">
