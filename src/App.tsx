@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
 
@@ -227,34 +227,6 @@ export default function App() {
   const [soupEmail, setSoupEmail] = useState('');
   const [soupSubmitted, setSoupSubmitted] = useState(false);
   const [isSubmittingSoup, setIsSubmittingSoup] = useState(false);
-
-  const panel1TitleRef = useRef<HTMLDivElement>(null);
-  const [panel1TitleSize, setPanel1TitleSize] = useState(80);
-
-  useEffect(() => {
-    const wrapper = panel1TitleRef.current;
-    if (!wrapper) return;
-    const fit = () => {
-      const headings = Array.from(wrapper.querySelectorAll('h2')) as HTMLElement[];
-      if (!headings.length) return;
-      const savedWS = headings.map(h => h.style.whiteSpace);
-      headings.forEach(h => { h.style.whiteSpace = 'nowrap'; });
-      const containerWidth = wrapper.clientWidth;
-      let lo = 12, hi = 200;
-      while (hi - lo > 1) {
-        const mid = (lo + hi) / 2;
-        headings.forEach(h => { h.style.fontSize = `${mid}px`; });
-        const maxW = Math.max(...headings.map(h => h.scrollWidth));
-        if (maxW > containerWidth) hi = mid; else lo = mid;
-      }
-      headings.forEach((h, i) => { h.style.fontSize = ''; h.style.whiteSpace = savedWS[i]; });
-      setPanel1TitleSize(Math.floor(lo));
-    };
-    const observer = new ResizeObserver(fit);
-    observer.observe(wrapper);
-    fit();
-    return () => observer.disconnect();
-  }, [settings]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -760,7 +732,7 @@ export default function App() {
             
             {/* Panel 1 — CTA Column */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
-                 style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a') }}>
+                 style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a'), containerType: 'inline-size' } as React.CSSProperties}>
                {/* Top eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
@@ -768,13 +740,13 @@ export default function App() {
                </p>
 
                {/* Main Title */}
-               <div ref={panel1TitleRef} className="z-10 flex-1">
+               <div className="z-10 flex-1">
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: `${panel1TitleSize}px` }}>
+                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(36px, 11cqi, 72px)' }}>
                    {(getSettingText('panel1TitleLine1', { es: 'EL\nCLUB', en: 'THE\nCLUB' }) || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
                  </h2>
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: `${panel1TitleSize}px` }}>
+                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(36px, 11cqi, 72px)' }}>
                    {getSettingText('panel1TitleLine2', { es: 'ONDO.', en: 'ONDO.' })}
                  </h2>
 
