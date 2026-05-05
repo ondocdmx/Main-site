@@ -728,7 +728,7 @@ export default function App() {
       {/* Manifesto Section */}
       {getSetting('showManifesto', true) && (
         <section id="manifesto" className="bg-ondo-beige py-8 lg:py-16 px-4 lg:px-6">
-          <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
             
             {/* Panel 1 — CTA Column */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
@@ -846,122 +846,82 @@ export default function App() {
                     }} />
             </div>
             
-            {/* Panel 3 — Founders + Orange Aspirational */}
+            {/* Panel 3 — Quiénes Somos / Tú Decides */}
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
-               {/* Top: Orange aspirational */}
-               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
+               {/* Top: Orange — Quiénes Somos */}
+               <div className="flex-1 p-7 flex flex-col relative overflow-hidden"
                     style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
                  {/* Eyebrow */}
-                 <p className="font-title text-[11px] uppercase tracking-[0.25em]"
+                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-4 z-10"
                     style={{ color: '#f1f3b0', opacity: 0.7 }}>
-                   {getSettingText('panel3OrangeEyebrow', { es: 'TU MEMBRESÍA', en: 'YOUR MEMBERSHIP' })}
-                 </p>
-
-                 {/* Aspirational headline */}
-                 <div className="mt-auto">
-                   <h3 className="font-title font-black text-[28px] lg:text-[32px] leading-[0.9] tracking-tight mb-3"
-                       style={{ color: '#f1f3b0' }}>
-                     {getSettingText('panel3OrangeHeadline', { es: 'Tú decides el cómo y el cuándo.', en: 'You decide how and when.' })}
-                   </h3>
-                 </div>
-
-                 {/* Watermark */}
-                 <div className="absolute bottom-0 right-0 w-[60%] h-[90px] opacity-10"
-                      style={{
-                        WebkitMaskImage: "url('/images/ondo-logo-orange.png')",
-                        maskImage: "url('/images/ondo-logo-orange.png')",
-                        WebkitMaskSize: "contain",
-                        maskSize: "contain",
-                        WebkitMaskRepeat: "no-repeat",
-                        maskRepeat: "no-repeat",
-                        WebkitMaskPosition: "bottom right",
-                        maskPosition: "bottom right",
-                        backgroundColor: '#f1f3b0'
-                      }} />
-               </div>
-
-               {/* Bottom: Founders card (dark green) */}
-               <div className="flex-1 p-7 flex flex-col justify-between relative overflow-hidden"
-                    style={{ backgroundColor: getSetting('panel3TopBgColor', '#2d4a1e') }}>
-                 {/* Eyebrow */}
-                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-auto"
-                    style={{ color: '#f1f3b0', opacity: 0.55 }}>
                    {getSettingText('panel3Eyebrow', { es: 'QUIÉNES SOMOS', en: 'WHO WE ARE' })}
                  </p>
 
-                 {/* Avatars + name */}
-                 <div className="mt-auto">
-                   <div className="flex gap-3 mb-4">
-                     {(getSetting('panel3FounderInitials', 'A,O') || 'A,O').split(',').map((init: string, i: number) => (
-                       <div key={i} className={`w-11 h-11 rounded-full flex items-center justify-center font-title font-black text-[15px] shadow-md ${i > 0 ? '-ml-2' : ''}`} style={{ backgroundColor: i === 0 ? '#bfe46b' : '#e8632a', color: i === 0 ? '#2d4a1e' : 'white' }}>{init.trim()}</div>
-                     ))}
-                   </div>
-                   <p className="font-title font-bold text-[16px] leading-none mb-1" style={{ color: '#f1f3b0' }}>{getSetting('panel3FounderName', 'Ana & Omar')}</p>
-                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>{getSettingText('panel3FounderRole', { es: 'Cofundadores · Ondo · Roma CDMX', en: 'Co-founders · Ondo · Roma CDMX' })}</p>
+                 {/* Illustration */}
+                 <div className="flex-1 flex items-center justify-center z-10 py-2">
+                   <img
+                     src={getSetting('panel3IllustrationImage', null) ? urlFor(getSetting('panel3IllustrationImage', null)).url() : '/images/Group 1597787.png'}
+                     alt=""
+                     className="max-h-[160px] lg:max-h-[180px] object-contain"
+                   />
+                 </div>
+
+                 {/* Quote */}
+                 <blockquote className="z-10 mt-auto">
+                   <p className="font-body font-bold italic text-[14px] lg:text-[15px] leading-snug mb-2"
+                      style={{ color: '#f1f3b0' }}>
+                     {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
+                   </p>
+                   <footer className="font-title font-bold text-[11px] uppercase tracking-widest"
+                           style={{ color: '#f1f3b0', opacity: 0.7 }}>
+                     {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
+                   </footer>
+                 </blockquote>
+               </div>
+
+               {/* Bottom: White — Tú Decides */}
+               <div className="flex-1 p-7 bg-ondo-white flex flex-col relative overflow-hidden">
+                 {/* Eyebrow */}
+                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-4"
+                    style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.65 }}>
+                   {getSettingText('panel3OrangeEyebrow', { es: 'TÚ DECIDES', en: 'YOU DECIDE' })}
+                 </p>
+
+                 {/* Headline */}
+                 <h3 className="font-title font-black text-[24px] lg:text-[28px] leading-[0.9] tracking-tight mb-4"
+                     style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f') }}>
+                   {getSettingText('panel3OrangeHeadline', { es: 'CUANDO TÚ LO QUIERAS MÁS.', en: 'WHENEVER YOU NEED IT MOST.' })}
+                 </h3>
+
+                 {/* Description */}
+                 <p className="font-body text-[13px] leading-relaxed flex-1"
+                    style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.7 }}>
+                   {getSettingText('panel3Description', { es: 'En familia, con amigos, en la oficina, cuando llueve, te da frío o no ves la vida o cuando necesitas un apapacho.', en: 'With family, with friends, at the office — whenever it rains, you get cold, or you just need a hug.' })}
+                 </p>
+
+                 {/* CTA */}
+                 <div className="mt-auto pt-4">
+                   {getSetting('panel4CTALink', '') ? (
+                     <a
+                       href={getSetting('panel4CTALink', '')}
+                       className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full"
+                       style={{ backgroundColor: getSetting('panel3BottomTextColor', '#1a2e0f'), color: '#f1f3b0' }}
+                     >
+                       {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
+                       <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                     </a>
+                   ) : (
+                     <button
+                       onClick={openFunnel}
+                       className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full"
+                       style={{ backgroundColor: getSetting('panel3BottomTextColor', '#1a2e0f'), color: '#f1f3b0' }}
+                     >
+                       {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
+                       <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                     </button>
+                   )}
                  </div>
                </div>
-            </div>
-            
-            {/* Panel 4 — About / Quote */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] bg-ondo-white p-8 flex flex-col relative overflow-hidden">
-               {/* Eyebrow */}
-               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-8"
-                  style={{ color: getSetting('panel4TextColor', '#5b9538'), opacity: 0.6 }}>
-                 {getSettingText('panel4Eyebrow', { es: 'NUESTRA MISIÓN', en: 'OUR MISSION' })}
-               </p>
-
-               {/* Main quote */}
-               <blockquote className="flex-1 flex flex-col justify-center z-10">
-                 <p className="font-body font-bold italic text-[20px] lg:text-[24px] leading-[1.3] mb-8"
-                    style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
-                 </p>
-                 <footer className="font-title font-bold text-[12px] uppercase tracking-widest"
-                         style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
-                 </footer>
-               </blockquote>
-
-               {/* CTA at bottom */}
-               <div className="z-10 mb-6">
-                 <a
-                   href={getSetting('panel4CTALink', '#about')}
-                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max"
-                   style={{ 
-                     backgroundColor: getSetting('panel4TextColor', '#5b9538'),
-                     color: '#ffffff'
-                   }}
-                 >
-                   {getSettingText('panel4CTAText', { es: 'CONÓCENOS', en: 'LEARN MORE' })}
-                   <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                 </a>
-               </div>
-
-               {/* Bottom labels */}
-               <div className="flex justify-between w-full mt-auto z-10">
-                 <span className="font-title font-bold uppercase text-[12px] tracking-widest"
-                       style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                    {resolveText(getSetting('panel4CityLeft', 'SOUP FIRST'))}
-                 </span>
-                 <span className="font-title font-bold uppercase text-[12px] tracking-widest"
-                       style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                    {resolveText(getSetting('panel4CityRight', 'CDMX'))}
-                 </span>
-               </div>
-
-               {/* Massive Logo at bottom */}
-               <div className="absolute bottom-[-2%] left-1/2 -translate-x-1/2 w-full h-[150px] opacity-90" 
-                    style={{ 
-                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')", 
-                      maskImage: "url('/images/ondo-logo-orange.png')", 
-                      WebkitMaskSize: "contain", 
-                      maskSize: "contain", 
-                      WebkitMaskRepeat: "no-repeat", 
-                      maskRepeat: "no-repeat", 
-                      WebkitMaskPosition: "bottom center", 
-                      maskPosition: "bottom center",
-                      backgroundColor: getSetting('panel4TextColor', '#5b9538')
-                    }} />
             </div>
             
           </div>

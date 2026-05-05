@@ -8,8 +8,7 @@ export const manifestoSettings = defineType({
     { name: 'general', title: 'General' },
     { name: 'panel1', title: 'Panel 1 — Club CTA' },
     { name: 'panel2', title: 'Panel 2 — Lo que incluye' },
-    { name: 'panel3', title: 'Panel 3 — Founders + Aspiracional' },
-    { name: 'panel4', title: 'Panel 4 — Misión / Quote' },
+    { name: 'panel3', title: 'Panel 3 — Quiénes Somos / Tú Decides' },
   ],
   preview: {
     prepare() {
@@ -25,7 +24,7 @@ export const manifestoSettings = defineType({
       title: 'Show Manifesto Section',
       type: 'boolean',
       initialValue: true,
-      description: 'Toggle visibility of the 4-column poster section.',
+      description: 'Toggle visibility of the 3-column poster section.',
       group: 'general',
     }),
 
@@ -141,51 +140,53 @@ export const manifestoSettings = defineType({
       }],
     }),
 
-    // ── PANEL 3 — Founders + Orange Aspirational ──────────────────────
-    defineField({
-      name: 'panel3TopBgColor',
-      title: 'Top Card — Background Color',
-      type: 'string',
-      initialValue: '#2d4a1e',
-      group: 'panel3',
-    }),
-    defineField({
-      name: 'panel3Eyebrow',
-      title: 'Top Card — Eyebrow Text',
-      type: 'translationRecord',
-      group: 'panel3',
-    }),
-    defineField({
-      name: 'panel3FounderInitials',
-      title: 'Founder Initials (comma separated)',
-      type: 'string',
-      initialValue: 'A,O',
-      description: 'Comma separated initials. Each one becomes an avatar circle.',
-      group: 'panel3',
-    }),
-    defineField({
-      name: 'panel3FounderName',
-      title: 'Founder Name(s)',
-      type: 'string',
-      initialValue: 'Ana & Omar',
-      group: 'panel3',
-    }),
-    defineField({
-      name: 'panel3FounderRole',
-      title: 'Founder Role/Location',
-      type: 'translationRecord',
-      group: 'panel3',
-    }),
+    // ── PANEL 3 — Quiénes Somos / Tú Decides ─────────────────────────
+    // Top card
     defineField({
       name: 'panel3OrangeBg',
-      title: 'Bottom Card — Background Color',
+      title: 'Top Card — Background Color',
       type: 'string',
       initialValue: '#e8632a',
       group: 'panel3',
     }),
     defineField({
+      name: 'panel3Eyebrow',
+      title: 'Top Card — Eyebrow (e.g. QUIÉNES SOMOS)',
+      type: 'translationRecord',
+      group: 'panel3',
+    }),
+    defineField({
+      name: 'panel3IllustrationImage',
+      title: 'Top Card — Illustration Image',
+      type: 'image',
+      description: 'Illustration shown in the center of the orange card. Falls back to the default illustration if empty.',
+      group: 'panel3',
+    }),
+    defineField({
+      name: 'panel4Quote',
+      title: 'Top Card — Quote Text',
+      type: 'translationRecord',
+      group: 'panel3',
+    }),
+    defineField({
+      name: 'panel4QuoteAuthor',
+      title: 'Top Card — Quote Author',
+      type: 'string',
+      initialValue: '— Ana & Omar',
+      group: 'panel3',
+    }),
+    // Bottom card
+    defineField({
+      name: 'panel3BottomTextColor',
+      title: 'Bottom Card — Text & Button Color',
+      type: 'string',
+      initialValue: '#1a2e0f',
+      description: 'Dark color used for headline, description text, and CTA button background.',
+      group: 'panel3',
+    }),
+    defineField({
       name: 'panel3OrangeEyebrow',
-      title: 'Bottom Card — Eyebrow Text',
+      title: 'Bottom Card — Eyebrow (e.g. TÚ DECIDES)',
       type: 'translationRecord',
       group: 'panel3',
     }),
@@ -195,59 +196,24 @@ export const manifestoSettings = defineType({
       type: 'translationRecord',
       group: 'panel3',
     }),
-
-    // ── PANEL 4 — Mission / Quote ─────────────────────────────────────
     defineField({
-      name: 'panel4TextColor',
-      title: 'Accent Color',
-      type: 'string',
-      initialValue: '#5b9538',
-      group: 'panel4',
-    }),
-    defineField({
-      name: 'panel4Eyebrow',
-      title: 'Eyebrow Text',
+      name: 'panel3Description',
+      title: 'Bottom Card — Description Text',
       type: 'translationRecord',
-      group: 'panel4',
-    }),
-    defineField({
-      name: 'panel4Quote',
-      title: 'Quote Text',
-      type: 'translationRecord',
-      group: 'panel4',
-    }),
-    defineField({
-      name: 'panel4QuoteAuthor',
-      title: 'Quote Author',
-      type: 'string',
-      initialValue: '— Ana & Omar',
-      group: 'panel4',
+      group: 'panel3',
     }),
     defineField({
       name: 'panel4CTAText',
-      title: 'CTA Button Text',
+      title: 'Bottom Card — CTA Button Text',
       type: 'translationRecord',
-      group: 'panel4',
+      group: 'panel3',
     }),
     defineField({
       name: 'panel4CTALink',
-      title: 'CTA Button Link (optional)',
+      title: 'Bottom Card — CTA Link (optional, leave empty to open subscription funnel)',
       type: 'string',
-      initialValue: '#about',
-      description: 'Anchor or URL for the CTA. Default: #about',
-      group: 'panel4',
-    }),
-    defineField({
-      name: 'panel4CityLeft',
-      title: 'Bottom Left Label',
-      type: 'translationRecord',
-      group: 'panel4',
-    }),
-    defineField({
-      name: 'panel4CityRight',
-      title: 'Bottom Right Label',
-      type: 'translationRecord',
-      group: 'panel4',
+      description: 'Anchor or URL. Leave empty to open the subscription funnel.',
+      group: 'panel3',
     }),
   ],
 })
