@@ -8,32 +8,27 @@ export const aboutSettings = defineType({
     defineField({
       name: 'aboutTitle',
       title: 'About Section Title',
-      type: 'string',
-      initialValue: 'Ondo is a soup-first\\nbrand in Mexico City',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'aboutHeader',
       title: 'About Section Header',
-      type: 'string',
-      initialValue: 'ABOUT',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'aboutSub',
       title: 'About Section Subtitle',
-      type: 'text',
-      initialValue: 'Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation. Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'aboutLink',
       title: 'About Link Text',
-      type: 'string',
-      initialValue: 'LEARN MORE',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'aboutCTA',
       title: 'About CTA Button',
-      type: 'string',
-      initialValue: '¡APAPÁCHATE!',
+      type: 'translationRecord',
     }),
   ]
 })

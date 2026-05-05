@@ -221,6 +221,13 @@ export default function App() {
   const [funnelContingencies, setFunnelContingencies] = useState('');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // Soup Request Popup
+  const [showSoupModal, setShowSoupModal] = useState(false);
+  const [soupIdea, setSoupIdea] = useState('');
+  const [soupEmail, setSoupEmail] = useState('');
+  const [soupSubmitted, setSoupSubmitted] = useState(false);
+  const [isSubmittingSoup, setIsSubmittingSoup] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -272,13 +279,19 @@ export default function App() {
     return settings?.[key] ?? defaultVal;
   };
 
+  const getSettingText = (key: string, defaultVal: any = null): string => {
+    return resolveText(getSetting(key, defaultVal));
+  };
+
   const content = t[lang];
 
   // Helper: resolve title/description fields that may be translationRecord or plain string
   const resolveText = (field: any): string => {
     if (!field) return '';
     if (typeof field === 'string') return field;
-    return field[lang] || field.es || field.en || '';
+    const val = field[lang] || field.es || field.en;
+    if (typeof val === 'string') return val;
+    return '';
   };
 
   const products = displayProducts;
@@ -319,6 +332,13 @@ export default function App() {
     setNotifyEmail('');
     setEmailSent(false);
     setShowPopupModal(true);
+  };
+
+  const openSoupModal = () => {
+    setSoupIdea('');
+    setSoupEmail('');
+    setSoupSubmitted(false);
+    setShowSoupModal(true);
   };
 
   const handleCheckout = async () => {
@@ -507,13 +527,33 @@ export default function App() {
     }
   };
 
+  const handleSoupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!soupIdea || !soupEmail) return;
+    setIsSubmittingSoup(true);
+    try {
+      await writeClient.create({
+        _type: 'soupRequest',
+        soupIdea,
+        email: soupEmail,
+        createdAt: new Date().toISOString(),
+      });
+      setSoupSubmitted(true);
+    } catch (err) {
+      console.error('Soup request error:', err);
+      alert(lang === 'es' ? 'Error al enviar tu sugerencia. Inténtalo de nuevo.' : 'Error sending your suggestion. Please try again.');
+    } finally {
+      setIsSubmittingSoup(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-ondo-beige text-ondo-black font-body">
       {/* Top Banner (ROJO BANNER) */}
       <div className="bg-ondo-red text-white py-2 text-xs md:text-sm font-bold tracking-wider uppercase font-title leading-none overflow-hidden whitespace-nowrap">
         <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSetting('bannerText', content.banner)}</span>
-          <span>{getSetting('bannerText', content.banner)}</span>
+          <span>{getSettingText('bannerText', content.banner)}</span>
+          <span>{getSettingText('bannerText', content.banner)}</span>
         </div>
       </div>
       
@@ -521,8 +561,8 @@ export default function App() {
       <nav className="bg-ondo-beige border-b border-black/5 sticky top-0 z-30">
         <div className="w-full mx-auto px-6 py-5 md:py-7 flex items-center justify-between relative">
           <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[15px] tracking-wide">
-            <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSetting('navShop', content.navShop)}</a>
-            <a href="#manifesto" className="hover:text-ondo-orange transition-colors">{getSetting('navSubs', content.navSubs)}</a>
+            <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
+            <a href="#manifesto" className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
           </div>
           <div className="md:hidden">
             <Menu className="w-6 h-6 text-ondo-green" />
@@ -533,11 +573,6 @@ export default function App() {
           </a>
         
         <div className="flex items-center gap-4 sm:gap-6">
-           <div className="hidden md:flex gap-6 font-title font-semibold text-sm tracking-wide">
-             <a href="#steps" className="hover:text-ondo-orange transition-colors">{getSetting('navSteps', content.navSteps)}</a>
-             <a href="#about" className="hover:text-ondo-orange transition-colors">{getSetting('navAbout', content.navAbout)}</a>
-           </div>
-
            {/* Lang Toggle */}
            <div className="flex items-center gap-2 font-title font-bold text-xs uppercase bg-white/40 px-2 py-1 border border-ondo-black/5">
               <button 
@@ -555,8 +590,6 @@ export default function App() {
               </button>
            </div>
 
-           <Search className="w-5 h-5 cursor-pointer text-ondo-green hover:text-ondo-orange transition-colors" />
-           <User className="w-5 h-5 cursor-pointer hidden sm:block text-ondo-green hover:text-ondo-orange transition-colors" />
            <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => setIsCartOpen(true)}>
              <ShoppingCart className="w-6 h-6" />
              {cartItemCount > 0 && (
@@ -595,7 +628,7 @@ export default function App() {
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
                <ShoppingCart className="w-16 h-16 mb-4 opacity-20 text-ondo-green" />
-               <p className="font-title uppercase tracking-widest text-lg">{getSetting('emptyCart', content.emptyCart)}</p>
+               <p className="font-title uppercase tracking-widest text-lg">{getSettingText('emptyCart', content.emptyCart)}</p>
             </div>
           ) : (
             cart.map(item => (
@@ -640,7 +673,7 @@ export default function App() {
         {cart.length > 0 && (
           <div className="p-6 bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
             <div className="flex justify-between items-center mb-1">
-              <span className="font-title text-xl text-gray-500">{getSetting('subtotal', content.subtotal)}</span>
+              <span className="font-title text-xl text-gray-500">{getSettingText('subtotal', content.subtotal)}</span>
               <span className="font-title text-[28px] font-bold text-ondo-black">€{cartSubtotal.toFixed(2)}</span>
             </div>
             {activeDiscount && (
@@ -654,7 +687,7 @@ export default function App() {
               disabled={isCheckingOut}
               className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-60"
             >
-              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : getSetting('checkout', content.checkout)}
+              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : getSettingText('checkout', content.checkout)}
             </button>
           </div>
         )}
@@ -703,18 +736,18 @@ export default function App() {
                {/* Top eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
-                 {getSetting('panel1Eyebrow', 'EL CLUB · MEMBRESÍA')}
+                 {getSettingText('panel1Eyebrow', { es: 'EL CLUB · MEMBRESÍA', en: 'THE CLUB · MEMBERSHIP' })}
                </p>
 
                {/* Main Title */}
                <div className="z-10 flex-1">
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
                      style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
-                   {(getSetting('panel1TitleLine1', 'EL\nCLUB') || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
+                   {(getSettingText('panel1TitleLine1', { es: 'EL\nCLUB', en: 'THE\nCLUB' }) || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
                  </h2>
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
                      style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(60px, 7vw, 90px)' }}>
-                   {getSetting('panel1TitleLine2', 'ONDO.')}
+                   {getSettingText('panel1TitleLine2', { es: 'ONDO.', en: 'ONDO.' })}
                  </h2>
 
                  {/* Divider */}
@@ -723,13 +756,13 @@ export default function App() {
                  {/* Subheadline */}
                  <p className="font-body font-bold text-[15px] leading-snug mb-3"
                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   {(() => { const txt = getSetting('panel1Subheadline', 'Échate un clavado a la soupscripción de Ondo.'); const accent = getSetting('panel1SubAccentWord', 'soupscripción'); if (!accent || !txt.includes(accent)) return txt; const parts = txt.split(accent); return <>{parts[0]}<span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{accent}</span>{parts[1]}</>; })()}
+                   {(() => { const txt = getSettingText('panel1Subheadline', { es: 'Échate un clavado a la soupscripción de Ondo.', en: "Dive into Ondo's soupscription." }); const accent = getSettingText('panel1SubAccentWord', { es: 'soupscripción', en: 'soupscription' }); if (!accent || !txt.includes(accent)) return txt; const parts = txt.split(accent); return <>{parts[0]}<span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{accent}</span>{parts[1]}</>; })()}
                  </p>
 
                  {/* Tagline italic */}
                  <p className="font-body italic text-[14px] leading-relaxed mt-6 mb-8"
                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.85 }}>
-                   {getSetting('panel1Tagline', 'Para los que saben que una buena sopa cambia el día.')}
+                   {getSettingText('panel1Tagline', { es: 'Para los que saben que una buena sopa cambia el día.', en: 'For those who know a great soup changes the day.' })}
                  </p>
                </div>
 
@@ -743,7 +776,7 @@ export default function App() {
                      color: getSetting('panel1BgColor', '#6ca53a') 
                    }}
                  >
-                   {getSetting('panel1CTAText', 'ÚNETE AL CLUB')}
+                   {getSettingText('panel1CTAText', { es: 'ÚNETE AL CLUB', en: 'JOIN THE CLUB' })}
                    <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                  </button>
                </div>
@@ -769,30 +802,30 @@ export default function App() {
                {/* Eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: '#f1f3b0', opacity: 0.65 }}>
-                 {getSetting('panel2Eyebrow', 'LO QUE INCLUYE')}
+                 {getSettingText('panel2Eyebrow', { es: 'LO QUE INCLUYE', en: "WHAT'S INCLUDED" })}
                </p>
 
                {/* Headline */}
                <div className="z-10 mb-8">
                  <h2 className="font-title font-black text-[32px] lg:text-[42px] leading-[0.9] tracking-tight">
-                   <span style={{ color: '#f1f3b0' }}>{getSetting('panel2HeadlinePrimary', 'Todo lo que necesitas.')}</span>{' '}
-                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{getSetting('panel2HeadlineAccent', 'Nada que no.')}</span>
+                   <span style={{ color: '#f1f3b0' }}>{getSettingText('panel2HeadlinePrimary', { es: 'Todo lo que necesitas.', en: 'Everything you need.' })}</span>{' '}
+                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{getSettingText('panel2HeadlineAccent', { es: 'Nada que no.', en: "Nothing you don't." })}</span>
                  </h2>
                </div>
 
                {/* Benefits list */}
                <div className="z-10 flex flex-col gap-5 flex-1">
                  {(getSetting('panel2Benefits', null) || [
-                   { title: 'Envío incluido', subtitle: 'sin sorpresas ni cargos ocultos' },
-                   { title: 'Sopas exclusivas de socio', subtitle: 'nunca en el menú regular' },
-                   { title: 'Primero en probar lo nuevo', subtitle: 'beta taster oficial' },
-                   { title: 'Recetas de temporada', subtitle: 'cada semana en tu correo' },
+                   { es: 'Envío incluido', en: 'Shipping included', subtitleEs: 'sin sorpresas ni cargos ocultos', subtitleEn: 'no surprises or hidden charges' },
+                   { es: 'Sopas exclusivas de socio', en: 'Member-exclusive soups', subtitleEs: 'nunca en el menú regular', subtitleEn: 'never on the regular menu' },
+                   { es: 'Primero en probar lo nuevo', en: 'First to try what\'s new', subtitleEs: 'beta taster oficial', subtitleEn: 'official beta taster' },
+                   { es: 'Recetas de temporada', en: 'Seasonal recipes', subtitleEs: 'cada semana en tu correo', subtitleEn: 'every week in your inbox' },
                  ]).map((item: any, i: number) => (
                    <div key={i} className="flex gap-4 items-start">
                      <span className="font-title font-bold text-[11px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{String(i + 1).padStart(2, '0')}</span>
                      <div>
-                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{item.title}</p>
-                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{item.subtitle || item.sub}</p>
+                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{lang === 'en' && item.en ? item.en : (item.es || item.title || '')}</p>
+                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{lang === 'en' && item.subtitleEn ? item.subtitleEn : (item.subtitleEs || item.subtitle || item.sub || '')}</p>
                      </div>
                    </div>
                  ))}
@@ -821,14 +854,14 @@ export default function App() {
                  {/* Eyebrow */}
                  <p className="font-title text-[11px] uppercase tracking-[0.25em]"
                     style={{ color: '#f1f3b0', opacity: 0.7 }}>
-                   {getSetting('panel3OrangeEyebrow', 'TU MEMBRESÍA')}
+                   {getSettingText('panel3OrangeEyebrow', { es: 'TU MEMBRESÍA', en: 'YOUR MEMBERSHIP' })}
                  </p>
 
                  {/* Aspirational headline */}
                  <div className="mt-auto">
                    <h3 className="font-title font-black text-[28px] lg:text-[32px] leading-[0.9] tracking-tight mb-3"
                        style={{ color: '#f1f3b0' }}>
-                     {getSetting('panel3OrangeHeadline', 'Tú decides el cómo y el cuándo.')}
+                     {getSettingText('panel3OrangeHeadline', { es: 'Tú decides el cómo y el cuándo.', en: 'You decide how and when.' })}
                    </h3>
                  </div>
 
@@ -853,7 +886,7 @@ export default function App() {
                  {/* Eyebrow */}
                  <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-auto"
                     style={{ color: '#f1f3b0', opacity: 0.55 }}>
-                   {getSetting('panel3Eyebrow', 'QUIÉNES SOMOS')}
+                   {getSettingText('panel3Eyebrow', { es: 'QUIÉNES SOMOS', en: 'WHO WE ARE' })}
                  </p>
 
                  {/* Avatars + name */}
@@ -864,7 +897,7 @@ export default function App() {
                      ))}
                    </div>
                    <p className="font-title font-bold text-[16px] leading-none mb-1" style={{ color: '#f1f3b0' }}>{getSetting('panel3FounderName', 'Ana & Omar')}</p>
-                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>{getSetting('panel3FounderRole', 'Cofundadores · Ondo · Roma CDMX')}</p>
+                   <p className="font-body text-[12px]" style={{ color: '#f1f3b0', opacity: 0.6 }}>{getSettingText('panel3FounderRole', { es: 'Cofundadores · Ondo · Roma CDMX', en: 'Co-founders · Ondo · Roma CDMX' })}</p>
                  </div>
                </div>
             </div>
@@ -874,14 +907,14 @@ export default function App() {
                {/* Eyebrow */}
                <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-8"
                   style={{ color: getSetting('panel4TextColor', '#5b9538'), opacity: 0.6 }}>
-                 {getSetting('panel4Eyebrow', 'NUESTRA MISIÓN')}
+                 {getSettingText('panel4Eyebrow', { es: 'NUESTRA MISIÓN', en: 'OUR MISSION' })}
                </p>
 
                {/* Main quote */}
                <blockquote className="flex-1 flex flex-col justify-center z-10">
                  <p className="font-body font-bold italic text-[20px] lg:text-[24px] leading-[1.3] mb-8"
                     style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
-                   {getSetting('panel4Quote', '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."')}
+                   {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
                  </p>
                  <footer className="font-title font-bold text-[12px] uppercase tracking-widest"
                          style={{ color: getSetting('panel4TextColor', '#5b9538') }}>
@@ -899,7 +932,7 @@ export default function App() {
                      color: '#ffffff'
                    }}
                  >
-                   {getSetting('panel4CTAText', 'CONÓCENOS')}
+                   {getSettingText('panel4CTAText', { es: 'CONÓCENOS', en: 'LEARN MORE' })}
                    <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                  </a>
                </div>
@@ -939,8 +972,8 @@ export default function App() {
       {getSetting('showMidBanner', true) !== false && (
       <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
         <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSetting('midBannerText', content.midBanner)}</span>
-          <span>{getSetting('midBannerText', content.midBanner)}</span>
+          <span>{getSettingText('midBannerText', content.midBanner)}</span>
+          <span>{getSettingText('midBannerText', content.midBanner)}</span>
         </div>
       </div>
       )}
@@ -951,7 +984,7 @@ export default function App() {
             {/* Sidebar Filters — dynamic from Sanity productTag */}
              <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
                <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
-                 {getSetting('filtersTitle', content.filtersTitle)}
+                 {getSettingText('filtersTitle', content.filtersTitle)}
                  {activeFilters.length > 0 && (
                    <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-green font-bold tracking-wide normal-case underline underline-offset-2">
                      {lang === 'es' ? 'Borrar' : 'Clear'}
@@ -963,19 +996,19 @@ export default function App() {
                  <>
                    <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
                      <div className="w-5 h-5 bg-ondo-green flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
-                     {getSetting('filterBundle', content.filterBundle)}
+                     {getSettingText('filterBundle', content.filterBundle)}
                    </button>
                    <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
                      <div className="w-5 h-5 bg-sky-400 flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
-                     {getSetting('filterNew', content.filterNew)}
+                     {getSettingText('filterNew', content.filterNew)}
                    </button>
                    <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
                      <div className="w-5 h-5 bg-red-500 flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🔥</span></div>
-                     {getSetting('filterBestseller', content.filterBestseller)}
+                     {getSettingText('filterBestseller', content.filterBestseller)}
                    </button>
                    <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
                      <div className="w-5 h-5 bg-ondo-light-green flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
-                     {getSetting('filterVegan', content.filterVegan)}
+                     {getSettingText('filterVegan', content.filterVegan)}
                    </button>
                  </>
                ) : (
@@ -1002,7 +1035,7 @@ export default function App() {
                )}
 
                <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-green hover:text-ondo-green transition-colors w-full justify-between">
-                 {getSetting('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
+                 {getSettingText('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
                </div>
             </div>
 
@@ -1128,31 +1161,31 @@ export default function App() {
       {getSetting('showSteps', true) !== false && (
       <section id="steps" className="py-28 px-6 bg-ondo-beige">
          <div className="max-w-6xl mx-auto text-center">
-            <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{getSetting('stepsTitle', content.stepsTitle)}</h2>
+            <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{getSettingText('stepsTitle', content.stepsTitle)}</h2>
             <div className="grid md:grid-cols-3 gap-12">
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
                     <img src={getSetting('step1Image', null) ? urlFor(getSetting('step1Image', null)).url() : '/images/ondo-113.JPG'} alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
                  </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step1Title', content.step1Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step1Desc', content.step1Desc)}</p>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step1Title', content.step1Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step1Desc', content.step1Desc)}</p>
                </div>
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
                     <img src={getSetting('step2Image', null) ? urlFor(getSetting('step2Image', null)).url() : '/images/ondo-051.JPG'} alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
                  </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step2Title', content.step2Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step2Desc', content.step2Desc)}</p>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step2Title', content.step2Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step2Desc', content.step2Desc)}</p>
                </div>
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
                     <img src={getSetting('step3Image', null) ? urlFor(getSetting('step3Image', null)).url() : '/images/ondo-070.JPG'} alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
                  </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSetting('step3Title', content.step3Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSetting('step3Desc', content.step3Desc)}</p>
+                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step3Title', content.step3Title)}</h3>
+                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step3Desc', content.step3Desc)}</p>
                </div>
 
             </div>
@@ -1170,21 +1203,21 @@ export default function App() {
           </div>
           <div className="flex-1">
              <h2 className="text-[#6ca53a] font-title text-[40px] md:text-[50px] lg:text-[65px] font-bold leading-[0.95] tracking-tight mb-16 whitespace-pre-line">
-               {getSetting('aboutTitle', content.aboutTitle)}
+               {getSettingText('aboutTitle', content.aboutTitle)}
              </h2>
 
-             <h4 className="text-[#6ca53a] font-title text-[12px] font-bold uppercase tracking-[0.2em] mb-6">{getSetting('aboutHeader', 'ABOUT')}</h4>
+             <h4 className="text-[#6ca53a] font-title text-[12px] font-bold uppercase tracking-[0.2em] mb-6">{getSettingText('aboutHeader', { es: 'ABOUT', en: 'ABOUT' })}</h4>
 
              <p className="text-[#5b9538] font-body text-[16px] md:text-[18px] font-bold leading-relaxed mb-12 max-w-[80%] whitespace-pre-line">
-               {getSetting('aboutSub', content.aboutSub)}
+               {getSettingText('aboutSub', content.aboutSub)}
              </p>
              
              <div className="flex items-center gap-8 border-t border-[#6ca53a]/20 pt-8">
                <a href="#" className="text-[#6ca53a] font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
-                 {getSetting('aboutLink', 'LEARN MORE')}
+                 {getSettingText('aboutLink', { es: 'LEARN MORE', en: 'LEARN MORE' })}
                </a>
                <button className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
-                 {getSetting('aboutCTA', '¡APAPÁCHATE!')}
+                 {getSettingText('aboutCTA', { es: '¡APAPÁCHATE!', en: '¡APAPÁCHATE!' })}
                </button>
              </div>
           </div>
@@ -1518,14 +1551,13 @@ export default function App() {
       {/* ── STATIC FLOATING BUTTON (BOTTOM LEFT) ── */}
       {getSetting('enabled', true) !== false && (
         <button
-          onClick={openFunnel}
+          onClick={openSoupModal}
           className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
-          {resolveText(getSetting('buttonText', { es: '¡Suscríbete!', en: 'Subscribe!' })) || 'Suscríbete'}
+          {resolveText(getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })) || '¿Qué sopa amas?'}
         </button>
       )}
-
       {/* ── MODAL: Subscription Funnel Popup ── */}
       {showPopupModal && (
         <div
@@ -2090,6 +2122,113 @@ export default function App() {
                 </p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+
+      {/* ── MODAL: Soup Request Popup ── */}
+      {showSoupModal && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowSoupModal(false)}
+        >
+          <div
+            className="bg-ondo-white shadow-2xl w-full max-w-lg overflow-hidden flex flex-col relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowSoupModal(false)}
+              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
+            >
+              <X className="w-5 h-5 text-ondo-green" />
+            </button>
+
+            <div className="p-8 md:p-10 flex flex-col bg-ondo-white">
+               {!soupSubmitted ? (
+                 <>
+                   <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block self-start pr-6">
+                     {lang === 'es' ? 'ONDO SOUPS' : 'ONDO SOUPS'}
+                   </p>
+                   
+                   <h2 className="font-title font-black text-[32px] md:text-[42px] uppercase leading-[0.9] text-ondo-green mb-6 tracking-tight">
+                     {resolveText(getSetting('popupTitle', { es: '¿Que sopas te apapachan?', en: 'What soups comfort you?' }))}
+                   </h2>
+
+                   <p className="font-body text-ondo-green text-[15px] leading-relaxed mb-8">
+                     {resolveText(getSetting('popupMessage', { 
+                       es: 'Dinos que sopas te encantaría que hicieramos y serás de los primeros en probarlos', 
+                       en: 'Tell us what soups you would love us to make and you will be among the first to try them' 
+                     }))}
+                   </p>
+
+                   <form onSubmit={handleSoupSubmit} className="flex flex-col gap-4">
+                     <div>
+                       <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                         {resolveText(getSetting('field1Label', { es: '¿Qué sopa tienes en mente?', en: 'What soup do you have in mind?' }))}
+                       </label>
+                       <textarea
+                         required
+                         rows={3}
+                         value={soupIdea}
+                         onChange={e => setSoupIdea(e.target.value)}
+                         placeholder={lang === 'es' ? 'Ej: Crema de alcachofa, Sopa de cebolla...' : 'e.g. Artichoke cream, Onion soup...'}
+                         className="w-full px-4 py-3 border border-ondo-green/20 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30 resize-none"
+                       />
+                     </div>
+
+                     <div>
+                       <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
+                         {resolveText(getSetting('field2Label', { es: 'Tu Correo', en: 'Your Email' }))}
+                       </label>
+                       <input
+                         required
+                         type="email"
+                         value={soupEmail}
+                         onChange={e => setSoupEmail(e.target.value)}
+                         placeholder={lang === 'es' ? 'tu@correo.com' : 'your@email.com'}
+                         className="w-full px-4 py-3 border border-ondo-green/20 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30"
+                       />
+                     </div>
+
+                     <p className="font-body text-[11px] text-gray-400 italic mb-2">
+                       {resolveText(getSetting('footerNote', { 
+                         es: '*al enviar aceptas recibir comunicaciones ligeras del equipo Ondo', 
+                         en: '*by submitting you agree to receive light communication from team Ondo' 
+                       }))}
+                     </p>
+
+                     <button
+                       type="submit"
+                       disabled={isSubmittingSoup}
+                       className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start disabled:opacity-50"
+                     >
+                       {isSubmittingSoup ? (lang === 'es' ? 'ENVIANDO...' : 'SENDING...') : (lang === 'es' ? 'ENVIAR' : 'SUBMIT')} &rarr;
+                     </button>
+                   </form>
+                 </>
+               ) : (
+                 <div className="py-12 flex flex-col items-center text-center">
+                   <div className="w-16 h-16 bg-ondo-green flex items-center justify-center mb-6">
+                     <CheckCircle className="w-8 h-8 text-white" />
+                   </div>
+                   <h2 className="font-title font-black text-[28px] uppercase leading-tight text-ondo-green mb-4">
+                     {resolveText(getSetting('successMessage', { es: '¡GRACIAS!', en: 'THANK YOU!' }))}
+                   </h2>
+                   <p className="font-body text-ondo-green text-[15px] leading-relaxed mb-8">
+                     {lang === 'es' 
+                       ? 'Hemos recibido tu idea. ¡Te avisaremos pronto!' 
+                       : 'We have received your idea. We will let you know soon!'}
+                   </p>
+                   <button
+                     onClick={() => setShowSoupModal(false)}
+                     className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3 px-8 transition-colors text-[13px]"
+                   >
+                     {lang === 'es' ? 'CERRAR' : 'CLOSE'}
+                   </button>
+                 </div>
+               )}
+            </div>
           </div>
         </div>
       )}

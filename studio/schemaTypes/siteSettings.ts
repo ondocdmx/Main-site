@@ -8,8 +8,7 @@ export const siteSettings = defineType({
     defineField({
       name: 'bannerText',
       title: 'Top Banner Text',
-      type: 'string',
-      initialValue: 'APAPÁCHATE | ENVÍO GRATIS EN 12+ CARTONES',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'showMidBanner',
@@ -20,50 +19,42 @@ export const siteSettings = defineType({
     defineField({
       name: 'midBannerText',
       title: 'Middle Banner Text',
-      type: 'string',
-      initialValue: '¡Aprovecha un regalo con tu primer pedido usando código: ONDOFIRST!',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'navShop',
       title: 'Navigation: Shop',
-      type: 'string',
-      initialValue: 'TIENDA',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'navSubs',
       title: 'Navigation: Subscription',
-      type: 'string',
-      initialValue: 'SUSCRIPCIÓN',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'navSteps',
       title: 'Navigation: How it Works',
-      type: 'string',
-      initialValue: 'CÓMO FUNCIONA',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'navAbout',
       title: 'Navigation: About',
-      type: 'string',
-      initialValue: 'NOSOTROS',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'emptyCart',
       title: 'Empty Cart Message',
-      type: 'string',
-      initialValue: 'Tu carrito está vacío',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'subtotal',
       title: 'Subtotal Text',
-      type: 'string',
-      initialValue: 'Subtotal',
+      type: 'translationRecord',
     }),
     defineField({
       name: 'checkout',
       title: 'Checkout Button Text',
-      type: 'string',
-      initialValue: 'Ir a pagar',
+      type: 'translationRecord',
     }),
 
     // ── CART DISCOUNTS ─────────────────────────────────────────────────

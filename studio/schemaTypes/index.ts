@@ -6,12 +6,13 @@ import { productSettings } from './productSettings'
 import { processSettings } from './processSettings'
 import { siteSettings } from './siteSettings'
 import { aboutSettings } from './aboutSettings'
-import manifestoSettings from './manifestoSettings'
+import { manifestoSettings } from './manifestoSettings'
 import { deliveryLead } from './deliveryLead'
 import { deliveryZones } from './deliveryZones'
 import { popupSettings } from './popupSettings'
 import { funnelSettings } from './funnelSettings'
 import { footerSettings } from './footerSettings'
+import { soupRequest } from './soupRequest'
 
 export const schemaTypes = [
   product,
@@ -28,4 +29,5 @@ export const schemaTypes = [
   popupSettings,
   funnelSettings,
   footerSettings,
+  soupRequest,
 ]

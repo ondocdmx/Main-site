@@ -1,6 +1,6 @@
 import {defineField, defineType} from 'sanity'
 
-export default defineType({
+export const manifestoSettings = defineType({
   name: 'manifestoSettings',
   title: 'Manifesto Section',
   type: 'document',
@@ -54,53 +54,46 @@ export default defineType({
     defineField({
       name: 'panel1Eyebrow',
       title: 'Eyebrow Text',
-      type: 'string',
-      initialValue: 'EL CLUB · MEMBRESÍA',
+      type: 'translationRecord',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1TitleLine1',
       title: 'Title Line 1',
-      type: 'string',
-      initialValue: 'EL\nCLUB',
+      type: 'translationRecord',
       description: 'Use line breaks (\\n) to split into multiple lines.',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1TitleLine2',
       title: 'Title Line 2 (accent color)',
-      type: 'string',
-      initialValue: 'ONDO.',
+      type: 'translationRecord',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1Subheadline',
-      title: 'Subheadline HTML',
-      type: 'text',
-      initialValue: 'Échate un clavado a la soupscripción de Ondo.',
+      title: 'Subheadline',
+      type: 'translationRecord',
       description: 'Subheadline text below the title.',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1SubAccentWord',
       title: 'Accent Word in Subheadline',
-      type: 'string',
-      initialValue: 'soupscripción',
-      description: 'This word in the subheadline will be highlighted with the accent color.',
+      type: 'translationRecord',
+      description: 'The word in the subheadline to highlight in accent color. Must match exactly the word in the subheadline (per language).',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1Tagline',
       title: 'Tagline (italic)',
-      type: 'text',
-      initialValue: 'Para los que saben que una buena sopa cambia el día.',
+      type: 'translationRecord',
       group: 'panel1',
     }),
     defineField({
       name: 'panel1CTAText',
       title: 'CTA Button Text',
-      type: 'string',
-      initialValue: 'ÚNETE AL CLUB',
+      type: 'translationRecord',
       group: 'panel1',
     }),
 
@@ -115,22 +108,19 @@ export default defineType({
     defineField({
       name: 'panel2Eyebrow',
       title: 'Eyebrow Text',
-      type: 'string',
-      initialValue: 'LO QUE INCLUYE',
+      type: 'translationRecord',
       group: 'panel2',
     }),
     defineField({
       name: 'panel2HeadlinePrimary',
       title: 'Headline (primary color)',
-      type: 'string',
-      initialValue: 'Todo lo que necesitas.',
+      type: 'translationRecord',
       group: 'panel2',
     }),
     defineField({
       name: 'panel2HeadlineAccent',
       title: 'Headline (accent color)',
-      type: 'string',
-      initialValue: 'Nada que no.',
+      type: 'translationRecord',
       group: 'panel2',
     }),
     defineField({
@@ -141,10 +131,12 @@ export default defineType({
       of: [{
         type: 'object',
         name: 'benefitItem',
-        preview: { select: { title: 'title' } },
+        preview: { select: { title: 'es' } },
         fields: [
-          defineField({ name: 'title', title: 'Benefit Title', type: 'string' }),
-          defineField({ name: 'subtitle', title: 'Benefit Subtitle', type: 'string' }),
+          defineField({ name: 'es', title: 'Título (Español)', type: 'string' }),
+          defineField({ name: 'en', title: 'Title (English)', type: 'string' }),
+          defineField({ name: 'subtitleEs', title: 'Subtítulo (Español)', type: 'string' }),
+          defineField({ name: 'subtitleEn', title: 'Subtitle (English)', type: 'string' }),
         ],
       }],
     }),
@@ -160,8 +152,7 @@ export default defineType({
     defineField({
       name: 'panel3Eyebrow',
       title: 'Top Card — Eyebrow Text',
-      type: 'string',
-      initialValue: 'QUIÉNES SOMOS',
+      type: 'translationRecord',
       group: 'panel3',
     }),
     defineField({
@@ -182,8 +173,7 @@ export default defineType({
     defineField({
       name: 'panel3FounderRole',
       title: 'Founder Role/Location',
-      type: 'string',
-      initialValue: 'Cofundadores · Ondo · Roma CDMX',
+      type: 'translationRecord',
       group: 'panel3',
     }),
     defineField({
@@ -196,15 +186,13 @@ export default defineType({
     defineField({
       name: 'panel3OrangeEyebrow',
       title: 'Bottom Card — Eyebrow Text',
-      type: 'string',
-      initialValue: 'TU MEMBRESÍA',
+      type: 'translationRecord',
       group: 'panel3',
     }),
     defineField({
       name: 'panel3OrangeHeadline',
       title: 'Bottom Card — Headline',
-      type: 'string',
-      initialValue: 'Tú decides el cómo y el cuándo.',
+      type: 'translationRecord',
       group: 'panel3',
     }),
 
@@ -219,15 +207,13 @@ export default defineType({
     defineField({
       name: 'panel4Eyebrow',
       title: 'Eyebrow Text',
-      type: 'string',
-      initialValue: 'NUESTRA MISIÓN',
+      type: 'translationRecord',
       group: 'panel4',
     }),
     defineField({
       name: 'panel4Quote',
       title: 'Quote Text',
-      type: 'text',
-      initialValue: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."',
+      type: 'translationRecord',
       group: 'panel4',
     }),
     defineField({
@@ -240,8 +226,7 @@ export default defineType({
     defineField({
       name: 'panel4CTAText',
       title: 'CTA Button Text',
-      type: 'string',
-      initialValue: 'CONÓCENOS',
+      type: 'translationRecord',
       group: 'panel4',
     }),
     defineField({

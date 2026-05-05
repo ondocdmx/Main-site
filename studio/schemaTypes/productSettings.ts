@@ -21,50 +21,42 @@ export const productSettings = defineType({
     defineField({
       name: 'filtersTitle',
       title: 'Filters Title',
-      type: 'string',
-      initialValue: 'Filtros'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'filterBundle',
       title: 'Filter: Bundle/Vegetarian',
-      type: 'string',
-      initialValue: 'Vegetariano'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'filterNew',
       title: 'Filter: Cold/New',
-      type: 'string',
-      initialValue: 'Frío'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'filterBestseller',
       title: 'Filter: Hot/Bestseller',
-      type: 'string',
-      initialValue: 'Caliente'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'filterVegan',
       title: 'Filter: Vegan',
-      type: 'string',
-      initialValue: 'Vegano'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'sortBy',
       title: 'Sort By Text',
-      type: 'string',
-      initialValue: 'Ordenar por'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'subscribeTab',
       title: 'Tab: Subscription',
-      type: 'string',
-      initialValue: 'Suscripción'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'singleTab',
       title: 'Tab: Single Purchase',
-      type: 'string',
-      initialValue: 'Una sola compra'
+      type: 'translationRecord',
     }),
     defineField({
       name: 'clubBannerTitle',
