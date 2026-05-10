@@ -12,7 +12,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 app.post('/api/create-cart-checkout', async (req, res) => {
-  const { cartItems, couponId } = req.body;
+  const { cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, shippingPriceId, isPickup } = req.body;
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     res.status(400).json({ error: 'cartItems is required' });
@@ -21,16 +21,28 @@ app.post('/api/create-cart-checkout', async (req, res) => {
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-  const line_items = cartItems.map((item: { priceId: string; quantity: number }) => ({
+  const line_items: { price: string; quantity: number }[] = cartItems.map((item: { priceId: string; quantity: number }) => ({
     price: item.priceId,
     quantity: item.quantity,
   }));
+
+  if (!isPickup && shippingPriceId) {
+    line_items.push({ price: shippingPriceId, quantity: 1 });
+  }
 
   const sessionParams: any = {
     mode: 'payment',
     line_items,
     success_url: `${frontendUrl}?payment=success`,
     cancel_url: frontendUrl,
+    payment_intent_data: {
+      metadata: {
+        delivery_type: isPickup ? 'pickup' : 'home_delivery',
+        delivery_slot: deliverySlot || '',
+        delivery_phone: deliveryPhone || '',
+        delivery_email: deliveryEmail || '',
+      },
+    },
   };
 
   if (couponId) {

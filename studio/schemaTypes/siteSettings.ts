@@ -94,5 +94,13 @@ export const siteSettings = defineType({
       type: 'string',
       description: 'El ID del cupón que creaste en el Dashboard de Stripe (ej: DISC_30PCT)',
     }),
+
+    // ── ENVÍOS ─────────────────────────────────────────────────────────────
+    defineField({
+      name: 'shippingStripePriceId',
+      title: 'Envío — ID del precio de Stripe',
+      type: 'string',
+      description: 'El ID del precio de Stripe del producto "Envío" (ej: price_xxxxx). Se añade automáticamente cuando el cliente elige entrega a domicilio.',
+    }),
   ]
 })

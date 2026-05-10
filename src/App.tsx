@@ -40,7 +40,22 @@ const t = {
     shopBestSellers: "COMPRA LOS MÁS VENDIDOS",
     reviews: "Reseñas",
     subscribeTab: "Suscripción",
-    singleTab: "Una sola compra"
+    singleTab: "Una sola compra",
+    deliverySlotTitle: "¿Cuándo te enviamos tu pedido?",
+    deliverySlotSub: "Las entregas se realizan los lunes. Elige tu franja horaria:",
+    slot1: "Lunes 9:00 – 13:00",
+    slot2: "Lunes 13:00 – 17:00",
+    slot3: "Lunes 17:00 – 21:00",
+    slotPickup: "Ninguna me viene bien",
+    slotPickupSub: "Recojo en tienda (Roma Norte) · Sin coste de envío",
+    deliveryContactTitle: "¿Cómo te avisamos cuando vamos de camino?",
+    deliveryPhone: "Teléfono",
+    deliveryEmail: "Email",
+    deliveryContactNote: "Introduce al menos uno para poder avisarte.",
+    pickupNote: "Te contactaremos para coordinar el horario de recogida en nuestra tienda de Roma Norte.",
+    confirmAndPay: "Confirmar y pagar",
+    deliverySlotRequired: "Selecciona una franja horaria para continuar.",
+    deliveryContactRequired: "Introduce un teléfono o email para que podamos avisarte de la entrega.",
   },
   en: {
     banner: "APAPÁCHATE | FREE SHIPPING 12+ CARTONS",
@@ -79,7 +94,22 @@ const t = {
     shopBestSellers: "SHOP BEST SELLERS",
     reviews: "Reviews",
     subscribeTab: "Subscription",
-    singleTab: "Single Purchase"
+    singleTab: "Single Purchase",
+    deliverySlotTitle: "When should we deliver your order?",
+    deliverySlotSub: "Deliveries happen on Mondays. Choose your time slot:",
+    slot1: "Monday 9:00 – 13:00",
+    slot2: "Monday 13:00 – 17:00",
+    slot3: "Monday 17:00 – 21:00",
+    slotPickup: "None of these work for me",
+    slotPickupSub: "Pick up in store (Roma Norte) · No delivery charge",
+    deliveryContactTitle: "How should we notify you when we're on our way?",
+    deliveryPhone: "Phone",
+    deliveryEmail: "Email",
+    deliveryContactNote: "Enter at least one so we can reach you.",
+    pickupNote: "We'll contact you to coordinate a pick-up time at our Roma Norte store.",
+    confirmAndPay: "Confirm & Pay",
+    deliverySlotRequired: "Please select a time slot to continue.",
+    deliveryContactRequired: "Please enter a phone or email so we can notify you about your delivery.",
   }
 };
 
@@ -200,6 +230,11 @@ export default function App() {
   const [pendingProduct, setPendingProduct] = useState<any>(null);
   const [deliveryZones, setDeliveryZones] = useState<any>(null);
   const hasValidatedDelivery = typeof window !== 'undefined' && localStorage.getItem('ondo_delivery_validated') === 'true';
+
+  // Delivery slot (inside cart)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [slotPhone, setSlotPhone] = useState('');
+  const [slotEmail, setSlotEmail] = useState('');
 
   // Cart mixing warning
   const [showMixWarning, setShowMixWarning] = useState(false);
@@ -514,7 +549,7 @@ export default function App() {
     return null;
   })();
 
-  const handleCartCheckout = async () => {
+  const handleCartCheckout = async (slot: string, phone: string, email: string) => {
     setIsCheckingOut(true);
     try {
       const cartItems = cart.map((item: { product: any; quantity: number }) => ({ priceId: item.product.stripePriceId, quantity: item.quantity }));
@@ -524,10 +559,20 @@ export default function App() {
         setIsCheckingOut(false);
         return;
       }
+      const isPickup = slot === 'pickup';
+      const shippingPriceId = getSetting('shippingStripePriceId', '');
       const res = await fetch('/api/create-cart-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cartItems, couponId: activeDiscount?.couponId || null }),
+        body: JSON.stringify({
+          cartItems,
+          couponId: activeDiscount?.couponId || null,
+          deliverySlot: slot,
+          deliveryPhone: phone,
+          deliveryEmail: email,
+          shippingPriceId,
+          isPickup,
+        }),
       });
       const data = await res.json();
       if (data.url) {
@@ -646,41 +691,96 @@ export default function App() {
                <p className="font-title uppercase tracking-widest text-lg">{getSettingText('emptyCart', content.emptyCart)}</p>
             </div>
           ) : (
-            cart.map(item => (
-              <div key={item.product._id} className="flex gap-4 p-4 bg-white shadow-sm border border-gray-50 items-center">
-                <div className={`w-16 h-20 ${item.product.bgColor || 'bg-ondo-beige'} overflow-hidden shrink-0`}>
-                   <img src={resolveImage(item.product.image)} className="w-full h-full object-cover mix-blend-multiply" alt="product" />
-                </div>
-                <div className="flex-1 flex flex-col justify-between">
-                   <div className="flex justify-between gap-2 mb-2">
-                      <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
-                      <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
-                         {cartItemCount >= 5 ? (
-                           <>
-                             <span className="line-through text-gray-400 text-xs">€{(item.product.price * item.quantity).toFixed(2)}</span>
-                             <span className="text-ondo-orange flex items-center gap-1">
-                               €{(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
-                               <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
-                                 -{cartItemCount > 9 ? '20' : '10'}%
+            <>
+              {cart.map((item: { product: any; quantity: number }) => (
+                <div key={item.product._id} className="flex gap-4 p-4 bg-white shadow-sm border border-gray-50 items-center">
+                  <div className={`w-16 h-20 ${item.product.bgColor || 'bg-ondo-beige'} overflow-hidden shrink-0`}>
+                     <img src={resolveImage(item.product.image)} className="w-full h-full object-cover mix-blend-multiply" alt="product" />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between">
+                     <div className="flex justify-between gap-2 mb-2">
+                        <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
+                        <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
+                           {cartItemCount >= 5 ? (
+                             <>
+                               <span className="line-through text-gray-400 text-xs">€{(item.product.price * item.quantity).toFixed(2)}</span>
+                               <span className="text-ondo-orange flex items-center gap-1">
+                                 €{(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
+                                 <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
+                                   -{cartItemCount > 9 ? '20' : '10'}%
+                                 </span>
                                </span>
-                             </span>
-                           </>
-                         ) : (
-                           <span>€{(item.product.price * item.quantity).toFixed(2)}</span>
-                         )}
-                      </div>
-                   </div>
-                   <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center border border-gray-100 bg-ondo-white">
-                         <button onClick={() => updateQuantity(item.product._id, -1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Minus className="w-3 h-3" /></button>
-                         <span className="font-title text-[15px] w-6 text-center">{item.quantity}</span>
-                         <button onClick={() => updateQuantity(item.product._id, 1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Plus className="w-3 h-3" /></button>
-                      </div>
-                      <button onClick={() => removeItem(item.product._id)} className="text-gray-300 hover:text-ondo-red transition-colors"><Trash2 className="w-5 h-5" /></button>
-                   </div>
+                             </>
+                           ) : (
+                             <span>€{(item.product.price * item.quantity).toFixed(2)}</span>
+                           )}
+                        </div>
+                     </div>
+                     <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center border border-gray-100 bg-ondo-white">
+                           <button onClick={() => updateQuantity(item.product._id, -1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Minus className="w-3 h-3" /></button>
+                           <span className="font-title text-[15px] w-6 text-center">{item.quantity}</span>
+                           <button onClick={() => updateQuantity(item.product._id, 1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Plus className="w-3 h-3" /></button>
+                        </div>
+                        <button onClick={() => removeItem(item.product._id)} className="text-gray-300 hover:text-ondo-red transition-colors"><Trash2 className="w-5 h-5" /></button>
+                     </div>
+                  </div>
                 </div>
+              ))}
+
+              {/* Delivery slot selection */}
+              <div className="mt-2 border-t border-gray-100 pt-4 flex flex-col gap-3">
+                <p className="font-title font-bold text-sm uppercase tracking-wide text-ondo-black">{content.deliverySlotTitle}</p>
+                <p className="font-body text-xs text-gray-400 -mt-1">{content.deliverySlotSub}</p>
+
+                {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
+                  const labels = [content.slot1, content.slot2, content.slot3];
+                  return (
+                    <button
+                      key={slotKey}
+                      onClick={() => setSelectedSlot(slotKey)}
+                      className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-sm uppercase tracking-wide transition-colors ${selectedSlot === slotKey ? 'border-ondo-orange bg-ondo-orange/5 text-ondo-orange' : 'border-gray-200 hover:border-ondo-orange/40 text-ondo-black'}`}
+                    >
+                      {labels[i]}
+                    </button>
+                  );
+                })}
+
+                <button
+                  onClick={() => setSelectedSlot('pickup')}
+                  className={`w-full text-left px-4 py-3 border-2 transition-colors ${selectedSlot === 'pickup' ? 'border-ondo-green bg-ondo-green/5' : 'border-gray-200 hover:border-ondo-green/40'}`}
+                >
+                  <p className={`font-title font-bold text-sm uppercase tracking-wide ${selectedSlot === 'pickup' ? 'text-ondo-green' : 'text-ondo-black'}`}>{content.slotPickup}</p>
+                  <p className="font-body text-xs text-gray-500 mt-0.5">{content.slotPickupSub}</p>
+                </button>
+
+                {/* Contact fields */}
+                {selectedSlot && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <p className="font-title font-bold text-xs uppercase tracking-wide text-ondo-black">{content.deliveryContactTitle}</p>
+                    {selectedSlot === 'pickup' ? (
+                      <p className="font-body text-xs text-gray-500 bg-ondo-light-green/30 px-3 py-2">{content.pickupNote}</p>
+                    ) : (
+                      <p className="font-body text-xs text-gray-400">{content.deliveryContactNote}</p>
+                    )}
+                    <input
+                      type="tel"
+                      value={slotPhone}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlotPhone(e.target.value)}
+                      placeholder={content.deliveryPhone + ' (+34 600 000 000)'}
+                      className="w-full border border-gray-200 px-3 py-2.5 font-body text-sm focus:outline-none focus:border-ondo-orange transition-colors"
+                    />
+                    <input
+                      type="email"
+                      value={slotEmail}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlotEmail(e.target.value)}
+                      placeholder={content.deliveryEmail + ' (tu@correo.com)'}
+                      className="w-full border border-gray-200 px-3 py-2.5 font-body text-sm focus:outline-none focus:border-ondo-orange transition-colors"
+                    />
+                  </div>
+                )}
               </div>
-            ))
+            </>
           )}
         </div>
 
@@ -698,16 +798,16 @@ export default function App() {
             )}
             {!activeDiscount && <div className="mb-5" />}
             <button
-              onClick={handleCartCheckout}
-              disabled={isCheckingOut}
-              className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-60"
+              onClick={() => handleCartCheckout(selectedSlot!, slotPhone.trim(), slotEmail.trim())}
+              disabled={isCheckingOut || !selectedSlot || (selectedSlot !== 'pickup' && !slotPhone.trim() && !slotEmail.trim())}
+              className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : getSettingText('checkout', content.checkout)}
+              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : content.confirmAndPay}
             </button>
           </div>
         )}
       </div>
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden flex items-center h-[calc(100vh-98px)] bg-ondo-beige pb-10">
         <div className="absolute inset-0 bg-ondo-beige/10 z-0 transition-opacity duration-300"></div>
