@@ -52,6 +52,11 @@ export default defineConfig({
               .title('Delivery Zones')
               .child(S.document().schemaType('deliveryZones').documentId('deliveryZones')),
             S.documentTypeListItem('deliveryLead').title('Delivery Leads'),
+            S.documentTypeListItem('soupRequest').title('Soup Requests'),
+            S.divider(),
+            S.listItem()
+              .title('Banner Settings')
+              .child(S.document().schemaType('bannerSettings').documentId('bannerSettings')),
           ])
     }),
     visionTool()

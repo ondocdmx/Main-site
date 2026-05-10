@@ -256,6 +256,7 @@ export default function App() {
   const [funnelQuantity, setFunnelQuantity] = useState<4 | 6 | 10>(4);
   const [funnelSoupQty, setFunnelSoupQty] = useState<Record<string, number>>({});
   const [funnelContingencies, setFunnelContingencies] = useState('');
+  const [funnelSlot, setFunnelSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   // Soup Request Popup
@@ -269,15 +270,15 @@ export default function App() {
     const fetchData = async () => {
       try {
         const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, footerSettingsData, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
-          client.fetch('*[_id == "siteSettings" || _type == "siteSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "productSettings" || _type == "productSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "processSettings" || _type == "processSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "manifestoSettings" || _type == "manifestoSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "popupSettings" || _type == "popupSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "heroSettings" || _type == "heroSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "aboutSettings" || _type == "aboutSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "funnelSettings" || _type == "funnelSettings"] | order(_updatedAt desc)[0]'),
-          client.fetch('*[_id == "footerSettings" || _type == "footerSettings"] | order(_updatedAt desc)[0]'),
+          client.fetch('*[_id == "siteSettings"][0]'),
+          client.fetch('*[_id == "productSettings"][0]'),
+          client.fetch('*[_id == "processSettings"][0]'),
+          client.fetch('*[_id == "manifestoSettings"][0]'),
+          client.fetch('*[_id == "popupSettings"][0]'),
+          client.fetch('*[_id == "heroSettings"][0]'),
+          client.fetch('*[_id == "aboutSettings"][0]'),
+          client.fetch('*[_id == "funnelSettings"][0]'),
+          client.fetch('*[_id == "footerSettings"][0]'),
           client.fetch('*[_type == "productTag"] | order(order asc)'),
           client.fetch('*[_type == "deliveryZones"][0]'),
           client.fetch(PRODUCTS_QUERY),
@@ -417,6 +418,7 @@ export default function App() {
           quantity: funnelQuantity,
           selectedSoups: soupNames,
           contingencies: funnelContingencies,
+          deliverySlot: funnelSlot,
         }),
       });
       const data = await res.json();
@@ -746,13 +748,16 @@ export default function App() {
                   );
                 })}
 
-                <button
-                  onClick={() => setSelectedSlot('pickup')}
-                  className={`w-full text-left px-4 py-3 border-2 transition-colors ${selectedSlot === 'pickup' ? 'border-ondo-green bg-ondo-green/5' : 'border-gray-200 hover:border-ondo-green/40'}`}
-                >
-                  <p className={`font-title font-bold text-sm uppercase tracking-wide ${selectedSlot === 'pickup' ? 'text-ondo-green' : 'text-ondo-black'}`}>{content.slotPickup}</p>
-                  <p className="font-body text-xs text-gray-500 mt-0.5">{content.slotPickupSub}</p>
-                </button>
+                {/* "Ninguna me viene bien" — oculto, se habilitará en el futuro */}
+                <div className="hidden">
+                  <button
+                    onClick={() => setSelectedSlot('pickup')}
+                    className={`w-full text-left px-4 py-3 border-2 transition-colors ${selectedSlot === 'pickup' ? 'border-ondo-green bg-ondo-green/5' : 'border-gray-200 hover:border-ondo-green/40'}`}
+                  >
+                    <p className={`font-title font-bold text-sm uppercase tracking-wide ${selectedSlot === 'pickup' ? 'text-ondo-green' : 'text-ondo-black'}`}>{content.slotPickup}</p>
+                    <p className="font-body text-xs text-gray-500 mt-0.5">{content.slotPickupSub}</p>
+                  </button>
+                </div>
 
                 {/* Contact fields */}
                 {selectedSlot && (
@@ -1623,7 +1628,12 @@ export default function App() {
           className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
-          {resolveText(getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })) || '¿Qué sopa amas?'}
+          <span className="flex flex-col text-left leading-tight">
+            <span>{getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })?.es || '¿Qué sopa amas?'}</span>
+            <span className="text-[10px] font-normal normal-case tracking-normal opacity-80">
+              {getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })?.en || 'What soup do you love?'}
+            </span>
+          </span>
         </button>
       )}
       {/* ── MODAL: Subscription Funnel Popup ── */}
@@ -1765,9 +1775,35 @@ export default function App() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Selección de franja horaria */}
+                    <div className="flex flex-col gap-2">
+                      <p className="font-title font-bold text-[11px] uppercase tracking-widest text-ondo-black">{content.deliverySlotTitle}</p>
+                      <p className="font-body text-xs text-gray-400 -mt-1">{content.deliverySlotSub}</p>
+                      {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
+                        const labels = [content.slot1, content.slot2, content.slot3];
+                        return (
+                          <button
+                            key={slotKey}
+                            onClick={() => setFunnelSlot(slotKey)}
+                            className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-sm uppercase tracking-wide transition-colors ${funnelSlot === slotKey ? 'border-ondo-orange bg-ondo-orange/5 text-ondo-orange' : 'border-gray-200 hover:border-ondo-orange/40 text-ondo-black'}`}
+                          >
+                            {labels[i]}
+                          </button>
+                        );
+                      })}
+                      {/* "Ninguna me viene bien" — oculto, se habilitará en el futuro */}
+                      <div className="hidden">
+                        <button className="w-full text-left px-4 py-3 border-2 border-gray-200 font-title font-bold text-sm uppercase tracking-wide text-ondo-black">
+                          {content.slotPickup}
+                        </button>
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => setFunnelStep('plan')}
-                      className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px]"
+                      disabled={!funnelSlot}
+                      className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {lang === 'es' ? 'ELEGIR MI PLAN' : 'CHOOSE MY PLAN'} &rarr;
                     </button>
@@ -2139,6 +2175,18 @@ export default function App() {
                     </span>
                   </div>
 
+                  {/* Franja horaria */}
+                  {funnelSlot && (
+                    <div className="flex justify-between items-center px-5 py-4">
+                      <span className="font-title text-[11px] uppercase tracking-widest text-gray-400">
+                        {lang === 'es' ? 'Entrega' : 'Delivery'}
+                      </span>
+                      <span className="font-title font-bold text-ondo-black text-[14px]">
+                        {funnelSlot === 'slot_9_13' ? content.slot1 : funnelSlot === 'slot_13_17' ? content.slot2 : content.slot3}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Sopas */}
                   <div className="px-5 py-4">
                     <span className="font-title text-[11px] uppercase tracking-widest text-gray-400 block mb-3">
@@ -2220,20 +2268,20 @@ export default function App() {
                    </p>
                    
                    <h2 className="font-title font-black text-[32px] md:text-[42px] uppercase leading-[0.9] text-ondo-green mb-6 tracking-tight">
-                     {resolveText(getSetting('popupTitle', { es: '¿Que sopas te apapachan?', en: 'What soups comfort you?' }))}
+                     {resolveText(getSetting('popupTitle', { es: '¿Qué sopa amas?', en: 'What soup do you love?' }))}
                    </h2>
 
                    <p className="font-body text-ondo-green text-[15px] leading-relaxed mb-8">
-                     {resolveText(getSetting('popupMessage', { 
-                       es: 'Dinos que sopas te encantaría que hicieramos y serás de los primeros en probarlos', 
-                       en: 'Tell us what soups you would love us to make and you will be among the first to try them' 
+                     {resolveText(getSetting('popupMessage', {
+                       es: '¿Cuál es la sopa que te gustaría probar? Déjanos tu correo y te avisaremos cuando salga, además de otras novedades.',
+                       en: "Which soup would you like to try? Leave your email and we'll let you know when it launches, plus other news."
                      }))}
                    </p>
 
                    <form onSubmit={handleSoupSubmit} className="flex flex-col gap-4">
                      <div>
                        <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
-                         {resolveText(getSetting('field1Label', { es: '¿Qué sopa tienes en mente?', en: 'What soup do you have in mind?' }))}
+                         {resolveText(getSetting('field1Label', { es: '¿Qué sopa te gustaría probar?', en: 'Which soup would you like to try?' }))}
                        </label>
                        <textarea
                          required

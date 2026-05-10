@@ -13,6 +13,7 @@ import { popupSettings } from './popupSettings'
 import { funnelSettings } from './funnelSettings'
 import { footerSettings } from './footerSettings'
 import { soupRequest } from './soupRequest'
+import { bannerSettings } from './bannerSettings'
 
 export const schemaTypes = [
   product,
@@ -30,4 +31,5 @@ export const schemaTypes = [
   funnelSettings,
   footerSettings,
   soupRequest,
+  bannerSettings,
 ]
