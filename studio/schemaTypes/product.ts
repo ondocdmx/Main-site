@@ -94,6 +94,13 @@ export const product = defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'soldOut',
+      title: '🚫 Sold Out',
+      type: 'boolean',
+      description: 'If enabled, the product shows a grey overlay with "Agotado" and cannot be added to the cart.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'images',
       title: 'Additional Images',
       type: 'array',
@@ -113,11 +120,12 @@ export const product = defineType({
       titleEn: 'title.en',
       purchaseType: 'purchaseType',
       onlySubscriptions: 'onlySubscriptions',
+      soldOut: 'soldOut',
       media: 'image',
     },
-    prepare({ titleEs, titleEn, purchaseType, onlySubscriptions, media }) {
-      const icon = purchaseType === 'subscription' ? '🔄' : '🛒'
-      const subLabel = onlySubscriptions ? 'Solo suscripción' : (purchaseType === 'subscription' ? 'Subscription' : 'Single Purchase')
+    prepare({ titleEs, titleEn, purchaseType, onlySubscriptions, soldOut, media }) {
+      const icon = soldOut ? '🚫' : (purchaseType === 'subscription' ? '🔄' : '🛒')
+      const subLabel = soldOut ? 'AGOTADO' : (onlySubscriptions ? 'Solo suscripción' : (purchaseType === 'subscription' ? 'Subscription' : 'Single Purchase'))
       return {
         title: `${icon} ${titleEs || titleEn || 'Untitled'}`,
         subtitle: subLabel,

@@ -121,6 +121,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   price,
   stripePriceId,
   onlySubscriptions,
+  soldOut,
   description,
   tagline,
   bgColor,
@@ -1131,6 +1132,13 @@ export default function App() {
                         alt={`${resolveText(product.title)} hover`}
                         className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
                       />
+                      {product.soldOut && (
+                        <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
+                          <span className="font-title text-white font-bold uppercase tracking-widest text-[13px] bg-gray-800/60 px-4 py-2">
+                            {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col flex-1 px-2">
@@ -1182,8 +1190,9 @@ export default function App() {
 
                           <button
                             type="button"
-                            onClick={() => addToCart(product)}
-                            className="p-3.5 w-1/3 flex justify-center cursor-pointer bg-ondo-green text-white"
+                            onClick={() => !product.soldOut && addToCart(product)}
+                            disabled={product.soldOut}
+                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : 'cursor-pointer bg-ondo-green'}`}
                           >
                             <Plus className="w-4 h-4" />
                           </button>
@@ -1609,13 +1618,19 @@ export default function App() {
               </div>
 
               {/* CTA */}
-              <button
-                type="button"
-                onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
-                className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
-              >
-                {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
-              </button>
+              {selectedProduct.soldOut ? (
+                <div className="border-[3px] border-gray-400 text-gray-400 font-title font-bold uppercase tracking-widest py-4 px-8 text-[14px] self-start cursor-not-allowed select-none opacity-60">
+                  {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+                  className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
+                >
+                  {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
+                </button>
+              )}
             </div>
           </div>
         </div>
