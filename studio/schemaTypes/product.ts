@@ -87,6 +87,20 @@ export const product = defineType({
       description: 'The Stripe Price ID for single-purchase checkout (e.g. price_1ABC...)',
     }),
     defineField({
+      name: 'onlySubscriptions',
+      title: 'Only Subscriptions',
+      type: 'boolean',
+      description: 'If enabled, this product only appears in the subscription funnel — it will NOT be shown in the products section.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'images',
+      title: 'Additional Images',
+      type: 'array',
+      of: [{ type: 'image', options: { hotspot: true } }],
+      description: 'Extra photos shown in the product detail popup carousel (after the main image and hover image)',
+    }),
+    defineField({
       name: 'order',
       title: 'Order',
       type: 'number',
@@ -98,13 +112,15 @@ export const product = defineType({
       titleEs: 'title.es',
       titleEn: 'title.en',
       purchaseType: 'purchaseType',
+      onlySubscriptions: 'onlySubscriptions',
       media: 'image',
     },
-    prepare({ titleEs, titleEn, purchaseType, media }) {
+    prepare({ titleEs, titleEn, purchaseType, onlySubscriptions, media }) {
       const icon = purchaseType === 'subscription' ? '🔄' : '🛒'
+      const subLabel = onlySubscriptions ? 'Solo suscripción' : (purchaseType === 'subscription' ? 'Subscription' : 'Single Purchase')
       return {
         title: `${icon} ${titleEs || titleEn || 'Untitled'}`,
-        subtitle: purchaseType === 'subscription' ? 'Subscription' : 'Single Purchase',
+        subtitle: subLabel,
         media,
       }
     },

@@ -90,11 +90,13 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   purchaseType,
   price,
   stripePriceId,
+  onlySubscriptions,
   description,
   tagline,
   bgColor,
   image,
   hoverImage,
+  images,
   "tags": tags[]->{ _id, name, slug, icon, color }
 }`;
 
@@ -294,7 +296,8 @@ export default function App() {
     return '';
   };
 
-  const products = displayProducts;
+  // Products section: hide items flagged as subscription-only
+  const products = displayProducts.filter((p: any) => !p.onlySubscriptions);
 
   // Helper: resolve image src from Sanity image or plain URL string
   const resolveImage = (img: any): string => {
@@ -312,9 +315,8 @@ export default function App() {
       );
 
   const ONDO_CHOICE_ID = '__ondo_choice__';
-  const subscriptionProds = displayProducts.filter(
-    (p: any) => !p.purchaseType || p.purchaseType === 'subscription'
-  );
+  // Funnel shows all products (including subscription-only ones)
+  const subscriptionProds = displayProducts;
   const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
   const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
   const funnelCanProceed = funnelTotal === funnelQuantity;
@@ -325,12 +327,25 @@ export default function App() {
     setFunnelQuantity(4);
     setFunnelSoupQty({});
     setFunnelContingencies('');
-    // Reset delivery state for fresh check
     setDeliveryStatus('idle');
     setDeliveryAddress('');
     setDeliveryPostal('');
     setNotifyEmail('');
     setEmailSent(false);
+    setShowPopupModal(true);
+  };
+
+  const openFunnelToDelivery = () => {
+    setFunnelFrequency('quincenal');
+    setFunnelQuantity(4);
+    setFunnelSoupQty({});
+    setFunnelContingencies('');
+    setDeliveryStatus('idle');
+    setDeliveryAddress('');
+    setDeliveryPostal('');
+    setNotifyEmail('');
+    setEmailSent(false);
+    setFunnelStep('delivery');
     setShowPopupModal(true);
   };
 
@@ -560,7 +575,7 @@ export default function App() {
       {/* Navbar (Crema Suave) */}
       <nav className="bg-ondo-beige border-b border-black/5 sticky top-0 z-30">
         <div className="w-full mx-auto px-6 py-5 md:py-7 flex items-center justify-between relative">
-          <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[15px] tracking-wide">
+          <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[19px] tracking-wide">
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
             <a href="#manifesto" className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
           </div>
@@ -569,7 +584,7 @@ export default function App() {
           </div>
           
           <a href="#" className="absolute left-1/2 transform -translate-x-1/2">
-            <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-[36px] md:h-[46px] object-contain" />
+            <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-[52px] md:h-[68px] object-contain" />
           </a>
         
         <div className="flex items-center gap-4 sm:gap-6">
@@ -591,7 +606,7 @@ export default function App() {
            </div>
 
            <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => setIsCartOpen(true)}>
-             <ShoppingCart className="w-6 h-6" />
+             <ShoppingCart className="w-8 h-8" />
              {cartItemCount > 0 && (
                <span className="absolute -top-2 -right-2 bg-ondo-red text-white text-[10px] w-5 h-5 flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors">
                  {cartItemCount}
@@ -712,11 +727,11 @@ export default function App() {
               {resolveText(getSetting('heroTitle', content.heroTitle))}
             </h1>
             <div>
-              <p className="text-[17px] md:text-[20px] font-body mb-8 text-ondo-green leading-relaxed font-bold max-w-[420px] mix-blend-multiply">
+              <p className="text-[17px] md:text-[20px] font-body mb-8 text-ondo-green leading-relaxed font-bold max-w-[420px] mix-blend-multiply whitespace-pre-line">
                  {resolveText(getSetting('heroSub', content.heroSub))}
               </p>
               <div>
-                <button onClick={openFunnel} className="bg-ondo-green text-white hover:bg-ondo-light-green hover:text-ondo-black font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm">
+                <button onClick={openFunnel} className="bg-ondo-orange text-white hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-10 transition-colors text-[15px] shadow-sm">
                   {resolveText(getSetting('heroCTA', content.shopNow))}
                 </button>
               </div>
@@ -734,7 +749,7 @@ export default function App() {
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
                  style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a'), containerType: 'inline-size' } as React.CSSProperties}>
                {/* Top eyebrow */}
-               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
+               <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
                  {getSettingText('panel1Eyebrow', { es: 'EL CLUB · MEMBRESÍA', en: 'THE CLUB · MEMBERSHIP' })}
                </p>
@@ -742,39 +757,41 @@ export default function App() {
                {/* Main Title */}
                <div className="z-10 flex-1">
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(36px, 11cqi, 72px)' }}>
+                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(46px, 13cqi, 90px)' }}>
                    {(getSettingText('panel1TitleLine1', { es: 'EL\nCLUB', en: 'THE\nCLUB' }) || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
                  </h2>
                  <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(36px, 11cqi, 72px)' }}>
+                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(46px, 13cqi, 90px)' }}>
                    {getSettingText('panel1TitleLine2', { es: 'ONDO.', en: 'ONDO.' })}
                  </h2>
 
                  {/* Divider */}
                  <div className="w-10 h-[3px] my-6" style={{ backgroundColor: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.4 }} />
 
-                 {/* Subheadline */}
-                 <p className="font-body font-bold text-[15px] leading-snug mb-3"
-                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   {(() => { const txt = getSettingText('panel1Subheadline', { es: 'Échate un clavado a la soupscripción de Ondo.', en: "Dive into Ondo's soupscription." }); const accent = getSettingText('panel1SubAccentWord', { es: 'soupscripción', en: 'soupscription' }); if (!accent || !txt.includes(accent)) return txt; const parts = txt.split(accent); return <>{parts[0]}<span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{accent}</span>{parts[1]}</>; })()}
+                 {/* Custom multi-size intro */}
+                 <p className="font-title font-black leading-[1.0] mb-4" style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
+                   <span style={{ fontSize: '20px' }}>Échate un </span>
+                   <span style={{ fontSize: '32px', color: getSetting('panel1TextColor2', '#e8632a') }}>clavado </span>
+                   <span style={{ fontSize: '20px' }}>a la </span>
+                   <br />
+                   <span style={{ fontSize: '46px', color: getSetting('panel1TextColor2', '#e8632a') }}>SOUP-SCRIPCIÓN </span>
+                   <br />
+                   <span style={{ fontSize: '20px' }}>de </span>
+                   <span style={{ fontSize: '46px' }}>ONDO</span>
                  </p>
 
-                 {/* Tagline italic */}
-                 <p className="font-body italic text-[14px] leading-relaxed mt-6 mb-8"
-                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.85 }}>
-                   {getSettingText('panel1Tagline', { es: 'Para los que saben que una buena sopa cambia el día.', en: 'For those who know a great soup changes the day.' })}
+                 {/* Tagline */}
+                 <p className="font-body font-bold text-[18px] leading-snug mt-4 mb-8"
+                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.9 }}>
+                   {getSettingText('panel1Tagline', { es: 'De lo mejor, siempre en tu refri.', en: 'The best, always in your fridge.' })}
                  </p>
                </div>
 
                {/* CTA at bottom */}
                <div className="z-10 mt-auto">
                  <button
-                   onClick={openFunnel}
-                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max"
-                   style={{ 
-                     backgroundColor: getSetting('panel1TextColor1', '#f1f3b0'), 
-                     color: getSetting('panel1BgColor', '#6ca53a') 
-                   }}
+                   onClick={openFunnelToDelivery}
+                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max bg-ondo-orange text-white hover:bg-ondo-green"
                  >
                    {getSettingText('panel1CTAText', { es: 'ÚNETE AL CLUB', en: 'JOIN THE CLUB' })}
                    <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
@@ -800,14 +817,14 @@ export default function App() {
             <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
                  style={{ backgroundColor: getSetting('panel2BgColor', '#2d4a1e') }}>
                {/* Eyebrow */}
-               <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-6 z-10"
+               <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-6 z-10"
                   style={{ color: '#f1f3b0', opacity: 0.65 }}>
                  {getSettingText('panel2Eyebrow', { es: 'LO QUE INCLUYE', en: "WHAT'S INCLUDED" })}
                </p>
 
                {/* Headline */}
                <div className="z-10 mb-8">
-                 <h2 className="font-title font-black text-[32px] lg:text-[42px] leading-[0.9] tracking-tight">
+                 <h2 className="font-title font-black text-[42px] lg:text-[56px] leading-[0.9] tracking-tight">
                    <span style={{ color: '#f1f3b0' }}>{getSettingText('panel2HeadlinePrimary', { es: 'Todo lo que necesitas.', en: 'Everything you need.' })}</span>{' '}
                    <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{getSettingText('panel2HeadlineAccent', { es: 'Nada que no.', en: "Nothing you don't." })}</span>
                  </h2>
@@ -822,10 +839,10 @@ export default function App() {
                    { es: 'Recetas de temporada', en: 'Seasonal recipes', subtitleEs: 'cada semana en tu correo', subtitleEn: 'every week in your inbox' },
                  ]).map((item: any, i: number) => (
                    <div key={i} className="flex gap-4 items-start">
-                     <span className="font-title font-bold text-[11px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{String(i + 1).padStart(2, '0')}</span>
+                     <span className="font-title font-bold text-[14px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{String(i + 1).padStart(2, '0')}</span>
                      <div>
-                       <p className="font-title font-bold text-[15px] leading-tight" style={{ color: '#f1f3b0' }}>{lang === 'en' && item.en ? item.en : (item.es || item.title || '')}</p>
-                       <p className="font-body text-[13px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{lang === 'en' && item.subtitleEn ? item.subtitleEn : (item.subtitleEs || item.subtitle || item.sub || '')}</p>
+                       <p className="font-title font-bold text-[19px] leading-tight" style={{ color: '#f1f3b0' }}>{lang === 'en' && item.en ? item.en : (item.es || item.title || '')}</p>
+                       <p className="font-body text-[16px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{lang === 'en' && item.subtitleEn ? item.subtitleEn : (item.subtitleEs || item.subtitle || item.sub || '')}</p>
                      </div>
                    </div>
                  ))}
@@ -852,7 +869,7 @@ export default function App() {
                <div className="flex-1 p-7 flex flex-col relative overflow-hidden"
                     style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
                  {/* Eyebrow */}
-                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-4 z-10"
+                 <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-4 z-10"
                     style={{ color: '#f1f3b0', opacity: 0.7 }}>
                    {getSettingText('panel3Eyebrow', { es: 'QUIÉNES SOMOS', en: 'WHO WE ARE' })}
                  </p>
@@ -862,17 +879,17 @@ export default function App() {
                    <img
                      src={getSetting('panel3IllustrationImage', null) ? urlFor(getSetting('panel3IllustrationImage', null)).url() : '/images/Group 1597787.png'}
                      alt=""
-                     className="max-h-[160px] lg:max-h-[180px] object-contain"
+                     className="max-h-[200px] lg:max-h-[225px] object-contain"
                    />
                  </div>
 
                  {/* Quote */}
                  <blockquote className="z-10 mt-auto">
-                   <p className="font-body font-bold italic text-[14px] lg:text-[15px] leading-snug mb-2"
+                   <p className="font-body font-bold italic text-[17px] lg:text-[19px] leading-snug mb-2"
                       style={{ color: '#f1f3b0' }}>
                      {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
                    </p>
-                   <footer className="font-title font-bold text-[11px] uppercase tracking-widest"
+                   <footer className="font-title font-bold text-[14px] uppercase tracking-widest"
                            style={{ color: '#f1f3b0', opacity: 0.7 }}>
                      {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
                    </footer>
@@ -882,44 +899,32 @@ export default function App() {
                {/* Bottom: White — Tú Decides */}
                <div className="flex-1 p-7 bg-ondo-white flex flex-col relative overflow-hidden">
                  {/* Eyebrow */}
-                 <p className="font-title text-[11px] uppercase tracking-[0.25em] mb-4"
+                 <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-4"
                     style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.65 }}>
                    {getSettingText('panel3OrangeEyebrow', { es: 'TÚ DECIDES', en: 'YOU DECIDE' })}
                  </p>
 
                  {/* Headline */}
-                 <h3 className="font-title font-black text-[24px] lg:text-[28px] leading-[0.9] tracking-tight mb-4"
+                 <h3 className="font-title font-black text-[30px] lg:text-[36px] leading-[0.9] tracking-tight mb-4"
                      style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f') }}>
                    {getSettingText('panel3OrangeHeadline', { es: 'CUANDO TÚ LO QUIERAS MÁS.', en: 'WHENEVER YOU NEED IT MOST.' })}
                  </h3>
 
                  {/* Description */}
-                 <p className="font-body text-[13px] leading-relaxed flex-1"
+                 <p className="font-body text-[16px] leading-relaxed flex-1"
                     style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.7 }}>
                    {getSettingText('panel3Description', { es: 'En familia, con amigos, en la oficina, cuando llueve, te da frío o no ves la vida o cuando necesitas un apapacho.', en: 'With family, with friends, at the office — whenever it rains, you get cold, or you just need a hug.' })}
                  </p>
 
                  {/* CTA */}
                  <div className="mt-auto pt-4">
-                   {getSetting('panel4CTALink', '') ? (
-                     <a
-                       href={getSetting('panel4CTALink', '')}
-                       className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full"
-                       style={{ backgroundColor: getSetting('panel3BottomTextColor', '#1a2e0f'), color: '#f1f3b0' }}
-                     >
-                       {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
-                       <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                     </a>
-                   ) : (
-                     <button
-                       onClick={openFunnel}
-                       className="inline-flex items-center justify-center gap-3 font-title font-bold text-[14px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full"
-                       style={{ backgroundColor: getSetting('panel3BottomTextColor', '#1a2e0f'), color: '#f1f3b0' }}
-                     >
-                       {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
-                       <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                     </button>
-                   )}
+                   <button
+                     onClick={openFunnelToDelivery}
+                     className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full bg-ondo-orange text-white hover:bg-ondo-green"
+                   >
+                     {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
+                     <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+                   </button>
                  </div>
                </div>
             </div>
@@ -1002,24 +1007,6 @@ export default function App() {
             {/* Products Grid Area */}
             <div className="flex-1 flex flex-col">
               
-              {/* Join the Club Banner */}
-              <div className="bg-ondo-orange py-[15px] px-8 md:py-[20px] md:px-12 mb-12 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/10 transition-all duration-500"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-ondo-green/10 rounded-full -ml-16 -mb-16 blur-2xl"></div>
-                
-                <div className="flex-1 relative z-10 text-center md:text-left">
-                  <h2 className="font-title text-[24px] md:text-[32px] font-black text-white leading-none uppercase tracking-tight">
-                    {resolveText(getSetting('clubBannerTitle', { es: 'Únete al club y obtén un 20% descuento', en: 'Join the club and get 20% off' }))}
-                  </h2>
-                </div>
-                <button
-                  onClick={openFunnel}
-                  className="bg-white text-ondo-orange hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-xl hover:scale-105 active:scale-95 shrink-0 relative z-10"
-                >
-                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
-                </button>
-              </div>
-
               {/* Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {filteredProducts.map((product: any) => (
@@ -1113,6 +1100,25 @@ export default function App() {
                   </div>
                 ))}
               </div>
+
+              {/* Soup-scription Banner — below products */}
+              <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
+                  {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
+                  <button
+                    onClick={openFunnel}
+                    className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
+                  >
+                    {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
+                  </button>
+                </p>
+                <button
+                  onClick={openFunnel}
+                  className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
+                >
+                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
+                </button>
+              </div>
             </div>
          </div>
       </section>
@@ -1176,7 +1182,7 @@ export default function App() {
                <a href="#" className="text-[#6ca53a] font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
                  {getSettingText('aboutLink', { es: 'LEARN MORE', en: 'LEARN MORE' })}
                </a>
-               <button className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
+               <button onClick={openFunnel} className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
                  {getSettingText('aboutCTA', { es: '¡APAPÁCHATE!', en: '¡APAPÁCHATE!' })}
                </button>
              </div>
@@ -1386,54 +1392,56 @@ export default function App() {
               <X className="w-5 h-5 text-ondo-green" />
             </button>
 
-            {/* Image column - Now more square and with Carousel */}
-            <div className={`md:w-1/2 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden group`} style={{ minHeight: '300px' }}>
-              <div 
-                className="w-full h-full flex transition-transform duration-500 ease-out absolute inset-0"
-                style={{ transform: `translateX(-${popupImageIndex * 100}%)` }}
-              >
-                <div className="w-full h-full shrink-0 relative">
-                  <img
-                    src={resolveImage(selectedProduct.image)}
-                    alt={resolveText(selectedProduct.title)}
-                    className="w-full h-full object-cover mix-blend-multiply"
-                  />
+            {/* Image column — dynamic carousel (image + hoverImage + extra images) */}
+            {(() => {
+              const popupImgs = [
+                selectedProduct.image,
+                selectedProduct.hoverImage,
+                ...(selectedProduct.images || []),
+              ].filter(Boolean);
+              const total = popupImgs.length;
+              return (
+                <div className={`md:w-1/2 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden group`} style={{ minHeight: '300px' }}>
+                  <div
+                    className="w-full h-full flex transition-transform duration-500 ease-out absolute inset-0"
+                    style={{ transform: `translateX(-${popupImageIndex * 100}%)` }}
+                  >
+                    {popupImgs.map((img: any, i: number) => (
+                      <div key={i} className="w-full h-full shrink-0 relative">
+                        <img
+                          src={resolveImage(img)}
+                          alt={`${resolveText(selectedProduct.title)} ${i + 1}`}
+                          className="w-full h-full object-cover mix-blend-multiply"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {total > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => (prev - 1 + total) % total); }}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => (prev + 1) % total); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                        {popupImgs.map((_: any, i: number) => (
+                          <div key={i} className={`w-2 h-2 rounded-full transition-colors ${popupImageIndex === i ? 'bg-ondo-green' : 'bg-ondo-green/30'}`} />
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
-                {selectedProduct.hoverImage && (
-                  <div className="w-full h-full shrink-0 relative">
-                    <img
-                      src={resolveImage(selectedProduct.hoverImage)}
-                      alt={`${resolveText(selectedProduct.title)} alternate`}
-                      className="w-full h-full object-cover mix-blend-multiply"
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* Carousel Controls */}
-              {selectedProduct.hoverImage && (
-                <>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => prev === 0 ? 1 : 0); }}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => prev === 0 ? 1 : 0); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                  
-                  {/* Indicators */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    <div className={`w-2 h-2 rounded-full transition-colors ${popupImageIndex === 0 ? 'bg-ondo-green' : 'bg-ondo-green/30'}`} />
-                    <div className={`w-2 h-2 rounded-full transition-colors ${popupImageIndex === 1 ? 'bg-ondo-green' : 'bg-ondo-green/30'}`} />
-                  </div>
-                </>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Content column */}
             <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-between bg-ondo-white">
@@ -1736,15 +1744,15 @@ export default function App() {
                     ← {lang === 'es' ? 'Atrás' : 'Back'}
                   </button>
 
-                  <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-1 inline-block pr-6">
+                  <p className="font-title text-[20px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-1 inline-block pr-6">
                     {resolveText(getSetting('planTitle', { es: 'TU PLAN', en: 'YOUR PLAN' }))}
                   </p>
-                  <p className="font-body text-gray-400 text-[12px] mt-2 mb-8">
+                  <p className="font-body text-gray-400 text-[15px] mt-2 mb-8">
                     {resolveText(getSetting('subscriptionDurationLabel', { es: '3 meses · sin compromiso · cancela cuando quieras', en: '3 months · no commitment · cancel anytime' }))}
                   </p>
 
                   {/* Frecuencia — dos cards con info de entregas */}
-                  <p className="font-title text-[10px] uppercase tracking-widest text-gray-400 mb-3">
+                  <p className="font-title text-[16px] uppercase tracking-widest text-gray-400 mb-3">
                     {resolveText(getSetting('frequencyLabel', { es: 'Frecuencia de entrega', en: 'Delivery frequency' }))}
                   </p>
                   <div className="grid grid-cols-2 gap-3 mb-8">
@@ -1760,12 +1768,12 @@ export default function App() {
                           onClick={() => { setFunnelFrequency(freq); setFunnelSoupQty({}); }}
                           className={`p-5 border-2 flex flex-col gap-1 text-left transition-all ${sel ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
                         >
-                          <span className={`font-title font-black uppercase text-[15px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
+                          <span className={`font-title font-black uppercase text-[22px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
                             {freq === 'quincenal'
                               ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
                               : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
                           </span>
-                          <span className={`font-body text-[12px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
+                          <span className={`font-body text-[18px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
                             {freqDeliveriesLabel}
                           </span>
                           <div className="flex gap-1 mt-2">
@@ -1779,7 +1787,7 @@ export default function App() {
                   </div>
 
                   {/* Cantidad — cards con total acumulado */}
-                  <p className="font-title text-[10px] uppercase tracking-widest text-gray-400 mb-4">
+                  <p className="font-title text-[16px] uppercase tracking-widest text-gray-400 mb-4">
                     {resolveText(getSetting('quantityLabel', { es: 'Sopas por envío', en: 'Soups per delivery' }))}
                   </p>
                   <div className="grid grid-cols-3 gap-3 mb-8">
@@ -1793,7 +1801,7 @@ export default function App() {
                           className={`relative p-4 border-2 flex flex-col gap-2 transition-all text-left ${selected ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
                         >
                           {qty === 6 && (
-                            <span className={`absolute top-2 right-2 font-title font-black text-[7px] uppercase tracking-widest px-1.5 py-0.5 ${selected ? 'bg-white text-ondo-green' : 'bg-ondo-orange text-white'}`}>
+                            <span className={`absolute top-2 right-2 font-title font-black text-[12px] uppercase tracking-widest px-1.5 py-0.5 ${selected ? 'bg-white text-ondo-green' : 'bg-ondo-orange text-white'}`}>
                               {lang === 'es' ? 'Popular' : 'Popular'}
                             </span>
                           )}
@@ -1805,13 +1813,13 @@ export default function App() {
                           </div>
                           {/* Cantidad por envío */}
                           <div className="leading-none">
-                            <span className={`font-title font-black text-[36px] leading-none ${selected ? 'text-white' : 'text-ondo-black'}`}>{qty}</span>
-                            <span className={`font-body text-[10px] block mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
+                            <span className={`font-title font-black text-[52px] leading-none ${selected ? 'text-white' : 'text-ondo-black'}`}>{qty}</span>
+                            <span className={`font-body text-[15px] block mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
                               {lang === 'es' ? 'sopas/envío' : 'soups/delivery'}
                             </span>
                           </div>
                           {/* Total acumulado */}
-                          <div className={`text-[11px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
+                          <div className={`text-[16px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
                             {total} {lang === 'es' ? 'en total' : 'total'}
                           </div>
                         </button>
@@ -1822,7 +1830,7 @@ export default function App() {
                   {/* Botón con precio */}
                   <button
                     onClick={() => setFunnelStep('soups')}
-                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] flex items-center justify-center gap-3"
+                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[20px] flex items-center justify-center gap-3"
                   >
                     <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
                     {planPrice && (
