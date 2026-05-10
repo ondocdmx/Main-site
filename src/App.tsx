@@ -397,8 +397,9 @@ export default function App() {
     setIsCheckingOut(true);
     try {
       const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-      const priceId = getSetting(`stripe${cap(funnelFrequency)}${funnelQuantity}`, '');
-      if (!priceId) {
+      const productId = getSetting(`productId${cap(funnelFrequency)}${funnelQuantity}`, '');
+      const amount = getSetting(`amount${cap(funnelFrequency)}${funnelQuantity}`, 0);
+      if (!productId || !amount) {
         alert(lang === 'es' ? 'Precio no configurado. Contacta al administrador.' : 'Price not configured. Contact admin.');
         setIsCheckingOut(false);
         return;
@@ -410,16 +411,23 @@ export default function App() {
           const p = displayProducts.find((p: any) => p._id === id);
           return p ? `${resolveText(p.title)} x${qty}` : `${id} x${qty}`;
         });
+      const letOndoChoose = ONDO_CHOICE_ID in funnelSoupQty && funnelSoupQty[ONDO_CHOICE_ID] > 0;
+      const savedAddress = localStorage.getItem('ondo_delivery_address') || '';
+      const savedPostal = localStorage.getItem('ondo_delivery_postal') || '';
       const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          priceId,
+          productId,
+          amount,
           frequency: funnelFrequency,
           quantity: funnelQuantity,
           selectedSoups: soupNames,
+          letOndoChoose,
           contingencies: funnelContingencies,
           deliverySlot: funnelSlot,
+          deliveryAddress: savedAddress,
+          deliveryPostal: savedPostal,
         }),
       });
       const data = await res.json();
@@ -480,6 +488,8 @@ export default function App() {
     } catch (e) { console.error('Lead save error', e); }
     if (isOk) {
       localStorage.setItem('ondo_delivery_validated', 'true');
+      localStorage.setItem('ondo_delivery_address', deliveryAddress);
+      localStorage.setItem('ondo_delivery_postal', deliveryPostal);
     }
   };
 
@@ -534,10 +544,16 @@ export default function App() {
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const cartSubtotal = cart.reduce((a, b) => {
-    const discountMult = cartItemCount > 9 ? 0.8 : (cartItemCount >= 5 ? 0.9 : 1);
-    return a + (b.product.price * discountMult * b.quantity);
-  }, 0);
+  const cartSubtotal = (() => {
+    const d2Min = getSetting('cartDiscount2Min', null);
+    const d1Min = getSetting('cartDiscount1Min', null);
+    const d2Pct = getSetting('cartDiscount2Percent', 20);
+    const d1Pct = getSetting('cartDiscount1Percent', 10);
+    let discountMult = 1;
+    if (d2Min !== null && cartItemCount >= d2Min) discountMult = 1 - d2Pct / 100;
+    else if (d1Min !== null && cartItemCount >= d1Min) discountMult = 1 - d1Pct / 100;
+    return cart.reduce((a: number, b: { product: any; quantity: number }) => a + b.product.price * discountMult * b.quantity, 0);
+  })();
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
 
   const activeDiscount = (() => {
@@ -555,15 +571,18 @@ export default function App() {
   const handleCartCheckout = async (slot: string, phone: string, email: string) => {
     setIsCheckingOut(true);
     try {
-      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ priceId: item.product.stripePriceId, quantity: item.quantity }));
-      const missingPrice = cartItems.some((i: { priceId: string; quantity: number }) => !i.priceId);
+      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, price: item.product.price, quantity: item.quantity }));
+      const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
         setIsCheckingOut(false);
         return;
       }
       const isPickup = slot === 'pickup';
-      const shippingPriceId = getSetting('shippingStripePriceId', '');
+      const shippingProductId = getSetting('shippingStripeProductId', '');
+      const shippingPrice = getSetting('shippingPrice', 0);
+      const savedAddress = localStorage.getItem('ondo_delivery_address') || '';
+      const savedPostal = localStorage.getItem('ondo_delivery_postal') || '';
       const res = await fetch('/api/create-cart-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -573,7 +592,10 @@ export default function App() {
           deliverySlot: slot,
           deliveryPhone: phone,
           deliveryEmail: email,
-          shippingPriceId,
+          deliveryAddress: savedAddress,
+          deliveryPostal: savedPostal,
+          shippingProductId,
+          shippingPrice,
           isPickup,
         }),
       });

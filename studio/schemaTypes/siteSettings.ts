@@ -77,6 +77,12 @@ export const siteSettings = defineType({
       description: 'El ID del cupón que creaste en el Dashboard de Stripe (ej: DISC_20PCT)',
     }),
     defineField({
+      name: 'cartDiscount1Percent',
+      title: 'Descuento 1 — porcentaje (%)',
+      type: 'number',
+      description: 'Ej: 20 (para mostrar 20% de descuento en el carrito)',
+    }),
+    defineField({
       name: 'cartDiscount2Min',
       title: 'Descuento 2 — mínimo de productos',
       type: 'number',
@@ -94,13 +100,25 @@ export const siteSettings = defineType({
       type: 'string',
       description: 'El ID del cupón que creaste en el Dashboard de Stripe (ej: DISC_30PCT)',
     }),
+    defineField({
+      name: 'cartDiscount2Percent',
+      title: 'Descuento 2 — porcentaje (%)',
+      type: 'number',
+      description: 'Ej: 30 (para mostrar 30% de descuento en el carrito)',
+    }),
 
     // ── ENVÍOS ─────────────────────────────────────────────────────────────
     defineField({
-      name: 'shippingStripePriceId',
-      title: 'Envío — ID del precio de Stripe',
+      name: 'shippingStripeProductId',
+      title: 'Envío — Product ID de Stripe',
       type: 'string',
-      description: 'El ID del precio de Stripe del producto "Envío" (ej: price_xxxxx). Se añade automáticamente cuando el cliente elige entrega a domicilio.',
+      description: 'El Product ID de Stripe del producto "Gastos de envío" (ej: prod_xxxxx).',
+    }),
+    defineField({
+      name: 'shippingPrice',
+      title: 'Envío — Precio (€)',
+      type: 'number',
+      description: 'Coste del envío en euros (ej: 4.5). Se usa junto al Product ID para generar el precio dinámicamente en Stripe.',
     }),
   ]
 })

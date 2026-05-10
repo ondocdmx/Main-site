@@ -12,7 +12,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 app.post('/api/create-cart-checkout', async (req, res) => {
-  const { cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, shippingPriceId, isPickup } = req.body;
+  const { cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal, shippingProductId, shippingPrice, isPickup } = req.body;
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     res.status(400).json({ error: 'cartItems is required' });
@@ -21,18 +21,30 @@ app.post('/api/create-cart-checkout', async (req, res) => {
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-  const line_items: { price: string; quantity: number }[] = cartItems.map((item: { priceId: string; quantity: number }) => ({
-    price: item.priceId,
+  const line_items: any[] = cartItems.map((item: { productId: string; price: number; quantity: number }) => ({
+    price_data: {
+      currency: 'eur',
+      product: item.productId,
+      unit_amount: Math.round(item.price * 100),
+    },
     quantity: item.quantity,
   }));
 
-  if (!isPickup && shippingPriceId) {
-    line_items.push({ price: shippingPriceId, quantity: 1 });
+  if (!isPickup && shippingProductId && shippingPrice) {
+    line_items.push({
+      price_data: {
+        currency: 'eur',
+        product: shippingProductId,
+        unit_amount: Math.round(shippingPrice * 100),
+      },
+      quantity: 1,
+    });
   }
 
   const sessionParams: any = {
     mode: 'payment',
     line_items,
+    ...(deliveryEmail ? { customer_email: deliveryEmail } : {}),
     success_url: `${frontendUrl}?payment=success`,
     cancel_url: frontendUrl,
     payment_intent_data: {
@@ -41,6 +53,8 @@ app.post('/api/create-cart-checkout', async (req, res) => {
         delivery_slot: deliverySlot || '',
         delivery_phone: deliveryPhone || '',
         delivery_email: deliveryEmail || '',
+        delivery_address: (deliveryAddress || '').slice(0, 500),
+        delivery_postal: deliveryPostal || '',
       },
     },
   };
@@ -54,10 +68,10 @@ app.post('/api/create-cart-checkout', async (req, res) => {
 });
 
 app.post('/api/create-checkout-session', async (req, res) => {
-  const { priceId, frequency, quantity, selectedSoups, letOndoChoose, contingencies } = req.body;
+  const { productId, amount, frequency, quantity, selectedSoups, letOndoChoose, contingencies, deliverySlot, deliveryAddress, deliveryPostal } = req.body;
 
-  if (!priceId) {
-    res.status(400).json({ error: 'priceId is required' });
+  if (!productId || !amount) {
+    res.status(400).json({ error: 'productId and amount are required' });
     return;
   }
 
@@ -68,9 +82,20 @@ app.post('/api/create-checkout-session', async (req, res) => {
     ? selectedSoups.join(' | ').slice(0, 490)
     : '';
 
+  const interval = frequency === 'Mensual' ? 'month' : 'week';
+  const intervalCount = frequency === 'Mensual' ? 1 : 2;
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{
+      price_data: {
+        currency: 'eur',
+        product: productId,
+        unit_amount: Math.round(amount * 100),
+        recurring: { interval, interval_count: intervalCount },
+      },
+      quantity: 1,
+    }],
     subscription_data: {
       metadata: {
         frequency: frequency || '',
@@ -78,6 +103,9 @@ app.post('/api/create-checkout-session', async (req, res) => {
         let_ondo_choose: String(letOndoChoose || false),
         selected_soups: soupsValue,
         contingencies: (contingencies || '').slice(0, 490),
+        delivery_slot: deliverySlot || '',
+        delivery_address: (deliveryAddress || '').slice(0, 490),
+        delivery_postal: deliveryPostal || '',
       },
     },
     success_url: `${frontendUrl}?subscription=success`,

@@ -114,19 +114,25 @@ export const funnelSettings = defineType({
     defineField({ name: 'priceMensual6',    title: 'Precio visible — Mensual 6 sopas',    type: 'string', group: 'step2' }),
     defineField({ name: 'priceMensual10',   title: 'Precio visible — Mensual 10 sopas',   type: 'string', group: 'step2' }),
 
-    // ── STRIPE PRICE IDs ───────────────────────────────────────────────
+    // ── STRIPE PRODUCT IDs + PRECIOS ──────────────────────────────────────
     defineField({
-      name: 'stripeQuincenal4',
-      title: 'Price ID — Quincenal 4 sopas',
+      name: 'productIdQuincenal4',
+      title: 'Product ID — Quincenal 4 sopas',
       type: 'string',
       group: 'stripe',
-      description: 'Ej: price_1ABC...',
+      description: 'Ej: prod_1ABC...',
     }),
-    defineField({ name: 'stripeQuincenal6',  title: 'Price ID — Quincenal 6 sopas',  type: 'string', group: 'stripe' }),
-    defineField({ name: 'stripeQuincenal10', title: 'Price ID — Quincenal 10 sopas', type: 'string', group: 'stripe' }),
-    defineField({ name: 'stripeMensual4',    title: 'Price ID — Mensual 4 sopas',    type: 'string', group: 'stripe' }),
-    defineField({ name: 'stripeMensual6',    title: 'Price ID — Mensual 6 sopas',    type: 'string', group: 'stripe' }),
-    defineField({ name: 'stripeMensual10',   title: 'Price ID — Mensual 10 sopas',   type: 'string', group: 'stripe' }),
+    defineField({ name: 'productIdQuincenal6',  title: 'Product ID — Quincenal 6 sopas',  type: 'string', group: 'stripe' }),
+    defineField({ name: 'productIdQuincenal10', title: 'Product ID — Quincenal 10 sopas', type: 'string', group: 'stripe' }),
+    defineField({ name: 'productIdMensual4',    title: 'Product ID — Mensual 4 sopas',    type: 'string', group: 'stripe' }),
+    defineField({ name: 'productIdMensual6',    title: 'Product ID — Mensual 6 sopas',    type: 'string', group: 'stripe' }),
+    defineField({ name: 'productIdMensual10',   title: 'Product ID — Mensual 10 sopas',   type: 'string', group: 'stripe' }),
+    defineField({ name: 'amountQuincenal4',  title: 'Precio (€) — Quincenal 4 sopas',  type: 'number', group: 'stripe', description: 'Importe en euros por entrega (ej: 49)' }),
+    defineField({ name: 'amountQuincenal6',  title: 'Precio (€) — Quincenal 6 sopas',  type: 'number', group: 'stripe' }),
+    defineField({ name: 'amountQuincenal10', title: 'Precio (€) — Quincenal 10 sopas', type: 'number', group: 'stripe' }),
+    defineField({ name: 'amountMensual4',    title: 'Precio (€) — Mensual 4 sopas',    type: 'number', group: 'stripe' }),
+    defineField({ name: 'amountMensual6',    title: 'Precio (€) — Mensual 6 sopas',    type: 'number', group: 'stripe' }),
+    defineField({ name: 'amountMensual10',   title: 'Precio (€) — Mensual 10 sopas',   type: 'number', group: 'stripe' }),
 
     // ── STEP 3: PRODUCT SELECTION ──────────────────────────────────────
     defineField({
