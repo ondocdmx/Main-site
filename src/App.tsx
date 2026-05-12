@@ -119,6 +119,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   title,
   purchaseType,
   price,
+  ingredients,
   stripeProductId,
   onlySubscriptions,
   soldOut,
@@ -232,8 +233,6 @@ export default function App() {
   const [deliveryZones, setDeliveryZones] = useState<any>(null);
   const hasValidatedDelivery = typeof window !== 'undefined' && localStorage.getItem('ondo_delivery_validated') === 'true';
 
-  // Delivery slot (inside cart)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   // Cart mixing warning
   const [showMixWarning, setShowMixWarning] = useState(false);
@@ -354,7 +353,8 @@ export default function App() {
   const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
   const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
   const funnelCanProceed = funnelTotal === funnelQuantity;
-  const funnelPlanPrice = getSetting(`price${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, '') as string;
+  const funnelPlanAmount = getSetting(`amount${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, null) as number | null;
+  const funnelPlanPrice = funnelPlanAmount ? `$${funnelPlanAmount}` : '';
 
   const openFunnel = () => {
     setFunnelStep('intro');
@@ -760,36 +760,6 @@ export default function App() {
                 </div>
               ))}
 
-              {/* Delivery slot selection */}
-              <div className="mt-2 border-t border-gray-100 pt-4 flex flex-col gap-3">
-                <p className="font-title font-bold text-sm uppercase tracking-wide text-ondo-black">{content.deliverySlotTitle}</p>
-                <p className="font-body text-xs text-gray-400 -mt-1">{content.deliverySlotSub}</p>
-
-                {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
-                  const labels = [content.slot1, content.slot2, content.slot3];
-                  return (
-                    <button
-                      key={slotKey}
-                      onClick={() => setSelectedSlot(slotKey)}
-                      className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-sm uppercase tracking-wide transition-colors ${selectedSlot === slotKey ? 'border-ondo-orange bg-ondo-orange/5 text-ondo-orange' : 'border-gray-200 hover:border-ondo-orange/40 text-ondo-black'}`}
-                    >
-                      {labels[i]}
-                    </button>
-                  );
-                })}
-
-                {/* "Ninguna me viene bien" — oculto, se habilitará en el futuro */}
-                <div className="hidden">
-                  <button
-                    onClick={() => setSelectedSlot('pickup')}
-                    className={`w-full text-left px-4 py-3 border-2 transition-colors ${selectedSlot === 'pickup' ? 'border-ondo-green bg-ondo-green/5' : 'border-gray-200 hover:border-ondo-green/40'}`}
-                  >
-                    <p className={`font-title font-bold text-sm uppercase tracking-wide ${selectedSlot === 'pickup' ? 'text-ondo-green' : 'text-ondo-black'}`}>{content.slotPickup}</p>
-                    <p className="font-body text-xs text-gray-500 mt-0.5">{content.slotPickupSub}</p>
-                  </button>
-                </div>
-
-              </div>
             </>
           )}
         </div>
@@ -808,8 +778,8 @@ export default function App() {
             )}
             {!activeDiscount && <div className="mb-5" />}
             <button
-              onClick={() => handleCartCheckout(selectedSlot!)}
-              disabled={isCheckingOut || !selectedSlot}
+              onClick={() => handleCartCheckout('')}
+              disabled={isCheckingOut}
               className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : content.confirmAndPay}
@@ -1909,7 +1879,8 @@ export default function App() {
             {funnelStep === 'plan' && (() => {
               const deliveries = funnelFrequency === 'quincenal' ? 6 : 3;
               const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-              const planPrice = getSetting(`price${cap(funnelFrequency)}${funnelQuantity}`, '') as string;
+              const planAmountVal = getSetting(`amount${cap(funnelFrequency)}${funnelQuantity}`, null) as number | null;
+              const planPrice = planAmountVal ? `$${planAmountVal}` : '';
               return (
                 <div className="p-8 md:p-10 bg-ondo-white">
                   <button
@@ -1938,7 +1909,8 @@ export default function App() {
                         ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
                         : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
                       const cap2 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-                      const freqPrice = getSetting(`price${cap2(freq)}${funnelQuantity}`, '') as string;
+                      const freqAmount = getSetting(`amount${cap2(freq)}${funnelQuantity}`, null) as number | null;
+                      const freqPrice = freqAmount ? `$${freqAmount}` : '';
                       return (
                         <button
                           key={freq}
@@ -1976,18 +1948,14 @@ export default function App() {
                     {([4, 6, 10] as const).map(qty => {
                       const selected = funnelQuantity === qty;
                       const total = qty * deliveries;
-                      const qtyPrice = getSetting(`price${cap(funnelFrequency)}${qty}`, '') as string;
+                      const qtyAmount = getSetting(`amount${cap(funnelFrequency)}${qty}`, null) as number | null;
+                      const qtyPrice = qtyAmount ? `$${qtyAmount}` : '';
                       return (
                         <button
                           key={qty}
                           onClick={() => { setFunnelQuantity(qty); setFunnelSoupQty({}); }}
                           className={`relative p-4 border-2 flex flex-col gap-2 transition-all text-left ${selected ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
                         >
-                          {qty === 6 && (
-                            <span className={`absolute top-2 right-2 font-title font-black text-[12px] uppercase tracking-widest px-1.5 py-0.5 ${selected ? 'bg-white text-ondo-green' : 'bg-ondo-orange text-white'}`}>
-                              {lang === 'es' ? 'Popular' : 'Popular'}
-                            </span>
-                          )}
                           {/* Dot grid — sopas por envío */}
                           <div className="flex flex-wrap gap-1 min-h-[24px]">
                             {Array.from({ length: qty }).map((_, i) => (
@@ -2153,9 +2121,9 @@ export default function App() {
                           <p className="font-title font-bold uppercase text-[13px] leading-tight text-ondo-black mb-1">
                             {resolveText(p.title)}
                           </p>
-                          {p.price && (
-                            <p className="font-title font-bold text-[13px] text-ondo-orange mb-3">
-                              ${p.price}
+                          {resolveText(p.ingredients) && (
+                            <p className="font-body text-[11px] text-gray-500 mt-0.5 mb-3 leading-tight line-clamp-2">
+                              {resolveText(p.ingredients)}
                             </p>
                           )}
                           <div className="flex items-center justify-between">
@@ -2332,23 +2300,14 @@ export default function App() {
                   )}
 
                   {/* Precio */}
-                  {funnelPlanPrice && (() => {
-                    const cap3 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-                    const priceMxn = getSetting(`priceMxn${cap3(funnelFrequency)}${funnelQuantity}`, '') as string;
-                    return (
-                      <div className="flex justify-between items-center px-5 py-4 bg-ondo-beige/40">
-                        <span className="font-title text-[11px] uppercase tracking-widest text-gray-400">
-                          {lang === 'es' ? 'Precio' : 'Price'}
-                        </span>
-                        <div className="flex flex-col items-end gap-0.5">
-                          <span className="font-title font-black text-ondo-green text-[20px]">{funnelPlanPrice}</span>
-                          {priceMxn && (
-                            <span className="font-body text-[13px] text-gray-400">${priceMxn} MXN</span>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {funnelPlanPrice && (
+                    <div className="flex justify-between items-center px-5 py-4 bg-ondo-beige/40">
+                      <span className="font-title text-[11px] uppercase tracking-widest text-gray-400">
+                        {lang === 'es' ? 'Precio' : 'Price'}
+                      </span>
+                      <span className="font-title font-black text-ondo-green text-[20px]">{funnelPlanPrice} MXN</span>
+                    </div>
+                  )}
                 </div>
 
                 <button

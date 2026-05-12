@@ -31,6 +31,12 @@ export const product = defineType({
       type: 'number',
     }),
     defineField({
+      name: 'ingredients',
+      title: 'Ingredients',
+      type: 'translationRecord',
+      description: 'Lista de ingredientes del producto (se muestra en el funnel de selección de sopas)',
+    }),
+    defineField({
       name: 'description',
       title: 'Description',
       type: 'translationRecord',
