@@ -12,18 +12,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 app.post('/api/create-cart-checkout', async (req, res) => {
-  const { cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal, shippingProductId, shippingPrice, isPickup } = req.body;
+  const { origin, cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal, shippingProductId, shippingPrice, isPickup } = req.body;
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     res.status(400).json({ error: 'cartItems is required' });
     return;
   }
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
   const line_items: any[] = cartItems.map((item: { productId: string; price: number; quantity: number }) => ({
     price_data: {
-      currency: 'eur',
+      currency: 'mxn',
       product: item.productId,
       unit_amount: Math.round(item.price * 100),
     },
@@ -33,7 +33,7 @@ app.post('/api/create-cart-checkout', async (req, res) => {
   if (!isPickup && shippingProductId && shippingPrice) {
     line_items.push({
       price_data: {
-        currency: 'eur',
+        currency: 'mxn',
         product: shippingProductId,
         unit_amount: Math.round(shippingPrice * 100),
       },
@@ -63,19 +63,24 @@ app.post('/api/create-cart-checkout', async (req, res) => {
     sessionParams.discounts = [{ coupon: couponId }];
   }
 
-  const session = await stripe.checkout.sessions.create(sessionParams);
-  res.json({ url: session.url });
+  try {
+    const session = await stripe.checkout.sessions.create(sessionParams);
+    res.json({ url: session.url });
+  } catch (err: any) {
+    console.error('Stripe cart error:', err?.message);
+    res.status(500).json({ error: err?.message || 'Stripe error' });
+  }
 });
 
 app.post('/api/create-checkout-session', async (req, res) => {
-  const { productId, amount, frequency, quantity, selectedSoups, letOndoChoose, contingencies, deliverySlot, deliveryAddress, deliveryPostal } = req.body;
+  const { origin, productId, amount, frequency, quantity, selectedSoups, letOndoChoose, contingencies, deliverySlot, deliveryAddress, deliveryPostal } = req.body;
 
   if (!productId || !amount) {
     res.status(400).json({ error: 'productId and amount are required' });
     return;
   }
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
   // Stripe metadata values are limited to 500 chars each
   const soupsValue = Array.isArray(selectedSoups)
@@ -85,34 +90,38 @@ app.post('/api/create-checkout-session', async (req, res) => {
   const interval = frequency === 'Mensual' ? 'month' : 'week';
   const intervalCount = frequency === 'Mensual' ? 1 : 2;
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    line_items: [{
-      price_data: {
-        currency: 'eur',
-        product: productId,
-        unit_amount: Math.round(amount * 100),
-        recurring: { interval, interval_count: intervalCount },
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{
+        price_data: {
+          currency: 'mxn',
+          product: productId,
+          unit_amount: Math.round(amount * 100),
+          recurring: { interval, interval_count: intervalCount },
+        },
+        quantity: 1,
+      }],
+      subscription_data: {
+        metadata: {
+          frequency: frequency || '',
+          soups_per_delivery: String(quantity || ''),
+          let_ondo_choose: String(letOndoChoose || false),
+          selected_soups: soupsValue,
+          contingencies: (contingencies || '').slice(0, 490),
+          delivery_slot: deliverySlot || '',
+          delivery_address: (deliveryAddress || '').slice(0, 490),
+          delivery_postal: deliveryPostal || '',
+        },
       },
-      quantity: 1,
-    }],
-    subscription_data: {
-      metadata: {
-        frequency: frequency || '',
-        soups_per_delivery: String(quantity || ''),
-        let_ondo_choose: String(letOndoChoose || false),
-        selected_soups: soupsValue,
-        contingencies: (contingencies || '').slice(0, 490),
-        delivery_slot: deliverySlot || '',
-        delivery_address: (deliveryAddress || '').slice(0, 490),
-        delivery_postal: deliveryPostal || '',
-      },
-    },
-    success_url: `${frontendUrl}?subscription=success`,
-    cancel_url: frontendUrl,
-  });
-
-  res.json({ url: session.url });
+      success_url: `${frontendUrl}?subscription=success`,
+      cancel_url: frontendUrl,
+    });
+    res.json({ url: session.url });
+  } catch (err: any) {
+    console.error('Stripe subscription error:', err?.message);
+    res.status(500).json({ error: err?.message || 'Stripe error' });
+  }
 });
 
 const PORT = process.env.PORT || 3001;

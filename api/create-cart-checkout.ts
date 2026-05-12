@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const {
-    cartItems, couponId,
+    origin, cartItems, couponId,
     deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal,
     shippingProductId, shippingPrice, isPickup,
   } = req.body;
@@ -22,11 +22,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
   const line_items: any[] = cartItems.map((item: { productId: string; price: number; quantity: number }) => ({
     price_data: {
-      currency: 'eur',
+      currency: 'mxn',
       product: item.productId,
       unit_amount: Math.round(item.price * 100),
     },
@@ -36,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!isPickup && shippingProductId && shippingPrice) {
     line_items.push({
       price_data: {
-        currency: 'eur',
+        currency: 'mxn',
         product: shippingProductId,
         unit_amount: Math.round(shippingPrice * 100),
       },

@@ -119,7 +119,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   title,
   purchaseType,
   price,
-  stripePriceId,
+  stripeProductId,
   onlySubscriptions,
   soldOut,
   description,
@@ -357,6 +357,7 @@ export default function App() {
   const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
   const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
   const funnelCanProceed = funnelTotal === funnelQuantity;
+  const funnelPlanPrice = getSetting(`price${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, '') as string;
 
   const openFunnel = () => {
     setFunnelStep('intro');
@@ -418,6 +419,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          origin: window.location.origin,
           productId,
           amount,
           frequency: funnelFrequency,
@@ -587,6 +589,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          origin: window.location.origin,
           cartItems,
           couponId: activeDiscount?.couponId || null,
           deliverySlot: slot,
@@ -605,9 +608,9 @@ export default function App() {
       } else {
         throw new Error(data.error || 'Unknown error');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Cart checkout error:', err);
-      alert(lang === 'es' ? 'Error al proceder al pago. Inténtalo de nuevo.' : 'Payment error. Please try again.');
+      alert(err?.message || (lang === 'es' ? 'Error al proceder al pago. Inténtalo de nuevo.' : 'Payment error. Please try again.'));
       setIsCheckingOut(false);
     }
   };
@@ -728,16 +731,16 @@ export default function App() {
                         <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
                            {cartItemCount >= 5 ? (
                              <>
-                               <span className="line-through text-gray-400 text-xs">€{(item.product.price * item.quantity).toFixed(2)}</span>
+                               <span className="line-through text-gray-400 text-xs">${(item.product.price * item.quantity).toFixed(2)}</span>
                                <span className="text-ondo-orange flex items-center gap-1">
-                                 €{(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
+                                 ${(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
                                  <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
                                    -{cartItemCount > 9 ? '20' : '10'}%
                                  </span>
                                </span>
                              </>
                            ) : (
-                             <span>€{(item.product.price * item.quantity).toFixed(2)}</span>
+                             <span>${(item.product.price * item.quantity).toFixed(2)}</span>
                            )}
                         </div>
                      </div>
@@ -817,7 +820,7 @@ export default function App() {
           <div className="p-6 bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
             <div className="flex justify-between items-center mb-1">
               <span className="font-title text-xl text-gray-500">{getSettingText('subtotal', content.subtotal)}</span>
-              <span className="font-title text-[28px] font-bold text-ondo-black">€{cartSubtotal.toFixed(2)}</span>
+              <span className="font-title text-[28px] font-bold text-ondo-black">${cartSubtotal.toFixed(2)}</span>
             </div>
             {activeDiscount && (
               <div className="flex justify-between items-center mb-5">
@@ -992,40 +995,41 @@ export default function App() {
             </div>
             
             {/* Panel 3 — Quiénes Somos / Tú Decides */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
+            <div className="min-h-[660px] sm:min-h-[600px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
                {/* Top: Orange — Quiénes Somos */}
-               <div className="flex-1 p-7 flex flex-col relative overflow-hidden"
+               <div className="flex-1 flex flex-col relative overflow-hidden"
                     style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
+                 {/* Full-panel image, not clipped */}
+                 <img
+                   src={getSetting('panel3IllustrationImage', null) ? urlFor(getSetting('panel3IllustrationImage', null)).url() : '/images/Group 1597787.png'}
+                   alt=""
+                   className="absolute inset-0 w-full h-full object-cover object-top"
+                 />
+
+                 {/* Gradient overlay so text is readable */}
+                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.45) 100%)' }} />
+
                  {/* Eyebrow */}
-                 <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-4 z-10"
-                    style={{ color: '#f1f3b0', opacity: 0.7 }}>
+                 <p className="relative z-10 font-title text-[14px] uppercase tracking-[0.25em] p-4 sm:p-6 md:p-7"
+                    style={{ color: '#f1f3b0', opacity: 0.85 }}>
                    {getSettingText('panel3Eyebrow', { es: 'QUIÉNES SOMOS', en: 'WHO WE ARE' })}
                  </p>
 
-                 {/* Illustration */}
-                 <div className="flex-1 flex items-center justify-center z-10 py-2">
-                   <img
-                     src={getSetting('panel3IllustrationImage', null) ? urlFor(getSetting('panel3IllustrationImage', null)).url() : '/images/Group 1597787.png'}
-                     alt=""
-                     className="max-h-[200px] lg:max-h-[225px] object-contain"
-                   />
-                 </div>
-
-                 {/* Quote */}
-                 <blockquote className="z-10 mt-auto">
+                 {/* Quote pinned to bottom */}
+                 <blockquote className="relative z-10 mt-auto p-4 sm:p-6 md:p-7">
                    <p className="font-body font-bold italic text-[17px] lg:text-[19px] leading-snug mb-2"
                       style={{ color: '#f1f3b0' }}>
                      {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
                    </p>
                    <footer className="font-title font-bold text-[14px] uppercase tracking-widest"
-                           style={{ color: '#f1f3b0', opacity: 0.7 }}>
+                           style={{ color: '#f1f3b0', opacity: 0.85 }}>
                      {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
                    </footer>
                  </blockquote>
                </div>
 
                {/* Bottom: White — Tú Decides */}
-               <div className="flex-1 p-7 bg-ondo-white flex flex-col relative overflow-hidden">
+               <div className="flex-1 p-4 sm:p-6 md:p-7 bg-ondo-white flex flex-col relative overflow-hidden">
                  {/* Eyebrow */}
                  <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-4"
                     style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.65 }}>
@@ -1181,14 +1185,14 @@ export default function App() {
                       <div className="font-body font-bold mb-5 text-[16px]">
                         {cartItemCount >= 5 ? (
                           <div className="flex items-center gap-2">
-                            <span className="line-through text-gray-400 text-[14px]">€{product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">€{(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                            <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
+                            <span className="text-ondo-orange">${(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
                             <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
                               -{cartItemCount > 9 ? '20' : '10'}%
                             </span>
                           </div>
                         ) : (
-                          <span className="text-ondo-green">€{product.price?.toFixed(2)}</span>
+                          <span className="text-ondo-green">${product.price?.toFixed(2)}</span>
                         )}
                       </div>
                       <div className="mt-auto" onClick={e => e.stopPropagation()}>
@@ -1609,14 +1613,14 @@ export default function App() {
                 <div className="font-title font-black text-[28px] mb-5">
                   {cartItemCount >= 5 ? (
                     <div className="flex items-center gap-3">
-                      <span className="line-through text-gray-400 text-[20px]">€{selectedProduct.price?.toFixed(2)}</span>
-                      <span className="text-ondo-orange">€{(selectedProduct.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                      <span className="line-through text-gray-400 text-[20px]">${selectedProduct.price?.toFixed(2)}</span>
+                      <span className="text-ondo-orange">${(selectedProduct.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
                       <span className="bg-ondo-orange text-white text-[12px] px-2 py-1 rounded-sm uppercase tracking-wide self-center mb-1">
                         -{cartItemCount > 9 ? '20' : '10'}%
                       </span>
                     </div>
                   ) : (
-                    <span className="text-ondo-green">€{selectedProduct.price?.toFixed(2)}</span>
+                    <span className="text-ondo-green">${selectedProduct.price?.toFixed(2)}</span>
                   )}
                 </div>
 
@@ -1658,11 +1662,11 @@ export default function App() {
         </div>
       )}
 
-      {/* ── STATIC FLOATING BUTTON (BOTTOM LEFT) ── */}
+      {/* ── STATIC FLOATING BUTTON (BOTTOM RIGHT) ── */}
       {getSetting('enabled', true) !== false && (
         <button
           onClick={openSoupModal}
-          className="fixed bottom-6 left-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
+          className="fixed bottom-6 right-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
           <span className="flex flex-col text-left leading-tight">
@@ -2007,7 +2011,7 @@ export default function App() {
                   >
                     <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
                     {planPrice && (
-                      <span className="font-body font-normal text-[13px] text-white/80 normal-case tracking-normal">
+                      <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
                         · {planPrice}
                       </span>
                     )}
@@ -2177,9 +2181,14 @@ export default function App() {
                 <button
                   onClick={() => setFunnelStep('summary')}
                   disabled={!funnelCanProceed}
-                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
-                  {lang === 'es' ? 'SIGUIENTE' : 'NEXT'} &rarr;
+                  <span>{lang === 'es' ? 'SIGUIENTE' : 'NEXT'} &rarr;</span>
+                  {funnelPlanPrice && (
+                    <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
+                      · {funnelPlanPrice}
+                    </span>
+                  )}
                 </button>
               </div>
             )}
@@ -2263,12 +2272,19 @@ export default function App() {
                 <button
                   onClick={handleCheckout}
                   disabled={isCheckingOut}
-                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] mb-4 disabled:opacity-60"
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] mb-4 disabled:opacity-60 flex items-center justify-center gap-3"
                 >
-                  {isCheckingOut
-                    ? (lang === 'es' ? 'Procesando...' : 'Processing...')
-                    : resolveText(getSetting('checkoutButtonText', { es: 'PROCEDER AL PAGO', en: 'PROCEED TO PAYMENT' }))}
-                  {!isCheckingOut && ' →'}
+                  <span>
+                    {isCheckingOut
+                      ? (lang === 'es' ? 'Procesando...' : 'Processing...')
+                      : resolveText(getSetting('checkoutButtonText', { es: 'PROCEDER AL PAGO', en: 'PROCEED TO PAYMENT' }))}
+                    {!isCheckingOut && ' →'}
+                  </span>
+                  {!isCheckingOut && funnelPlanPrice && (
+                    <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
+                      · {funnelPlanPrice}
+                    </span>
+                  )}
                 </button>
                 <p className="text-center font-body text-[11px] text-gray-400">
                   {resolveText(getSetting('termsText', { es: 'Al continuar aceptas nuestros términos y condiciones. Cancela cuando quieras.', en: 'By continuing you accept our terms and conditions. Cancel anytime.' }))}

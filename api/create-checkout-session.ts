@@ -12,7 +12,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const {
-    productId, amount, frequency, quantity,
+    origin, productId, amount, frequency, quantity,
     selectedSoups, letOndoChoose, contingencies,
     deliverySlot, deliveryAddress, deliveryPostal,
   } = req.body;
@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
   const soupsValue = Array.isArray(selectedSoups)
     ? selectedSoups.join(' | ').slice(0, 490)
@@ -36,7 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mode: 'subscription',
       line_items: [{
         price_data: {
-          currency: 'eur',
+          currency: 'mxn',
           product: productId,
           unit_amount: Math.round(amount * 100),
           recurring: { interval, interval_count: intervalCount },
