@@ -687,6 +687,18 @@ export default function App() {
         </div>
       </nav>
 
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-ondo-beige border-b border-black/10 sticky top-[73px] z-20 flex flex-col font-title font-semibold text-[17px] tracking-wide">
+          <a href="#shop" className="px-6 py-4 border-b border-black/5 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+            {getSettingText('navShop', content.navShop)}
+          </a>
+          <a href="#manifesto" className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+            {getSettingText('navSubs', content.navSubs)}
+          </a>
+        </div>
+      )}
+
       {/* Cart Sidebar */}
       {isCartOpen && (
         <div className="fixed inset-0 bg-ondo-black/40 z-40 transition-opacity backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
