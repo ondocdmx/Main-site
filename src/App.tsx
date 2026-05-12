@@ -1427,13 +1427,6 @@ export default function App() {
                 </p>
                 <input
                   type="text"
-                  value={deliveryAddress}
-                  onChange={e => setDeliveryAddress(e.target.value)}
-                  placeholder={lang === 'es' ? 'Tu dirección (opcional)' : 'Your address (optional)'}
-                  className="w-full border border-gray-200 px-4 py-3 font-body text-sm mb-3 focus:outline-none focus:border-ondo-orange bg-white"
-                />
-                <input
-                  type="text"
                   value={deliveryPostal}
                   onChange={e => setDeliveryPostal(e.target.value)}
                   placeholder={lang === 'es' ? 'Código postal *' : 'Postal code *'}
@@ -1818,13 +1811,6 @@ export default function App() {
                         : 'Enter your postal code to confirm we deliver to your area.'}
                     </p>
                     <div className="flex flex-col gap-3 mb-6">
-                      <input
-                        type="text"
-                        value={deliveryAddress}
-                        onChange={e => setDeliveryAddress(e.target.value)}
-                        placeholder={lang === 'es' ? 'Dirección (opcional)' : 'Address (optional)'}
-                        className="w-full border border-ondo-green/20 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30"
-                      />
                       <input
                         type="text"
                         value={deliveryPostal}
