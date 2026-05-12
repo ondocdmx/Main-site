@@ -234,8 +234,6 @@ export default function App() {
 
   // Delivery slot (inside cart)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [slotPhone, setSlotPhone] = useState('');
-  const [slotEmail, setSlotEmail] = useState('');
 
   // Cart mixing warning
   const [showMixWarning, setShowMixWarning] = useState(false);
@@ -251,7 +249,7 @@ export default function App() {
 
   // Subscription Popup / Funnel
   const [showPopupModal, setShowPopupModal] = useState(false);
-  type FunnelStep = 'intro' | 'delivery' | 'plan' | 'soups' | 'summary';
+  type FunnelStep = 'intro' | 'delivery' | 'plan' | 'soups' | 'slot' | 'summary';
   const [funnelStep, setFunnelStep] = useState<FunnelStep>('intro');
   const [funnelFrequency, setFunnelFrequency] = useState<'quincenal' | 'mensual'>('quincenal');
   const [funnelQuantity, setFunnelQuantity] = useState<4 | 6 | 10>(4);
@@ -365,6 +363,7 @@ export default function App() {
     setFunnelQuantity(4);
     setFunnelSoupQty({});
     setFunnelContingencies('');
+    setFunnelSlot(null);
     setDeliveryStatus('idle');
     setDeliveryAddress('');
     setDeliveryPostal('');
@@ -570,7 +569,7 @@ export default function App() {
     return null;
   })();
 
-  const handleCartCheckout = async (slot: string, phone: string, email: string) => {
+  const handleCartCheckout = async (slot: string) => {
     setIsCheckingOut(true);
     try {
       const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, price: item.product.price, quantity: item.quantity }));
@@ -593,8 +592,6 @@ export default function App() {
           cartItems,
           couponId: activeDiscount?.couponId || null,
           deliverySlot: slot,
-          deliveryPhone: phone,
-          deliveryEmail: email,
           deliveryAddress: savedAddress,
           deliveryPostal: savedPostal,
           shippingProductId,
@@ -785,31 +782,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Contact fields */}
-                {selectedSlot && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    <p className="font-title font-bold text-xs uppercase tracking-wide text-ondo-black">{content.deliveryContactTitle}</p>
-                    {selectedSlot === 'pickup' ? (
-                      <p className="font-body text-xs text-gray-500 bg-ondo-light-green/30 px-3 py-2">{content.pickupNote}</p>
-                    ) : (
-                      <p className="font-body text-xs text-gray-400">{content.deliveryContactNote}</p>
-                    )}
-                    <input
-                      type="tel"
-                      value={slotPhone}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlotPhone(e.target.value)}
-                      placeholder={content.deliveryPhone + ' (+34 600 000 000)'}
-                      className="w-full border border-gray-200 px-3 py-2.5 font-body text-sm focus:outline-none focus:border-ondo-orange transition-colors"
-                    />
-                    <input
-                      type="email"
-                      value={slotEmail}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSlotEmail(e.target.value)}
-                      placeholder={content.deliveryEmail + ' (tu@correo.com)'}
-                      className="w-full border border-gray-200 px-3 py-2.5 font-body text-sm focus:outline-none focus:border-ondo-orange transition-colors"
-                    />
-                  </div>
-                )}
               </div>
             </>
           )}
@@ -829,8 +801,8 @@ export default function App() {
             )}
             {!activeDiscount && <div className="mb-5" />}
             <button
-              onClick={() => handleCartCheckout(selectedSlot!, slotPhone.trim(), slotEmail.trim())}
-              disabled={isCheckingOut || !selectedSlot || (selectedSlot !== 'pickup' && !slotPhone.trim() && !slotEmail.trim())}
+              onClick={() => handleCartCheckout(selectedSlot!)}
+              disabled={isCheckingOut || !selectedSlot}
               className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : content.confirmAndPay}
@@ -1681,7 +1653,6 @@ export default function App() {
       {showPopupModal && (
         <div
           className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setShowPopupModal(false)}
         >
           <div
             className="bg-ondo-white shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col relative"
@@ -1939,6 +1910,8 @@ export default function App() {
                       const freqDeliveriesLabel = freq === 'quincenal'
                         ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
                         : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
+                      const cap2 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+                      const freqPrice = getSetting(`price${cap2(freq)}${funnelQuantity}`, '') as string;
                       return (
                         <button
                           key={freq}
@@ -1953,6 +1926,11 @@ export default function App() {
                           <span className={`font-body text-[18px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
                             {freqDeliveriesLabel}
                           </span>
+                          {freqPrice && (
+                            <span className={`font-title font-black text-[20px] mt-1 ${sel ? 'text-white' : 'text-ondo-orange'}`}>
+                              {freqPrice}
+                            </span>
+                          )}
                           <div className="flex gap-1 mt-2">
                             {Array.from({ length: freqDeliveries }).map((_, i) => (
                               <span key={i} className={`w-2 h-2 rounded-full ${sel ? 'bg-white/60' : 'bg-ondo-green/20'}`} />
@@ -1971,6 +1949,7 @@ export default function App() {
                     {([4, 6, 10] as const).map(qty => {
                       const selected = funnelQuantity === qty;
                       const total = qty * deliveries;
+                      const qtyPrice = getSetting(`price${cap(funnelFrequency)}${qty}`, '') as string;
                       return (
                         <button
                           key={qty}
@@ -1999,6 +1978,12 @@ export default function App() {
                           <div className={`text-[16px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
                             {total} {lang === 'es' ? 'en total' : 'total'}
                           </div>
+                          {/* Precio */}
+                          {qtyPrice && (
+                            <div className={`font-title font-black text-[15px] ${selected ? 'text-white/90' : 'text-ondo-orange'}`}>
+                              {qtyPrice}
+                            </div>
+                          )}
                         </button>
                       );
                     })}
@@ -2062,7 +2047,7 @@ export default function App() {
                 </div>
 
                 {/* Grid de productos con stepper — ONDO choice es la primera card */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   {/* Card "Elección de ONDO" — integrada en el grid */}
                   {(() => {
                     const ondoQty = funnelSoupQty[ONDO_CHOICE_ID] || 0;
@@ -2070,7 +2055,7 @@ export default function App() {
                     const ondoBg = getSetting('ondoChoiceBgColor', 'bg-ondo-beige');
                     return (
                       <div className={`border transition-all ${ondoQty > 0 ? 'border-ondo-green' : 'border-gray-100'}`}>
-                        <div className={`aspect-[4/3] ${ondoBg} relative overflow-hidden`}>
+                        <div className={`aspect-[3/2] ${ondoBg} relative overflow-hidden`}>
                           {ondoImg ? (
                             <img
                               src={resolveImage(ondoImg)}
@@ -2079,38 +2064,38 @@ export default function App() {
                             />
                           ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center gap-1">
-                              <span className="font-title font-black text-[32px] text-ondo-orange/40 leading-none">?</span>
-                              <span className="font-title font-black text-[9px] uppercase tracking-widest text-ondo-orange/40">ONDO</span>
+                              <span className="font-title font-black text-[48px] text-ondo-orange/40 leading-none">?</span>
+                              <span className="font-title font-black text-[11px] uppercase tracking-widest text-ondo-orange/40">ONDO</span>
                             </div>
                           )}
                           {ondoQty > 0 && (
-                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ondo-green flex items-center justify-center">
-                              <span className="font-title font-black text-white text-[10px]">{ondoQty}</span>
+                            <div className="absolute top-2 right-2 w-6 h-6 bg-ondo-green flex items-center justify-center">
+                              <span className="font-title font-black text-white text-[12px]">{ondoQty}</span>
                             </div>
                           )}
                         </div>
-                        <div className="p-2">
-                          <p className="font-title font-bold uppercase text-[10px] truncate text-ondo-black leading-tight">
+                        <div className="p-3">
+                          <p className="font-title font-bold uppercase text-[13px] truncate text-ondo-black leading-tight">
                             {resolveText(getSetting('ondoChoiceTitle', { es: 'Elección de ONDO', en: "ONDO's Choice" }))}
                           </p>
-                          <p className="font-body text-[9px] text-gray-400 mt-0.5 leading-tight line-clamp-2 mb-2">
+                          <p className="font-body text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-2 mb-3">
                             {resolveText(getSetting('ondoChoiceDescription', { es: 'Sorpresa de temporada seleccionada por nuestro chef', en: 'Seasonal surprise selected by our chef' }))}
                           </p>
                           <div className="flex items-center justify-between">
                             <button
                               onClick={() => setFunnelSoupQty(prev => { const n = { ...prev }; if ((n[ONDO_CHOICE_ID] || 0) > 0) n[ONDO_CHOICE_ID]--; if (n[ONDO_CHOICE_ID] === 0) delete n[ONDO_CHOICE_ID]; return n; })}
                               disabled={ondoQty === 0}
-                              className="w-7 h-7 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
+                              className="w-9 h-9 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-4 h-4" />
                             </button>
-                            <span className="font-title font-bold text-[16px] text-ondo-black w-6 text-center">{ondoQty}</span>
+                            <span className="font-title font-bold text-[20px] text-ondo-black w-8 text-center">{ondoQty}</span>
                             <button
                               onClick={() => { if (funnelRemaining <= 0) return; setFunnelSoupQty(prev => ({ ...prev, [ONDO_CHOICE_ID]: (prev[ONDO_CHOICE_ID] || 0) + 1 })); }}
                               disabled={funnelRemaining <= 0}
-                              className="w-7 h-7 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
+                              className="w-9 h-9 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -2125,37 +2110,42 @@ export default function App() {
                         key={p._id}
                         className={`border transition-all ${qty > 0 ? 'border-ondo-green' : 'border-gray-100'}`}
                       >
-                        <div className={`aspect-[4/3] ${p.bgColor || 'bg-ondo-beige'} relative overflow-hidden`}>
+                        <div className={`aspect-[3/2] ${p.bgColor || 'bg-ondo-beige'} relative overflow-hidden`}>
                           <img
                             src={resolveImage(p.image)}
                             alt={resolveText(p.title)}
                             className="w-full h-full object-cover mix-blend-multiply"
                           />
                           {qty > 0 && (
-                            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-ondo-green flex items-center justify-center">
-                              <span className="font-title font-black text-white text-[10px]">{qty}</span>
+                            <div className="absolute top-2 right-2 w-6 h-6 bg-ondo-green flex items-center justify-center">
+                              <span className="font-title font-black text-white text-[12px]">{qty}</span>
                             </div>
                           )}
                         </div>
-                        <div className="p-2">
-                          <p className="font-title font-bold uppercase text-[10px] truncate text-ondo-black leading-tight mb-2">
+                        <div className="p-3">
+                          <p className="font-title font-bold uppercase text-[13px] leading-tight text-ondo-black mb-1">
                             {resolveText(p.title)}
                           </p>
+                          {p.price && (
+                            <p className="font-title font-bold text-[13px] text-ondo-orange mb-3">
+                              {p.price} €
+                            </p>
+                          )}
                           <div className="flex items-center justify-between">
                             <button
                               onClick={() => setFunnelSoupQty(prev => { const n = { ...prev }; if ((n[p._id] || 0) > 0) n[p._id]--; if (n[p._id] === 0) delete n[p._id]; return n; })}
                               disabled={qty === 0}
-                              className="w-7 h-7 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
+                              className="w-9 h-9 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-4 h-4" />
                             </button>
-                            <span className="font-title font-bold text-[16px] text-ondo-black w-6 text-center">{qty}</span>
+                            <span className="font-title font-bold text-[20px] text-ondo-black w-8 text-center">{qty}</span>
                             <button
                               onClick={() => { if (funnelRemaining <= 0) return; setFunnelSoupQty(prev => ({ ...prev, [p._id]: (prev[p._id] || 0) + 1 })); }}
                               disabled={funnelRemaining <= 0}
-                              className="w-7 h-7 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
+                              className="w-9 h-9 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -2179,7 +2169,7 @@ export default function App() {
                 </div>
 
                 <button
-                  onClick={() => setFunnelStep('summary')}
+                  onClick={() => setFunnelStep('slot')}
                   disabled={!funnelCanProceed}
                   className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                 >
@@ -2193,12 +2183,58 @@ export default function App() {
               </div>
             )}
 
-            {/* ── PASO 4: RESUMEN + CHECKOUT ────────────────────────────── */}
-            {/* ── PASO 5: RESUMEN + CHECKOUT ────────────────────────────── */}
-            {funnelStep === 'summary' && (
+            {/* ── PASO 5: SELECCIÓN DE HORARIO ─────────────────────────── */}
+            {funnelStep === 'slot' && (
               <div className="p-8 md:p-10 bg-ondo-white">
                 <button
                   onClick={() => setFunnelStep('soups')}
+                  className="text-ondo-green/50 font-body text-sm mb-8 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                >
+                  ← {lang === 'es' ? 'Atrás' : 'Back'}
+                </button>
+
+                <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block pr-6">
+                  {lang === 'es' ? 'ENTREGA' : 'DELIVERY'}
+                </p>
+                <h2 className="font-title font-black text-[28px] md:text-[34px] uppercase leading-tight text-ondo-green mb-3">
+                  {lang === 'es' ? '¿CUÁNDO TE\nENVIAMOS?' : 'WHEN SHOULD\nWE DELIVER?'}
+                </h2>
+                <div className="w-12 h-[3px] bg-ondo-green mb-6" />
+                <p className="font-body text-ondo-green/70 text-[14px] leading-relaxed mb-8">
+                  {content.deliverySlotSub}
+                </p>
+
+                <div className="flex flex-col gap-3 mb-10">
+                  {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
+                    const labels = [content.slot1, content.slot2, content.slot3];
+                    const sel = funnelSlot === slotKey;
+                    return (
+                      <button
+                        key={slotKey}
+                        onClick={() => setFunnelSlot(slotKey)}
+                        className={`w-full text-left px-5 py-4 border-2 font-title font-bold text-[15px] uppercase tracking-wide transition-colors ${sel ? 'border-ondo-green bg-ondo-green text-white' : 'border-gray-200 hover:border-ondo-green/50 text-ondo-black'}`}
+                      >
+                        {labels[i]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setFunnelStep('summary')}
+                  disabled={!funnelSlot}
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {lang === 'es' ? 'VER RESUMEN' : 'SEE SUMMARY'} &rarr;
+                </button>
+              </div>
+            )}
+
+            {/* ── PASO 6: RESUMEN + CHECKOUT ────────────────────────────── */}
+            {funnelStep === 'summary' && (
+              <div className="p-8 md:p-10 bg-ondo-white">
+                <button
+                  onClick={() => setFunnelStep('slot')}
                   className="text-ondo-green/50 font-body text-sm mb-6 flex items-center gap-1 hover:text-ondo-green transition-colors"
                 >
                   ← {lang === 'es' ? 'Atrás' : 'Back'}
@@ -2267,6 +2303,25 @@ export default function App() {
                       <p className="font-body text-sm text-gray-600 italic">{funnelContingencies}</p>
                     </div>
                   )}
+
+                  {/* Precio */}
+                  {funnelPlanPrice && (() => {
+                    const cap3 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+                    const priceMxn = getSetting(`priceMxn${cap3(funnelFrequency)}${funnelQuantity}`, '') as string;
+                    return (
+                      <div className="flex justify-between items-center px-5 py-4 bg-ondo-beige/40">
+                        <span className="font-title text-[11px] uppercase tracking-widest text-gray-400">
+                          {lang === 'es' ? 'Precio' : 'Price'}
+                        </span>
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span className="font-title font-black text-ondo-green text-[20px]">{funnelPlanPrice}</span>
+                          {priceMxn && (
+                            <span className="font-body text-[13px] text-gray-400">{priceMxn} MXN</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <button
