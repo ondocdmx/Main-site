@@ -218,6 +218,7 @@ export default function App() {
   const [purchaseMode, setPurchaseMode] = useState<'subscription' | 'single'>('subscription');
   const [cart, setCart] = useState<{product: any, quantity: number}[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settings, setSettings] = useState<any>(null);
   // Products state: starts with mock data, replaced only if Sanity returns real products
   const [displayProducts, setDisplayProducts] = useState<any[]>(MOCK_PRODUCTS);
@@ -616,20 +617,12 @@ export default function App() {
     if (!soupIdea || !soupEmail) return;
     setIsSubmittingSoup(true);
     try {
-      await writeClient.create({
-        _type: 'soupRequest',
-        soupIdea,
-        email: soupEmail,
-        createdAt: new Date().toISOString(),
-      });
-
-      // Send lead to Google Sheets (fire-and-forget — don't block on failure)
-      fetch('/api/submit-soup-lead', {
+      const res = await fetch('/api/submit-soup-lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ soupIdea, email: soupEmail }),
-      }).catch(err => console.error('Google Sheets lead error:', err));
-
+      });
+      if (!res.ok) throw new Error('API error');
       setSoupSubmitted(true);
     } catch (err) {
       console.error('Soup request error:', err);
@@ -656,9 +649,9 @@ export default function App() {
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
             <a href="#manifesto" className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
           </div>
-          <div className="md:hidden">
-            <Menu className="w-6 h-6 text-ondo-green" />
-          </div>
+          <button className="md:hidden p-1" onClick={() => setIsMobileMenuOpen((o: boolean) => !o)}>
+            {isMobileMenuOpen ? <X className="w-6 h-6 text-ondo-green" /> : <Menu className="w-6 h-6 text-ondo-green" />}
+          </button>
           
           <a href="#" className="absolute left-1/2 transform -translate-x-1/2">
             <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-[52px] md:h-[68px] object-contain" />
@@ -1785,34 +1778,9 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Selección de franja horaria */}
-                    <div className="flex flex-col gap-2">
-                      <p className="font-title font-bold text-[11px] uppercase tracking-widest text-ondo-black">{content.deliverySlotTitle}</p>
-                      <p className="font-body text-xs text-gray-400 -mt-1">{content.deliverySlotSub}</p>
-                      {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
-                        const labels = [content.slot1, content.slot2, content.slot3];
-                        return (
-                          <button
-                            key={slotKey}
-                            onClick={() => setFunnelSlot(slotKey)}
-                            className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-sm uppercase tracking-wide transition-colors ${funnelSlot === slotKey ? 'border-ondo-orange bg-ondo-orange/5 text-ondo-orange' : 'border-gray-200 hover:border-ondo-orange/40 text-ondo-black'}`}
-                          >
-                            {labels[i]}
-                          </button>
-                        );
-                      })}
-                      {/* "Ninguna me viene bien" — oculto, se habilitará en el futuro */}
-                      <div className="hidden">
-                        <button className="w-full text-left px-4 py-3 border-2 border-gray-200 font-title font-bold text-sm uppercase tracking-wide text-ondo-black">
-                          {content.slotPickup}
-                        </button>
-                      </div>
-                    </div>
-
                     <button
                       onClick={() => setFunnelStep('plan')}
-                      disabled={!funnelSlot}
-                      className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px]"
                     >
                       {lang === 'es' ? 'ELEGIR MI PLAN' : 'CHOOSE MY PLAN'} &rarr;
                     </button>
@@ -1879,8 +1847,7 @@ export default function App() {
             {funnelStep === 'plan' && (() => {
               const deliveries = funnelFrequency === 'quincenal' ? 6 : 3;
               const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-              const planAmountVal = getSetting(`amount${cap(funnelFrequency)}${funnelQuantity}`, null) as number | null;
-              const planPrice = planAmountVal ? `$${planAmountVal}` : '';
+              const planPrice = getSetting(`price${cap(funnelFrequency)}${funnelQuantity}`, '') as string;
               return (
                 <div className="p-8 md:p-10 bg-ondo-white">
                   <button
@@ -1909,8 +1876,7 @@ export default function App() {
                         ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
                         : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
                       const cap2 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-                      const freqAmount = getSetting(`amount${cap2(freq)}${funnelQuantity}`, null) as number | null;
-                      const freqPrice = freqAmount ? `$${freqAmount}` : '';
+                      const freqPrice = getSetting(`price${cap2(freq)}${funnelQuantity}`, '') as string;
                       return (
                         <button
                           key={freq}
@@ -1948,8 +1914,7 @@ export default function App() {
                     {([4, 6, 10] as const).map(qty => {
                       const selected = funnelQuantity === qty;
                       const total = qty * deliveries;
-                      const qtyAmount = getSetting(`amount${cap(funnelFrequency)}${qty}`, null) as number | null;
-                      const qtyPrice = qtyAmount ? `$${qtyAmount}` : '';
+                      const qtyPrice = getSetting(`price${cap(funnelFrequency)}${qty}`, '') as string;
                       return (
                         <button
                           key={qty}
