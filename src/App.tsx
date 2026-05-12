@@ -764,13 +764,13 @@ export default function App() {
                      <div className="flex justify-between gap-2 mb-2">
                         <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
                         <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
-                           {cartItemCount >= 5 ? (
+                           {activeDiscount ? (
                              <>
                                <span className="line-through text-gray-400 text-xs">${(item.product.price * item.quantity).toFixed(2)}</span>
                                <span className="text-ondo-orange flex items-center gap-1">
-                                 ${(item.product.price * item.quantity * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}
+                                 ${(item.product.price * item.quantity * (1 - activeDiscount.pct / 100)).toFixed(2)}
                                  <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
-                                   -{cartItemCount > 9 ? '20' : '10'}%
+                                   -{activeDiscount.pct}%
                                  </span>
                                </span>
                              </>
