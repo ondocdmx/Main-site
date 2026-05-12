@@ -257,6 +257,8 @@ export default function App() {
   const [funnelContingencies, setFunnelContingencies] = useState('');
   const [funnelSlot, setFunnelSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [cartSlot, setCartSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
+  const [showCartSlotSelector, setShowCartSlotSelector] = useState(false);
 
   // Soup Request Popup
   const [showSoupModal, setShowSoupModal] = useState(false);
@@ -546,8 +548,8 @@ export default function App() {
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const cartSubtotal = (() => {
-    const d2Min = getSetting('cartDiscount2Min', null);
-    const d1Min = getSetting('cartDiscount1Min', null);
+    const d2Min = getSetting('cartDiscount2Min', 10);
+    const d1Min = getSetting('cartDiscount1Min', 5);
     const d2Pct = getSetting('cartDiscount2Percent', 20);
     const d1Pct = getSetting('cartDiscount1Percent', 10);
     let discountMult = 1;
@@ -558,13 +560,13 @@ export default function App() {
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
 
   const activeDiscount = (() => {
-    const d2Min = getSetting('cartDiscount2Min', null);
-    const d1Min = getSetting('cartDiscount1Min', null);
+    const d2Min = getSetting('cartDiscount2Min', 10);
+    const d1Min = getSetting('cartDiscount1Min', 5);
     if (d2Min !== null && cartItemCount >= d2Min) {
-      return { label: getSetting('cartDiscount2Label', ''), couponId: getSetting('cartDiscount2CouponId', '') };
+      return { label: getSetting('cartDiscount2Label', ''), pct: getSetting('cartDiscount2Percent', 20), couponId: getSetting('cartDiscount2CouponId', '') };
     }
     if (d1Min !== null && cartItemCount >= d1Min) {
-      return { label: getSetting('cartDiscount1Label', ''), couponId: getSetting('cartDiscount1CouponId', '') };
+      return { label: getSetting('cartDiscount1Label', ''), pct: getSetting('cartDiscount1Percent', 10), couponId: getSetting('cartDiscount1CouponId', '') };
     }
     return null;
   })();
@@ -572,7 +574,8 @@ export default function App() {
   const handleCartCheckout = async (slot: string) => {
     setIsCheckingOut(true);
     try {
-      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, price: item.product.price, quantity: item.quantity }));
+      const discountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
+      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, price: Math.round(item.product.price * discountMult * 100) / 100, quantity: item.quantity }));
       const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
@@ -590,7 +593,6 @@ export default function App() {
         body: JSON.stringify({
           origin: window.location.origin,
           cartItems,
-          couponId: activeDiscount?.couponId || null,
           deliverySlot: slot,
           deliveryAddress: savedAddress,
           deliveryPostal: savedPostal,
@@ -701,7 +703,7 @@ export default function App() {
 
       {/* Cart Sidebar */}
       {isCartOpen && (
-        <div className="fixed inset-0 bg-ondo-black/40 z-40 transition-opacity backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
+        <div className="fixed inset-0 bg-ondo-black/40 z-40 transition-opacity backdrop-blur-sm" onClick={() => { setIsCartOpen(false); setShowCartSlotSelector(false); }} />
       )}
       <div className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-ondo-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Header */}
@@ -709,7 +711,7 @@ export default function App() {
           <div className="flex-1" />
           <h2 className="font-title font-bold text-xl uppercase tracking-wide">ONDO</h2>
           <div className="flex-1 flex justify-end">
-             <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-ondo-light-green transition-colors"><X className="w-6 h-6 text-ondo-black" /></button>
+             <button onClick={() => { setIsCartOpen(false); setShowCartSlotSelector(false); }} className="p-2 hover:bg-ondo-light-green transition-colors"><X className="w-6 h-6 text-ondo-black" /></button>
           </div>
         </div>
 
@@ -771,24 +773,63 @@ export default function App() {
 
         {/* Footer info */}
         {cart.length > 0 && (
-          <div className="p-6 bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-title text-xl text-gray-500">{getSettingText('subtotal', content.subtotal)}</span>
-              <span className="font-title text-[28px] font-bold text-ondo-black">${cartSubtotal.toFixed(2)}</span>
-            </div>
-            {activeDiscount && (
-              <div className="flex justify-between items-center mb-5">
-                <span className="font-title text-sm text-ondo-green uppercase tracking-wide">{activeDiscount.label}</span>
+          <div className="bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
+            {showCartSlotSelector ? (
+              <div className="p-6">
+                <button
+                  onClick={() => setShowCartSlotSelector(false)}
+                  className="text-ondo-green/50 font-body text-sm mb-5 flex items-center gap-1 hover:text-ondo-green transition-colors"
+                >
+                  ← {lang === 'es' ? 'Atrás' : 'Back'}
+                </button>
+                <p className="font-title text-[11px] uppercase tracking-[0.2em] text-ondo-green mb-2">
+                  {lang === 'es' ? 'ENTREGA' : 'DELIVERY'}
+                </p>
+                <p className="font-body text-ondo-green/70 text-[13px] mb-4">{content.deliverySlotSub}</p>
+                <div className="flex flex-col gap-2 mb-5">
+                  {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
+                    const labels = [content.slot1, content.slot2, content.slot3];
+                    const sel = cartSlot === slotKey;
+                    return (
+                      <button
+                        key={slotKey}
+                        onClick={() => setCartSlot(slotKey)}
+                        className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-[13px] uppercase tracking-wide transition-colors ${sel ? 'border-ondo-green bg-ondo-green text-white' : 'border-gray-200 hover:border-ondo-green/50 text-ondo-black'}`}
+                      >
+                        {labels[i]}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => { if (cartSlot) handleCartCheckout(cartSlot); }}
+                  disabled={!cartSlot || isCheckingOut}
+                  className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : (lang === 'es' ? 'PROCEDER AL PAGO' : 'PROCEED TO PAYMENT')}
+                </button>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-title text-xl text-gray-500">{getSettingText('subtotal', content.subtotal)}</span>
+                  <span className="font-title text-[28px] font-bold text-ondo-black">${cartSubtotal.toFixed(2)}</span>
+                </div>
+                {activeDiscount && (
+                  <div className="flex justify-between items-center mb-5">
+                    <span className="font-title text-sm text-ondo-green uppercase tracking-wide">{activeDiscount.label}</span>
+                  </div>
+                )}
+                {!activeDiscount && <div className="mb-5" />}
+                <button
+                  onClick={() => setShowCartSlotSelector(true)}
+                  disabled={isCheckingOut}
+                  className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {content.confirmAndPay}
+                </button>
               </div>
             )}
-            {!activeDiscount && <div className="mb-5" />}
-            <button
-              onClick={() => handleCartCheckout('')}
-              disabled={isCheckingOut}
-              className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : content.confirmAndPay}
-            </button>
           </div>
         )}
       </div>
