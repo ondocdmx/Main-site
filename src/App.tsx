@@ -242,6 +242,7 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [settings, setSettings] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   // Products state: starts with mock data, replaced only if Sanity returns real products
   const [displayProducts, setDisplayProducts] = useState<any[]>(MOCK_PRODUCTS);
 
@@ -292,20 +293,24 @@ export default function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, footerSettingsData, fetchedTags, fetchedZones, fetchedProducts] = await Promise.all([
-          client.fetch('*[_id == "siteSettings"][0]'),
-          client.fetch('*[_id == "productSettings"][0]'),
-          client.fetch('*[_id == "processSettings"][0]'),
-          client.fetch('*[_id == "manifestoSettings"][0]'),
-          client.fetch('*[_id == "popupSettings"][0]'),
-          client.fetch('*[_id == "heroSettings"][0]'),
-          client.fetch('*[_id == "aboutSettings"][0]'),
-          client.fetch('*[_id == "funnelSettings"][0]'),
-          client.fetch('*[_id == "footerSettings"][0]'),
-          client.fetch('*[_type == "productTag"] | order(order asc)'),
-          client.fetch('*[_type == "deliveryZones"][0]'),
-          client.fetch(PRODUCTS_QUERY),
+        const [results] = await Promise.all([
+          Promise.all([
+            client.fetch('*[_id == "siteSettings"][0]'),
+            client.fetch('*[_id == "productSettings"][0]'),
+            client.fetch('*[_id == "processSettings"][0]'),
+            client.fetch('*[_id == "manifestoSettings"][0]'),
+            client.fetch('*[_id == "popupSettings"][0]'),
+            client.fetch('*[_id == "heroSettings"][0]'),
+            client.fetch('*[_id == "aboutSettings"][0]'),
+            client.fetch('*[_id == "funnelSettings"][0]'),
+            client.fetch('*[_id == "footerSettings"][0]'),
+            client.fetch('*[_type == "productTag"] | order(order asc)'),
+            client.fetch('*[_type == "deliveryZones"][0]'),
+            client.fetch(PRODUCTS_QUERY),
+          ]),
+          new Promise(resolve => setTimeout(resolve, 1000)),
         ]);
+        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, footerSettingsData, fetchedTags, fetchedZones, fetchedProducts] = results;
         console.log('[Sanity] processSettings raw:', processSettings);
         console.log('[Sanity] siteSettings raw:', siteSettings);
         const merged = {
@@ -331,6 +336,8 @@ export default function App() {
       } catch (e) {
         console.error('Sanity fetch error, mock data will stay:', e);
         // Mock data remains unchanged on error
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchData();
@@ -649,6 +656,22 @@ export default function App() {
       setIsSubmittingSoup(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-ondo-beige flex flex-col items-center justify-center gap-6 z-50">
+        <img
+          src="/images/ondo-logo-orange.png"
+          alt="ONDO"
+          className="h-16 animate-bounce"
+        />
+        <div className="w-10 h-10 rounded-full border-4 border-ondo-orange/30 border-t-ondo-orange animate-spin" />
+        <p className="font-title text-sm tracking-widest uppercase text-ondo-black/50">
+          {lang === 'es' ? 'Cargando...' : 'Loading...'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-ondo-beige text-ondo-black font-body">
