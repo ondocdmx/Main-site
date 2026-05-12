@@ -62,7 +62,6 @@ const t = {
     aboutSub: "In soup we trust. Nuestra misión es nutrir cuerpo y comunidad con profundidad — en sabor, origen y experiencia.",
     bestSellersTitle: "CALDOS MÁS VENDIDOS",
     shopBestSellers: "COMPRA LOS MÁS VENDIDOS",
-    reviews: "Reseñas",
     subscribeTab: "Suscripción",
     singleTab: "Una sola compra",
     deliverySlotTitle: "¿Cuándo te enviamos tu pedido?",
@@ -116,7 +115,6 @@ const t = {
     aboutSub: "In soup we trust. Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.",
     bestSellersTitle: "BEST SELLING BROTH",
     shopBestSellers: "SHOP BEST SELLERS",
-    reviews: "Reviews",
     subscribeTab: "Subscription",
     singleTab: "Single Purchase",
     deliverySlotTitle: "When should we deliver your order?",
@@ -572,25 +570,19 @@ export default function App() {
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const cartSubtotal = (() => {
-    const d2Min = getSetting('cartDiscount2Min', 10);
-    const d1Min = getSetting('cartDiscount1Min', 5);
-    const d2Pct = getSetting('cartDiscount2Percent', 20);
-    const d1Pct = getSetting('cartDiscount1Percent', 10);
     let discountMult = 1;
-    if (d2Min !== null && cartItemCount >= d2Min) discountMult = 1 - d2Pct / 100;
-    else if (d1Min !== null && cartItemCount >= d1Min) discountMult = 1 - d1Pct / 100;
+    if (cartItemCount >= 10) discountMult = 0.8;
+    else if (cartItemCount >= 5) discountMult = 0.9;
     return cart.reduce((a: number, b: { product: any; quantity: number }) => a + b.product.price * discountMult * b.quantity, 0);
   })();
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
 
   const activeDiscount = (() => {
-    const d2Min = getSetting('cartDiscount2Min', 10);
-    const d1Min = getSetting('cartDiscount1Min', 5);
-    if (d2Min !== null && cartItemCount >= d2Min) {
-      return { label: getSetting('cartDiscount2Label', ''), pct: getSetting('cartDiscount2Percent', 20), couponId: getSetting('cartDiscount2CouponId', '') };
+    if (cartItemCount >= 10) {
+      return { pct: 20, couponId: getSetting('cartDiscount2CouponId', '') };
     }
-    if (d1Min !== null && cartItemCount >= d1Min) {
-      return { label: getSetting('cartDiscount1Label', ''), pct: getSetting('cartDiscount1Percent', 10), couponId: getSetting('cartDiscount1CouponId', '') };
+    if (cartItemCount >= 5) {
+      return { pct: 10, couponId: getSetting('cartDiscount1CouponId', '') };
     }
     return null;
   })();
@@ -841,7 +833,7 @@ export default function App() {
                 </div>
                 {activeDiscount && (
                   <div className="flex justify-between items-center mb-5">
-                    <span className="font-title text-sm text-ondo-green uppercase tracking-wide">{activeDiscount.label}</span>
+                    <span className="font-title text-sm text-ondo-green uppercase tracking-wide">-{activeDiscount.pct}% descuento</span>
                   </div>
                 )}
                 {!activeDiscount && <div className="mb-5" />}
@@ -873,7 +865,7 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-16 h-full flex flex-col justify-center">
           <div className="max-w-[500px] w-full flex flex-col justify-center bg-transparent mt-[-10vh]">
-             <h1 className="text-[55px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-8 text-ondo-green uppercase w-[150%] max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left">
+             <h1 className="text-[42px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-8 text-ondo-green uppercase w-full max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left break-words">
               {resolveText(getSetting('heroTitle', content.heroTitle))}
             </h1>
             <div>
@@ -1195,9 +1187,6 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-col flex-1 px-2">
-                      <div className="flex items-center text-ondo-yellow text-[11px] mb-2 tracking-widest">
-                        ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
-                      </div>
                       {/* Tags badges */}
                       {product.tags && product.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
@@ -1621,11 +1610,6 @@ export default function App() {
                   {lang === 'es' ? 'PRODUCTO' : 'PRODUCT'}
                 </p>
 
-                {/* Stars */}
-                <div className="flex items-center text-ondo-yellow text-[11px] tracking-widest mb-4">
-                  ★★★★★ <span className="text-gray-300 font-body tracking-normal ml-2 underline underline-offset-2">(42)</span>
-                </div>
-
                 {/* Title */}
                 <h2 className="font-title font-black text-[32px] md:text-[40px] uppercase leading-[0.92] text-ondo-green mb-4 tracking-tight">
                   {resolveText(selectedProduct.title)}
@@ -1934,15 +1918,15 @@ export default function App() {
                     ← {lang === 'es' ? 'Atrás' : 'Back'}
                   </button>
 
-                  <p className="font-title text-[20px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-1 inline-block pr-6">
+                  <p className="font-title text-[18px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-1 inline-block pr-6">
                     {resolveText(getSetting('planTitle', { es: 'TU PLAN', en: 'YOUR PLAN' }))}
                   </p>
-                  <p className="font-body text-gray-400 text-[15px] mt-2 mb-8">
+                  <p className="font-body text-gray-400 text-[13px] mt-2 mb-8">
                     {resolveText(getSetting('subscriptionDurationLabel', { es: '3 meses · sin compromiso · cancela cuando quieras', en: '3 months · no commitment · cancel anytime' }))}
                   </p>
 
                   {/* Frecuencia — dos cards con info de entregas */}
-                  <p className="font-title text-[16px] uppercase tracking-widest text-gray-400 mb-3">
+                  <p className="font-title text-[14px] uppercase tracking-widest text-gray-400 mb-3">
                     {resolveText(getSetting('frequencyLabel', { es: 'Frecuencia de entrega', en: 'Delivery frequency' }))}
                   </p>
                   <div className="grid grid-cols-2 gap-3 mb-8">
@@ -1960,16 +1944,16 @@ export default function App() {
                           onClick={() => { setFunnelFrequency(freq); setFunnelSoupQty({}); }}
                           className={`p-5 border-2 flex flex-col gap-1 text-left transition-all ${sel ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
                         >
-                          <span className={`font-title font-black uppercase text-[22px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
+                          <span className={`font-title font-black uppercase text-[20px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
                             {freq === 'quincenal'
                               ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
                               : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
                           </span>
-                          <span className={`font-body text-[18px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
+                          <span className={`font-body text-[16px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
                             {freqDeliveriesLabel}
                           </span>
                           {freqPrice && (
-                            <span className={`font-title font-black text-[20px] mt-1 ${sel ? 'text-white' : 'text-ondo-orange'}`}>
+                            <span className={`font-title font-black text-[18px] mt-1 ${sel ? 'text-white' : 'text-ondo-orange'}`}>
                               {freqPrice}
                             </span>
                           )}
@@ -1984,7 +1968,7 @@ export default function App() {
                   </div>
 
                   {/* Cantidad — cards con total acumulado */}
-                  <p className="font-title text-[16px] uppercase tracking-widest text-gray-400 mb-4">
+                  <p className="font-title text-[14px] uppercase tracking-widest text-gray-400 mb-4">
                     {resolveText(getSetting('quantityLabel', { es: 'Sopas por envío', en: 'Soups per delivery' }))}
                   </p>
                   <div className="grid grid-cols-3 gap-3 mb-8">
@@ -2006,18 +1990,18 @@ export default function App() {
                           </div>
                           {/* Cantidad por envío */}
                           <div className="leading-none">
-                            <span className={`font-title font-black text-[52px] leading-none ${selected ? 'text-white' : 'text-ondo-black'}`}>{qty}</span>
-                            <span className={`font-body text-[15px] block mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
+                            <span className={`font-title font-black text-[47px] leading-none ${selected ? 'text-white' : 'text-ondo-black'}`}>{qty}</span>
+                            <span className={`font-body text-[13px] block mt-0.5 ${selected ? 'text-white/70' : 'text-gray-400'}`}>
                               {lang === 'es' ? 'sopas/envío' : 'soups/delivery'}
                             </span>
                           </div>
                           {/* Total acumulado */}
-                          <div className={`text-[16px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
+                          <div className={`text-[14px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
                             {total} {lang === 'es' ? 'en total' : 'total'}
                           </div>
                           {/* Precio */}
                           {qtyPrice && (
-                            <div className={`font-title font-black text-[15px] ${selected ? 'text-white/90' : 'text-ondo-orange'}`}>
+                            <div className={`font-title font-black text-[13px] ${selected ? 'text-white/90' : 'text-ondo-orange'}`}>
                               {qtyPrice}
                             </div>
                           )}
@@ -2029,11 +2013,11 @@ export default function App() {
                   {/* Botón con precio */}
                   <button
                     onClick={() => setFunnelStep('soups')}
-                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[20px] flex items-center justify-center gap-3"
+                    className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[18px] flex items-center justify-center gap-3"
                   >
                     <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
                     {planPrice && (
-                      <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
+                      <span className="font-body font-normal text-[15px] text-white normal-case tracking-normal">
                         · {planPrice}
                       </span>
                     )}
