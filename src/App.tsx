@@ -2,6 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
 
+function getNextMonday(): Date {
+  const today = new Date();
+  const day = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const daysUntilMonday = day === 1 ? 7 : (8 - day) % 7;
+  const next = new Date(today);
+  next.setDate(today.getDate() + daysUntilMonday);
+  return next;
+}
+
+function formatNextMondayEs(): string {
+  const d = getNextMonday();
+  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `lunes ${d.getDate()} de ${months[d.getMonth()]}`;
+}
+
+function formatNextMondayEn(): string {
+  const d = getNextMonday();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `Monday, ${months[d.getMonth()]} ${d.getDate()}`;
+}
+
+const nextEs = formatNextMondayEs();
+const nextEn = formatNextMondayEn();
+
 const t = {
   es: {
     banner: "APAPÁCHATE | ENVÍO GRATIS EN 12+ CARTONES",
@@ -42,10 +66,10 @@ const t = {
     subscribeTab: "Suscripción",
     singleTab: "Una sola compra",
     deliverySlotTitle: "¿Cuándo te enviamos tu pedido?",
-    deliverySlotSub: "Las entregas se realizan los lunes. Elige tu franja horaria:",
-    slot1: "Lunes 9:00 – 13:00",
-    slot2: "Lunes 13:00 – 17:00",
-    slot3: "Lunes 17:00 – 21:00",
+    deliverySlotSub: `Tu próxima entrega es el ${nextEs}. Elige tu franja horaria:`,
+    slot1: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 9:00 – 13:00`,
+    slot2: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 13:00 – 17:00`,
+    slot3: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 17:00 – 21:00`,
     slotPickup: "Ninguna me viene bien",
     slotPickupSub: "Recojo en tienda (Roma Norte) · Sin coste de envío",
     deliveryContactTitle: "¿Cómo te avisamos cuando vamos de camino?",
@@ -96,10 +120,10 @@ const t = {
     subscribeTab: "Subscription",
     singleTab: "Single Purchase",
     deliverySlotTitle: "When should we deliver your order?",
-    deliverySlotSub: "Deliveries happen on Mondays. Choose your time slot:",
-    slot1: "Monday 9:00 – 13:00",
-    slot2: "Monday 13:00 – 17:00",
-    slot3: "Monday 17:00 – 21:00",
+    deliverySlotSub: `Your next delivery is on ${nextEn}. Choose your time slot:`,
+    slot1: `${nextEn} · 9:00 – 13:00`,
+    slot2: `${nextEn} · 13:00 – 17:00`,
+    slot3: `${nextEn} · 17:00 – 21:00`,
     slotPickup: "None of these work for me",
     slotPickupSub: "Pick up in store (Roma Norte) · No delivery charge",
     deliveryContactTitle: "How should we notify you when we're on our way?",
