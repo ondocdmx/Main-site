@@ -19,17 +19,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  const payload = JSON.stringify({
+    soupIdea: soupIdea || '',
+    email,
+    timestamp: new Date().toISOString(),
+    source: '¿Qué sopa amas más?',
+  });
+
   try {
-    await fetch(webhookUrl, {
+    // Apps Script Web Apps redirect (302) and Node.js converts POST→GET on redirect.
+    // We follow the redirect manually and re-POST to the final URL.
+    const firstResponse = await fetch(webhookUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        soupIdea: soupIdea || '',
-        email,
-        timestamp: new Date().toISOString(),
-        source: '¿Qué sopa amas más?',
-      }),
+      redirect: 'manual',
+      body: payload,
     });
+
+    if (firstResponse.status === 301 || firstResponse.status === 302) {
+      const redirectUrl = firstResponse.headers.get('location');
+      if (redirectUrl) {
+        await fetch(redirectUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload,
+        });
+      }
+    }
+
     res.json({ ok: true });
   } catch (err: any) {
     console.error('Google Sheets webhook error:', err);
