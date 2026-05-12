@@ -331,8 +331,7 @@ export default function App() {
     return '';
   };
 
-  // Products section: hide items flagged as subscription-only
-  const products = displayProducts.filter((p: any) => !p.onlySubscriptions);
+  const products = displayProducts;
 
   // Helper: resolve image src from Sanity image or plain URL string
   const resolveImage = (img: any): string => {
@@ -1145,6 +1144,14 @@ export default function App() {
                           </span>
                         </div>
                       )}
+                      {!product.soldOut && product.onlySubscriptions && (
+                        <div className="absolute inset-0 bg-ondo-orange/80 flex flex-col items-center justify-center z-10 gap-2">
+                          <Sparkles className="w-4 h-4 text-white" />
+                          <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] text-center leading-tight px-3">
+                            {lang === 'es' ? 'SOLO SUSCRIPTORES' : 'SUBSCRIBERS ONLY'}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col flex-1 px-2">
@@ -1196,9 +1203,12 @@ export default function App() {
 
                           <button
                             type="button"
-                            onClick={() => !product.soldOut && addToCart(product)}
+                            onClick={() => {
+                              if (product.onlySubscriptions) { openFunnel(); }
+                              else if (!product.soldOut) { addToCart(product); }
+                            }}
                             disabled={product.soldOut}
-                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : 'cursor-pointer bg-ondo-green'}`}
+                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : product.onlySubscriptions ? 'cursor-pointer bg-ondo-orange' : 'cursor-pointer bg-ondo-green'}`}
                           >
                             <Plus className="w-4 h-4" />
                           </button>
@@ -1628,6 +1638,15 @@ export default function App() {
                 <div className="border-[3px] border-gray-400 text-gray-400 font-title font-bold uppercase tracking-widest py-4 px-8 text-[14px] self-start cursor-not-allowed select-none opacity-60">
                   {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
                 </div>
+              ) : selectedProduct.onlySubscriptions ? (
+                <button
+                  type="button"
+                  onClick={() => { setSelectedProduct(null); openFunnel(); }}
+                  className="border-[3px] border-ondo-orange bg-ondo-orange text-white hover:bg-ondo-orange/85 font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  {lang === 'es' ? 'SUSCRÍBETE PARA PEDIR' : 'SUBSCRIBE TO ORDER'} &rarr;
+                </button>
               ) : (
                 <button
                   type="button"
