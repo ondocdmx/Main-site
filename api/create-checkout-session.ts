@@ -34,6 +34,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
+      phone_number_collection: { enabled: true },
+      shipping_address_collection: { allowed_countries: ['MX'] },
       line_items: [{
         price_data: {
           currency: 'mxn',

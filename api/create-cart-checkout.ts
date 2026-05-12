@@ -46,11 +46,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const sessionParams: any = {
     mode: 'payment',
+    phone_number_collection: { enabled: true },
+    shipping_address_collection: { allowed_countries: ['MX'] },
     line_items,
     ...(deliveryEmail ? { customer_email: deliveryEmail } : {}),
     success_url: `${frontendUrl}?payment=success`,
     cancel_url: frontendUrl,
     payment_intent_data: {
+      receipt_email: deliveryEmail || undefined,
       metadata: {
         delivery_type: isPickup ? 'pickup' : 'home_delivery',
         delivery_slot: deliverySlot || '',
