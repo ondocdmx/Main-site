@@ -888,7 +888,7 @@ export default function App() {
 
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-16 h-full flex flex-col justify-center">
           <div className="max-w-[500px] w-full flex flex-col justify-center bg-transparent mt-[-10vh]">
-             <h1 className="text-[42px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-8 text-ondo-green uppercase w-full max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left break-words">
+             <h1 className="text-[42px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-8 text-ondo-green uppercase w-full md:w-[150%] max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left break-words md:whitespace-nowrap">
               {resolveText(getSetting('heroTitle', content.heroTitle))}
             </h1>
             <div>
