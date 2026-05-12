@@ -623,6 +623,14 @@ export default function App() {
         email: soupEmail,
         createdAt: new Date().toISOString(),
       });
+
+      // Send lead to Google Sheets (fire-and-forget — don't block on failure)
+      fetch('/api/submit-soup-lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ soupIdea, email: soupEmail }),
+      }).catch(err => console.error('Google Sheets lead error:', err));
+
       setSoupSubmitted(true);
     } catch (err) {
       console.error('Soup request error:', err);
@@ -1638,7 +1646,7 @@ export default function App() {
       {getSetting('enabled', true) !== false && (
         <button
           onClick={openSoupModal}
-          className="fixed bottom-6 right-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors flex items-center gap-3 border-2 border-transparent hover:border-ondo-black"
+          className="hidden md:flex fixed bottom-6 right-6 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest px-6 py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-colors items-center gap-3 border-2 border-transparent hover:border-ondo-black"
         >
           <Mail className="w-5 h-5" />
           <span className="flex flex-col text-left leading-tight">
@@ -2128,7 +2136,7 @@ export default function App() {
                           </p>
                           {p.price && (
                             <p className="font-title font-bold text-[13px] text-ondo-orange mb-3">
-                              {p.price} €
+                              ${p.price}
                             </p>
                           )}
                           <div className="flex items-center justify-between">
@@ -2316,7 +2324,7 @@ export default function App() {
                         <div className="flex flex-col items-end gap-0.5">
                           <span className="font-title font-black text-ondo-green text-[20px]">{funnelPlanPrice}</span>
                           {priceMxn && (
-                            <span className="font-body text-[13px] text-gray-400">{priceMxn} MXN</span>
+                            <span className="font-body text-[13px] text-gray-400">${priceMxn} MXN</span>
                           )}
                         </div>
                       </div>
