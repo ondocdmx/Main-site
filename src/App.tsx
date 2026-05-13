@@ -387,6 +387,7 @@ export default function App() {
   const funnelCanProceed = funnelTotal === funnelQuantity;
   const funnelPlanAmount = getSetting(`amount${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, null) as number | null;
   const funnelPlanPrice = funnelPlanAmount ? `$${funnelPlanAmount}` : '';
+  const funnelPlanSavings = getSetting(`price${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, '') as string;
 
   const openFunnel = () => {
     setFunnelStep('intro');
@@ -1934,48 +1935,6 @@ export default function App() {
                     {resolveText(getSetting('subscriptionDurationLabel', { es: '3 meses · sin compromiso · cancela cuando quieras', en: '3 months · no commitment · cancel anytime' }))}
                   </p>
 
-                  {/* Frecuencia — dos cards con info de entregas */}
-                  <p className="font-title text-[14px] uppercase tracking-widest text-gray-400 mb-3">
-                    {resolveText(getSetting('frequencyLabel', { es: 'Frecuencia de entrega', en: 'Delivery frequency' }))}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 mb-8">
-                    {(['quincenal', 'mensual'] as const).map(freq => {
-                      const sel = funnelFrequency === freq;
-                      const freqDeliveries = freq === 'quincenal' ? 6 : 3;
-                      const freqDeliveriesLabel = freq === 'quincenal'
-                        ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
-                        : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
-                      const cap2 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-                      const freqPrice = getSetting(`price${cap2(freq)}${funnelQuantity}`, '') as string;
-                      return (
-                        <button
-                          key={freq}
-                          onClick={() => { setFunnelFrequency(freq); setFunnelSoupQty({}); }}
-                          className={`p-5 border-2 flex flex-col gap-1 text-left transition-all ${sel ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
-                        >
-                          <span className={`font-title font-black uppercase text-[20px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
-                            {freq === 'quincenal'
-                              ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
-                              : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
-                          </span>
-                          <span className={`font-body text-[16px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
-                            {freqDeliveriesLabel}
-                          </span>
-                          {freqPrice && (
-                            <span className={`font-title font-black text-[18px] mt-1 ${sel ? 'text-white' : 'text-ondo-orange'}`}>
-                              {freqPrice}
-                            </span>
-                          )}
-                          <div className="flex gap-1 mt-2">
-                            {Array.from({ length: freqDeliveries }).map((_, i) => (
-                              <span key={i} className={`w-2 h-2 rounded-full ${sel ? 'bg-white/60' : 'bg-ondo-green/20'}`} />
-                            ))}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-
                   {/* Cantidad — cards con total acumulado */}
                   <p className="font-title text-[14px] uppercase tracking-widest text-gray-400 mb-4">
                     {resolveText(getSetting('quantityLabel', { es: 'Sopas por envío', en: 'Soups per delivery' }))}
@@ -1984,7 +1943,6 @@ export default function App() {
                     {([4, 6, 10] as const).map(qty => {
                       const selected = funnelQuantity === qty;
                       const total = qty * deliveries;
-                      const qtyPrice = getSetting(`price${cap(funnelFrequency)}${qty}`, '') as string;
                       return (
                         <button
                           key={qty}
@@ -2008,26 +1966,71 @@ export default function App() {
                           <div className={`text-[14px] font-title font-bold border-t pt-2 mt-1 ${selected ? 'border-white/20 text-white' : 'border-gray-100 text-ondo-green'}`}>
                             {total} {lang === 'es' ? 'en total' : 'total'}
                           </div>
-                          {/* Precio */}
-                          {qtyPrice && (
-                            <div className={`font-title font-black text-[13px] ${selected ? 'text-white/90' : 'text-ondo-orange'}`}>
-                              {qtyPrice}
-                            </div>
-                          )}
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* Botón con precio */}
+                  {/* Frecuencia — dos cards con info de entregas */}
+                  <p className="font-title text-[14px] uppercase tracking-widest text-gray-400 mb-3">
+                    {resolveText(getSetting('frequencyLabel', { es: 'Frecuencia de entrega', en: 'Delivery frequency' }))}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                    {(['quincenal', 'mensual'] as const).map(freq => {
+                      const sel = funnelFrequency === freq;
+                      const freqDeliveries = freq === 'quincenal' ? 6 : 3;
+                      const freqDeliveriesLabel = freq === 'quincenal'
+                        ? resolveText(getSetting('quincenalDeliveriesLabel', { es: '6 entregas en 3 meses', en: '6 deliveries in 3 months' }))
+                        : resolveText(getSetting('mensualDeliveriesLabel', { es: '3 entregas en 3 meses', en: '3 deliveries in 3 months' }));
+                      return (
+                        <button
+                          key={freq}
+                          onClick={() => { setFunnelFrequency(freq); setFunnelSoupQty({}); }}
+                          className={`p-5 border-2 flex flex-col gap-1 text-left transition-all ${sel ? 'border-ondo-green bg-ondo-green' : 'border-gray-200 hover:border-ondo-green/50 bg-white'}`}
+                        >
+                          <span className={`font-title font-black uppercase text-[20px] tracking-widest ${sel ? 'text-white' : 'text-ondo-black'}`}>
+                            {freq === 'quincenal'
+                              ? resolveText(getSetting('quincenalLabel', { es: 'Quincenal', en: 'Biweekly' }))
+                              : resolveText(getSetting('mensualLabel', { es: 'Mensual', en: 'Monthly' }))}
+                          </span>
+                          <span className={`font-body text-[16px] leading-snug ${sel ? 'text-white/70' : 'text-gray-400'}`}>
+                            {freqDeliveriesLabel}
+                          </span>
+                          <div className="flex gap-1 mt-2">
+                            {Array.from({ length: freqDeliveries }).map((_, i) => (
+                              <span key={i} className={`w-2 h-2 rounded-full ${sel ? 'bg-white/60' : 'bg-ondo-green/20'}`} />
+                            ))}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Texto dinámico del plan */}
+                  <p className="font-body text-[14px] text-ondo-black/70 mb-4 text-center">
+                    {lang === 'es' ? 'Recibirás ' : 'You will receive '}
+                    <span className="font-title font-black text-ondo-orange">{funnelQuantity}</span>
+                    {lang === 'es' ? ' sopas ' : ' soups '}
+                    <span className="font-title font-black text-ondo-orange">
+                      {lang === 'es'
+                        ? (funnelFrequency === 'quincenal' ? 'cada 15 días' : 'cada mes')
+                        : (funnelFrequency === 'quincenal' ? 'every 2 weeks' : 'every month')}
+                    </span>
+                    {lang === 'es' ? ' durante los próximos ' : ' for the next '}
+                    <span className="font-title font-black text-ondo-orange">
+                      {lang === 'es' ? '3 meses' : '3 months'}
+                    </span>
+                  </p>
+
+                  {/* Botón continuar */}
                   <button
                     onClick={() => setFunnelStep('soups')}
                     className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[18px] flex items-center justify-center gap-3"
                   >
                     <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
-                    {planPrice && (
-                      <span className="font-body font-normal text-[15px] text-white normal-case tracking-normal">
-                        · {planPrice}
+                    {funnelPlanSavings && (
+                      <span className="font-body font-normal text-[15px] text-white/80 normal-case tracking-normal">
+                        · {funnelPlanSavings}
                       </span>
                     )}
                     <span>&rarr;</span>
@@ -2205,8 +2208,8 @@ export default function App() {
                 >
                   <span>{lang === 'es' ? 'SIGUIENTE' : 'NEXT'} &rarr;</span>
                   {funnelPlanPrice && (
-                    <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
-                      · {funnelPlanPrice}
+                    <span className="font-body font-normal text-[17px] text-white/80 normal-case tracking-normal">
+                      · {funnelPlanPrice} MXN
                     </span>
                   )}
                 </button>
@@ -2343,24 +2346,38 @@ export default function App() {
                       <span className="font-title font-black text-ondo-green text-[20px]">{funnelPlanPrice} MXN</span>
                     </div>
                   )}
+
+                  {/* Frase dinámica integrada en el resumen */}
+                  <div className="px-5 py-4 bg-ondo-green/5">
+                    <p className="font-body text-[14px] text-ondo-black/70">
+                      {lang === 'es' ? 'Recibirás ' : 'You will receive '}
+                      <span className="font-title font-black text-ondo-orange">{funnelQuantity}</span>
+                      {lang === 'es' ? ' sopas ' : ' soups '}
+                      <span className="font-title font-black text-ondo-orange">
+                        {lang === 'es'
+                          ? (funnelFrequency === 'quincenal' ? 'cada 15 días' : 'cada mes')
+                          : (funnelFrequency === 'quincenal' ? 'every 2 weeks' : 'every month')}
+                      </span>
+                      {lang === 'es' ? ' durante los próximos ' : ' for the next '}
+                      <span className="font-title font-black text-ondo-orange">
+                        {lang === 'es' ? '3 meses' : '3 months'}
+                      </span>
+                      {funnelPlanSavings && (
+                        <>, <span className="font-title font-black text-ondo-green">{lang === 'es' ? 'con ' : 'with '}{funnelPlanSavings}</span></>
+                      )}
+                    </p>
+                  </div>
                 </div>
 
                 <button
                   onClick={handleCheckout}
                   disabled={isCheckingOut}
-                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] mb-4 disabled:opacity-60 flex items-center justify-center gap-3"
+                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[14px] mb-4 disabled:opacity-60"
                 >
-                  <span>
-                    {isCheckingOut
-                      ? (lang === 'es' ? 'Procesando...' : 'Processing...')
-                      : resolveText(getSetting('checkoutButtonText', { es: 'PROCEDER AL PAGO', en: 'PROCEED TO PAYMENT' }))}
-                    {!isCheckingOut && ' →'}
-                  </span>
-                  {!isCheckingOut && funnelPlanPrice && (
-                    <span className="font-body font-normal text-[17px] text-white normal-case tracking-normal">
-                      · {funnelPlanPrice}
-                    </span>
-                  )}
+                  {isCheckingOut
+                    ? (lang === 'es' ? 'Procesando...' : 'Processing...')
+                    : resolveText(getSetting('checkoutButtonText', { es: 'PROCEDER AL PAGO', en: 'PROCEED TO PAYMENT' }))}
+                  {!isCheckingOut && ' →'}
                 </button>
                 <p className="text-center font-body text-[11px] text-gray-400">
                   {resolveText(getSetting('termsText', { es: 'Al continuar aceptas nuestros términos y condiciones. Cancela cuando quieras.', en: 'By continuing you accept our terms and conditions. Cancel anytime.' }))}
