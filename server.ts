@@ -12,7 +12,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 app.post('/api/create-cart-checkout', async (req, res) => {
-  const { origin, cartItems, couponId, deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal, shippingProductId, shippingPrice, isPickup } = req.body;
+  const {
+    origin, cartItems, couponId,
+    deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal,
+    shippingProductId, isPickup,
+  } = req.body;
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
     res.status(400).json({ error: 'cartItems is required' });
@@ -21,33 +25,30 @@ app.post('/api/create-cart-checkout', async (req, res) => {
 
   const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
-  const line_items: any[] = cartItems.map((item: { productId: string; price: number; quantity: number }) => ({
-    price_data: {
-      currency: 'mxn',
-      product: item.productId,
-      unit_amount: Math.round(item.price * 100),
-    },
+  console.log('CART ITEMS RECEIVED:', JSON.stringify(cartItems, null, 2));
+  console.log('shippingProductId:', shippingProductId, 'isPickup:', isPickup);
+
+  const line_items: any[] = cartItems.map((item: { productId: string; quantity: number }) => ({
+    price: item.productId,
     quantity: item.quantity,
   }));
 
-  if (!isPickup && shippingProductId && shippingPrice) {
-    line_items.push({
-      price_data: {
-        currency: 'mxn',
-        product: shippingProductId,
-        unit_amount: Math.round(shippingPrice * 100),
-      },
-      quantity: 1,
-    });
+  console.log('LINE ITEMS TO STRIPE:', JSON.stringify(line_items, null, 2));
+
+  if (!isPickup && shippingProductId) {
+    line_items.push({ price: shippingProductId, quantity: 1 });
   }
 
   const sessionParams: any = {
     mode: 'payment',
+    phone_number_collection: { enabled: true },
+    shipping_address_collection: { allowed_countries: ['MX'] },
     line_items,
     ...(deliveryEmail ? { customer_email: deliveryEmail } : {}),
     success_url: `${frontendUrl}?payment=success`,
     cancel_url: frontendUrl,
     payment_intent_data: {
+      receipt_email: deliveryEmail || undefined,
       metadata: {
         delivery_type: isPickup ? 'pickup' : 'home_delivery',
         delivery_slot: deliverySlot || '',
@@ -73,50 +74,51 @@ app.post('/api/create-cart-checkout', async (req, res) => {
 });
 
 app.post('/api/create-checkout-session', async (req, res) => {
-  const { origin, productId, amount, frequency, quantity, selectedSoups, letOndoChoose, contingencies, deliverySlot, deliveryAddress, deliveryPostal } = req.body;
+  const {
+    origin, productId, frequency, quantity,
+    selectedSoups, letOndoChoose, contingencies,
+    deliverySlot, deliveryAddress, deliveryPostal,
+  } = req.body;
 
-  if (!productId || !amount) {
-    res.status(400).json({ error: 'productId and amount are required' });
+  if (!productId) {
+    res.status(400).json({ error: 'productId is required' });
     return;
   }
 
   const frontendUrl = origin || process.env.FRONTEND_URL || 'http://localhost:3000';
 
-  // Stripe metadata values are limited to 500 chars each
   const soupsValue = Array.isArray(selectedSoups)
     ? selectedSoups.join(' | ').slice(0, 490)
     : '';
 
-  const interval = frequency === 'Mensual' ? 'month' : 'week';
-  const intervalCount = frequency === 'Mensual' ? 1 : 2;
+  const metadata = {
+    frequency: frequency || '',
+    soups_per_delivery: String(quantity || ''),
+    let_ondo_choose: String(letOndoChoose || false),
+    selected_soups: soupsValue,
+    contingencies: (contingencies || '').slice(0, 490),
+    delivery_slot: deliverySlot || '',
+    delivery_address: (deliveryAddress || '').slice(0, 490),
+    delivery_postal: deliveryPostal || '',
+  };
 
   try {
+    const price = await stripe.prices.retrieve(productId);
+    const isRecurring = price.type === 'recurring';
+
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      line_items: [{
-        price_data: {
-          currency: 'mxn',
-          product: productId,
-          unit_amount: Math.round(amount * 100),
-          recurring: { interval, interval_count: intervalCount },
-        },
-        quantity: 1,
-      }],
-      subscription_data: {
-        metadata: {
-          frequency: frequency || '',
-          soups_per_delivery: String(quantity || ''),
-          let_ondo_choose: String(letOndoChoose || false),
-          selected_soups: soupsValue,
-          contingencies: (contingencies || '').slice(0, 490),
-          delivery_slot: deliverySlot || '',
-          delivery_address: (deliveryAddress || '').slice(0, 490),
-          delivery_postal: deliveryPostal || '',
-        },
-      },
+      mode: isRecurring ? 'subscription' : 'payment',
+      phone_number_collection: { enabled: true },
+      shipping_address_collection: { allowed_countries: ['MX'] },
+      line_items: [{ price: productId, quantity: 1 }],
+      ...(isRecurring
+        ? { subscription_data: { metadata } }
+        : { payment_intent_data: { metadata } }
+      ),
       success_url: `${frontendUrl}?subscription=success`,
       cancel_url: frontendUrl,
     });
+
     res.json({ url: session.url });
   } catch (err: any) {
     console.error('Stripe subscription error:', err?.message);
