@@ -142,7 +142,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   purchaseType,
   price,
   ingredients,
-  stripeProductId,
+  stripePriceId,
   onlySubscriptions,
   soldOut,
   description,
@@ -599,7 +599,7 @@ export default function App() {
     setIsCheckingOut(true);
     try {
       const discountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
-      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, price: Math.round(item.product.price * discountMult * 100) / 100, quantity: item.quantity }));
+      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripePriceId, quantity: item.quantity }));
       const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');

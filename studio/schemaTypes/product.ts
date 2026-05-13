@@ -87,10 +87,10 @@ export const product = defineType({
       }
     }),
     defineField({
-      name: 'stripeProductId',
-      title: 'Stripe Product ID',
+      name: 'stripePriceId',
+      title: 'Stripe Price ID',
       type: 'string',
-      description: 'El Product ID de Stripe (ej: prod_1ABC...). El precio viene del campo "Price (€)" de arriba.',
+      description: 'El Price ID de Stripe (ej: price_1ABC...). Este ID determina el precio que se cobra al cliente.',
     }),
     defineField({
       name: 'onlySubscriptions',
