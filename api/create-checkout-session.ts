@@ -28,27 +28,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? selectedSoups.join(' | ').slice(0, 490)
     : '';
 
+  const metadata = {
+    frequency: frequency || '',
+    soups_per_delivery: String(quantity || ''),
+    let_ondo_choose: String(letOndoChoose || false),
+    selected_soups: soupsValue,
+    contingencies: (contingencies || '').slice(0, 490),
+    delivery_slot: deliverySlot || '',
+    delivery_address: (deliveryAddress || '').slice(0, 490),
+    delivery_postal: deliveryPostal || '',
+  };
+
   try {
+    const price = await stripe.prices.retrieve(productId);
+    const isRecurring = price.type === 'recurring';
+
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
+      mode: isRecurring ? 'subscription' : 'payment',
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ['MX'] },
-      line_items: [{
-        price: productId,
-        quantity: 1,
-      }],
-      subscription_data: {
-        metadata: {
-          frequency: frequency || '',
-          soups_per_delivery: String(quantity || ''),
-          let_ondo_choose: String(letOndoChoose || false),
-          selected_soups: soupsValue,
-          contingencies: (contingencies || '').slice(0, 490),
-          delivery_slot: deliverySlot || '',
-          delivery_address: (deliveryAddress || '').slice(0, 490),
-          delivery_postal: deliveryPostal || '',
-        },
-      },
+      line_items: [{ price: productId, quantity: 1 }],
+      ...(isRecurring
+        ? { subscription_data: { metadata } }
+        : { payment_intent_data: { metadata } }
+      ),
       success_url: `${frontendUrl}?subscription=success`,
       cancel_url: frontendUrl,
     });
