@@ -142,7 +142,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   purchaseType,
   price,
   ingredients,
-  stripeProductId,
+  stripePriceId,
   onlySubscriptions,
   soldOut,
   description,
@@ -330,6 +330,7 @@ export default function App() {
         setDeliveryZones(fetchedZones || null);
         // Only replace mock data if Sanity actually has products
         if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
+          console.log('[SANITY IDs]', fetchedProducts.map((p: any) => `${p.title?.es}: ${p.stripePriceId}`));
           setDisplayProducts(fetchedProducts);
         }
         // If 0 real products: keep showing mock data (already initialized)
@@ -599,7 +600,12 @@ export default function App() {
     setIsCheckingOut(true);
     try {
       const discountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
-      const cartItems = cart.map((item: { product: any; quantity: number }) => ({ productId: item.product.stripeProductId, quantity: item.quantity }));
+      const freshProducts = await client.fetch(PRODUCTS_QUERY);
+      console.log('[CHECKOUT IDs]', freshProducts.map((p: any) => `${p.title?.es}: ${p.stripePriceId}`));
+      const cartItems = cart.map((item: { product: any; quantity: number }) => {
+        const fresh = freshProducts.find((p: any) => p._id === item.product._id);
+        return { productId: (fresh || item.product).stripePriceId, quantity: item.quantity };
+      });
       const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
