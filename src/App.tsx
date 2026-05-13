@@ -290,6 +290,23 @@ export default function App() {
   const [soupSubmitted, setSoupSubmitted] = useState(false);
   const [isSubmittingSoup, setIsSubmittingSoup] = useState(false);
 
+  // Payment success confirmation
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [paymentSuccessType, setPaymentSuccessType] = useState<'subscription' | 'payment' | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscription') === 'success') {
+      setPaymentSuccessType('subscription');
+      setShowPaymentSuccess(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('payment') === 'success') {
+      setPaymentSuccessType('payment');
+      setShowPaymentSuccess(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -2499,6 +2516,70 @@ export default function App() {
                    </button>
                  </div>
                )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PAYMENT SUCCESS POPUP ─────────────────────────────────── */}
+      {showPaymentSuccess && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div
+            className="bg-ondo-white shadow-2xl w-full max-w-md flex flex-col relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowPaymentSuccess(false)}
+              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
+            >
+              <X className="w-5 h-5 text-ondo-green" />
+            </button>
+
+            <div className="bg-ondo-green p-8 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-white/20 flex items-center justify-center mb-5">
+                <CheckCircle className="w-9 h-9 text-white" />
+              </div>
+              <h2 className="font-title font-black text-[32px] uppercase leading-tight text-white tracking-tight mb-2">
+                {lang === 'es' ? '¡Pago completado!' : 'Payment complete!'}
+              </h2>
+              <p className="font-body text-white/80 text-[14px] uppercase tracking-widest">
+                {paymentSuccessType === 'subscription'
+                  ? (lang === 'es' ? 'Suscripción activada' : 'Subscription activated')
+                  : (lang === 'es' ? 'Pedido confirmado' : 'Order confirmed')}
+              </p>
+            </div>
+
+            <div className="p-8 flex flex-col gap-5">
+              <div className="flex gap-4 items-start">
+                <Mail className="w-5 h-5 text-ondo-green shrink-0 mt-0.5" />
+                <p className="font-body text-ondo-green text-[15px] leading-relaxed">
+                  {lang === 'es'
+                    ? 'Deberías haber recibido un correo de confirmación de Stripe con el resumen de tu pedido.'
+                    : 'You should have received a confirmation email from Stripe with your order summary.'}
+                </p>
+              </div>
+
+              <div className="border-t border-ondo-green/10 pt-5">
+                <p className="font-body text-gray-500 text-[13px] leading-relaxed">
+                  {lang === 'es'
+                    ? '¿No has recibido el correo? Revisa tu carpeta de spam o contáctanos directamente:'
+                    : "Didn't receive the email? Check your spam folder or contact us directly:"}
+                </p>
+                <a
+                  href={`mailto:${getSetting('contactEmail', 'hola@ondo.mx')}`}
+                  className="inline-flex items-center gap-2 mt-3 font-title font-bold text-[13px] uppercase tracking-widest text-ondo-green hover:text-ondo-orange transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  {getSetting('contactEmail', 'hola@ondo.mx')}
+                </a>
+              </div>
+
+              <button
+                onClick={() => setShowPaymentSuccess(false)}
+                className="mt-2 border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3 px-8 transition-colors text-[13px] self-center"
+              >
+                {lang === 'es' ? 'Cerrar' : 'Close'}
+              </button>
             </div>
           </div>
         </div>
