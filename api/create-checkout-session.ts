@@ -12,13 +12,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const {
-    origin, productId, amount, frequency, quantity,
+    origin, productId, frequency, quantity,
     selectedSoups, letOndoChoose, contingencies,
     deliverySlot, deliveryAddress, deliveryPostal,
   } = req.body;
 
-  if (!productId || !amount) {
-    res.status(400).json({ error: 'productId and amount are required' });
+  if (!productId) {
+    res.status(400).json({ error: 'productId is required' });
     return;
   }
 
@@ -28,21 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ? selectedSoups.join(' | ').slice(0, 490)
     : '';
 
-  const interval = frequency === 'Mensual' ? 'month' : 'week';
-  const intervalCount = frequency === 'Mensual' ? 1 : 2;
-
   try {
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ['MX'] },
       line_items: [{
-        price_data: {
-          currency: 'mxn',
-          product: productId,
-          unit_amount: Math.round(amount * 100),
-          recurring: { interval, interval_count: intervalCount },
-        },
+        price: productId,
         quantity: 1,
       }],
       subscription_data: {
