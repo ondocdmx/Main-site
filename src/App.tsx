@@ -640,6 +640,7 @@ export default function App() {
         body: JSON.stringify({
           origin: window.location.origin,
           cartItems,
+          couponId: activeDiscount?.couponId || undefined,
           deliverySlot: slot,
           deliveryAddress: savedAddress,
           deliveryPostal: savedPostal,
