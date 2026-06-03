@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
 
@@ -265,6 +265,7 @@ export default function App() {
   // Product detail popup
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [popupImageIndex, setPopupImageIndex] = useState(0);
+  const popupTouchStartX = useRef<number | null>(null);
 
   // Tags / filtering
   const [tags, setTags] = useState<any[]>([]);
@@ -1600,7 +1601,19 @@ export default function App() {
               ].filter(Boolean);
               const total = popupImgs.length;
               return (
-                <div className={`md:w-1/2 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden group`} style={{ minHeight: '300px' }}>
+                <div
+                  className={`md:w-1/2 shrink-0 ${selectedProduct.bgColor || 'bg-ondo-beige'} relative overflow-hidden group`}
+                  style={{ minHeight: '300px' }}
+                  onTouchStart={(e) => { popupTouchStartX.current = e.touches[0].clientX; }}
+                  onTouchEnd={(e) => {
+                    if (popupTouchStartX.current === null) return;
+                    const delta = e.changedTouches[0].clientX - popupTouchStartX.current;
+                    if (Math.abs(delta) > 40) {
+                      setPopupImageIndex(prev => delta < 0 ? (prev + 1) % total : (prev - 1 + total) % total);
+                    }
+                    popupTouchStartX.current = null;
+                  }}
+                >
                   <div
                     className="w-full h-full flex transition-transform duration-500 ease-out absolute inset-0"
                     style={{ transform: `translateX(-${popupImageIndex * 100}%)` }}
@@ -1620,13 +1633,13 @@ export default function App() {
                     <>
                       <button
                         onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => (prev - 1 + total) % total); }}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors md:opacity-0 md:group-hover:opacity-100"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setPopupImageIndex(prev => (prev + 1) % total); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-white/50 hover:bg-white text-ondo-green rounded-full transition-colors md:opacity-0 md:group-hover:opacity-100"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
