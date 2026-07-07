@@ -11,6 +11,14 @@ export const product = defineType({
       type: 'translationRecord',
     }),
     defineField({
+      name: 'slug',
+      title: 'Slug',
+      type: 'slug',
+      options: { source: 'title.es', maxLength: 96 },
+      description: 'Identificador único para URLs (ej: crema-de-elote). Se usa en ?product=<slug>.',
+      validation: (Rule) => Rule.required(),
+    }),
+    defineField({
       name: 'purchaseType',
       title: 'Purchase Type',
       type: 'string',

@@ -138,6 +138,7 @@ const t = {
 // GROQ query — fetch products with dereferenced tags
 const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   _id,
+  "slug": slug.current,
   title,
   purchaseType,
   price,
@@ -163,6 +164,7 @@ const MOCK_TAG_VEGAN = { _id: 'mt4', name: { es: 'Vegano', en: 'Vegan' }, slug: 
 const MOCK_PRODUCTS = [
   {
     _id: 'mock-1',
+    slug: 'crema-de-elote',
     title: { es: 'Crema de Elote', en: 'Corn Cream Soup' },
     purchaseType: 'subscription',
     price: 89,
@@ -175,6 +177,7 @@ const MOCK_PRODUCTS = [
   },
   {
     _id: 'mock-2',
+    slug: 'pozole-rojo',
     title: { es: 'Pozole Rojo', en: 'Red Pozole' },
     purchaseType: 'subscription',
     price: 115,
@@ -187,6 +190,7 @@ const MOCK_PRODUCTS = [
   },
   {
     _id: 'mock-3',
+    slug: 'sopa-de-lima-yucateca',
     title: { es: 'Sopa de Lima Yucateca', en: 'Yucatan Lime Soup' },
     purchaseType: 'subscription',
     price: 99,
@@ -199,6 +203,7 @@ const MOCK_PRODUCTS = [
   },
   {
     _id: 'mock-4',
+    slug: 'gazpacho-verde',
     title: { es: 'Gazpacho Verde', en: 'Green Gazpacho' },
     purchaseType: 'single',
     price: 79,
@@ -211,6 +216,7 @@ const MOCK_PRODUCTS = [
   },
   {
     _id: 'mock-5',
+    slug: 'caldo-tlalpeno',
     title: { es: 'Caldo Tlalpeño', en: 'Tlalpeño Broth' },
     purchaseType: 'single',
     price: 105,
@@ -223,6 +229,7 @@ const MOCK_PRODUCTS = [
   },
   {
     _id: 'mock-6',
+    slug: 'vichyssoise-de-huitlacoche',
     title: { es: 'Vichyssoise de Huitlacoche', en: 'Huitlacoche Vichyssoise' },
     purchaseType: 'single',
     price: 125,
@@ -307,6 +314,20 @@ export default function App() {
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
+
+  useEffect(() => {
+    if (displayProducts.length === 0) return;
+    const slug = new URLSearchParams(window.location.search).get('product');
+    if (!slug) return;
+    const product = displayProducts.find((p: any) => p.slug === slug);
+    if (product) {
+      setSelectedProduct(product);
+      setPopupImageIndex(0);
+      const url = new URL(window.location.href);
+      url.searchParams.delete('product');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [displayProducts]);
 
   useEffect(() => {
     const fetchData = async () => {
