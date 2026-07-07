@@ -2187,7 +2187,14 @@ export default function App() {
                             alt={resolveText(p.title)}
                             className="w-full h-full object-cover mix-blend-multiply"
                           />
-                          {qty > 0 && (
+                          {p.soldOut && (
+                            <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
+                              <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] bg-gray-800/60 px-3 py-1.5">
+                                {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
+                              </span>
+                            </div>
+                          )}
+                          {!p.soldOut && qty > 0 && (
                             <div className="absolute top-2 right-2 w-5 h-5 sm:w-6 sm:h-6 bg-ondo-green flex items-center justify-center">
                               <span className="font-title font-black text-white text-[11px] sm:text-[12px]">{qty}</span>
                             </div>
@@ -2207,16 +2214,16 @@ export default function App() {
                           <div className="flex items-center justify-between mt-auto pt-1">
                             <button
                               onClick={() => setFunnelSoupQty(prev => { const n = { ...prev }; if ((n[p._id] || 0) > 0) n[p._id]--; if (n[p._id] === 0) delete n[p._id]; return n; })}
-                              disabled={qty === 0}
+                              disabled={qty === 0 || p.soldOut}
                               className="w-7 h-7 sm:w-9 sm:h-9 border border-gray-200 flex items-center justify-center text-ondo-black disabled:opacity-30 hover:border-ondo-green transition-colors"
                             >
                               <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <span className="font-title font-bold text-[16px] sm:text-[20px] text-ondo-black w-6 sm:w-8 text-center">{qty}</span>
                             <button
-                              onClick={() => { if (funnelRemaining <= 0) return; setFunnelSoupQty(prev => ({ ...prev, [p._id]: (prev[p._id] || 0) + 1 })); }}
-                              disabled={funnelRemaining <= 0}
-                              className="w-7 h-7 sm:w-9 sm:h-9 bg-ondo-green text-white flex items-center justify-center disabled:opacity-30 hover:bg-ondo-light-green transition-colors"
+                              onClick={() => { if (funnelRemaining <= 0 || p.soldOut) return; setFunnelSoupQty(prev => ({ ...prev, [p._id]: (prev[p._id] || 0) + 1 })); }}
+                              disabled={funnelRemaining <= 0 || p.soldOut}
+                              className={`w-7 h-7 sm:w-9 sm:h-9 text-white flex items-center justify-center disabled:opacity-30 transition-colors ${p.soldOut ? 'bg-gray-400 cursor-not-allowed' : 'bg-ondo-green hover:bg-ondo-light-green'}`}
                             >
                               <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
