@@ -315,19 +315,72 @@ export default function App() {
     }
   }, []);
 
+  // ── Client-side routing (pathname) ─────────────────────────────
+  const [route, setRoute] = useState<string>(() => window.location.pathname);
+  const productRouteMatch = route.match(/^\/sopas\/(.+?)\/?$/);
+  const productSlugFromRoute = productRouteMatch ? decodeURIComponent(productRouteMatch[1]) : null;
+  const isProductRoute = !!productSlugFromRoute;
+  const isSoupcripcionesRoute = route === '/soupcripciones' || route === '/soupcripciones/';
+  const routeProduct = productSlugFromRoute
+    ? (displayProducts.find((p: any) => p.slug === productSlugFromRoute) ?? null)
+    : null;
+
+  const navigate = (path: string) => {
+    window.history.pushState({}, '', path);
+    setRoute(path);
+  };
+
+  // Back/forward del navegador: sincroniza UI con la ruta
   useEffect(() => {
-    if (displayProducts.length === 0) return;
+    const onPopState = () => {
+      const path = window.location.pathname;
+      setRoute(path);
+      if (!path.startsWith('/sopas/')) {
+        setSelectedProduct(null);
+        setPopupImageIndex(0);
+      }
+      if (path !== '/soupcripciones' && path !== '/soupcripciones/') setShowPopupModal(false);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // URLs legacy ?product=slug -> /sopas/slug
+  useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get('product');
     if (!slug) return;
-    const product = displayProducts.find((p: any) => p.slug === slug);
+    const target = `/sopas/${encodeURIComponent(slug)}`;
+    window.history.replaceState({}, '', target);
+    setRoute(target);
+  }, []);
+
+  // /sopas/:slug -> abre la ficha de producto correspondiente
+  useEffect(() => {
+    if (!productSlugFromRoute) return;
+    const product = displayProducts.find((p: any) => p.slug === productSlugFromRoute);
     if (product) {
-      setSelectedProduct(product);
-      setPopupImageIndex(0);
-      const url = new URL(window.location.href);
-      url.searchParams.delete('product');
-      window.history.replaceState({}, '', url.toString());
+      if (product._id !== selectedProduct?._id) {
+        setSelectedProduct(product);
+        setPopupImageIndex(0);
+      }
+    } else if (!isLoading) {
+      setSelectedProduct(null);
     }
-  }, [displayProducts]);
+  }, [productSlugFromRoute, displayProducts, isLoading]);
+
+  // /soupcripciones -> abre el funnel de suscripción sobre la home
+  useEffect(() => {
+    if (isSoupcripcionesRoute) openFunnel();
+  }, [isSoupcripcionesRoute]);
+
+  // /sopas (sin slug) -> home anclado a la tienda
+  useEffect(() => {
+    if (route.replace(/\/+$/, '') === '/sopas') {
+      window.history.replaceState({}, '', '/#shop');
+      setRoute('/');
+      requestAnimationFrame(() => document.getElementById('shop')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior }));
+    }
+  }, [route]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -456,6 +509,23 @@ export default function App() {
     setEmailSent(false);
     setFunnelStep('delivery');
     setShowPopupModal(true);
+  };
+
+  // Abrir ficha de producto con URL propia (/sopas/:slug)
+  const openProduct = (product: any) => {
+    if (!product?.slug) return;
+    setPopupImageIndex(0);
+    navigate(`/sopas/${encodeURIComponent(product.slug)}`);
+  };
+
+  const closeProductModal = () => {
+    setSelectedProduct(null);
+    if (isProductRoute) navigate('/');
+  };
+
+  const closeFunnelModal = () => {
+    setShowPopupModal(false);
+    if (isSoupcripcionesRoute) navigate('/');
   };
 
   const openSoupModal = () => {
@@ -735,7 +805,7 @@ export default function App() {
         <div className="w-full mx-auto px-4 sm:px-6 py-4 md:py-7 flex items-center justify-between relative">
           <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[19px] tracking-wide">
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
-            <a href="#manifesto" className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
+            <a href="/soupcripciones" onClick={(e) => { e.preventDefault(); navigate('/soupcripciones'); }} className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
           </div>
           <button className="md:hidden p-1" onClick={() => setIsMobileMenuOpen((o: boolean) => !o)}>
             {isMobileMenuOpen ? <X className="w-6 h-6 text-ondo-green" /> : <Menu className="w-6 h-6 text-ondo-green" />}
@@ -779,7 +849,7 @@ export default function App() {
             <a href="#shop" className="px-6 py-4 border-b border-black/5 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
               {getSettingText('navShop', content.navShop)}
             </a>
-            <a href="#manifesto" className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
+            <a href="/soupcripciones" className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={(e) => { e.preventDefault(); setIsMobileMenuOpen(false); navigate('/soupcripciones'); }}>
               {getSettingText('navSubs', content.navSubs)}
             </a>
           </div>
@@ -950,6 +1020,212 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      {/* Products Section */}
+      <section className="py-20 px-6 bg-ondo-beige" id="shop">
+         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
+            {/* Sidebar Filters — dynamic from Sanity productTag */}
+             <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
+               <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
+                 {getSettingText('filtersTitle', content.filtersTitle)}
+                 {activeFilters.length > 0 && (
+                   <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-green font-bold tracking-wide normal-case underline underline-offset-2">
+                     {lang === 'es' ? 'Borrar' : 'Clear'}
+                   </button>
+                 )}
+               </h3>
+
+               {tags.length === 0 ? (
+                 <>
+                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
+                     <div className="w-5 h-5 bg-ondo-green flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
+                     {getSettingText('filterBundle', content.filterBundle)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
+                     <div className="w-5 h-5 bg-sky-400 flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
+                     {getSettingText('filterNew', content.filterNew)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
+                     <div className="w-5 h-5 bg-red-500 flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🔥</span></div>
+                     {getSettingText('filterBestseller', content.filterBestseller)}
+                   </button>
+                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
+                     <div className="w-5 h-5 bg-ondo-light-green flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
+                     {getSettingText('filterVegan', content.filterVegan)}
+                   </button>
+                 </>
+               ) : (
+                 tags.map((tag: any) => {
+                   const slug = tag?.slug?.current || tag._id;
+                   const isActive = activeFilters.includes(slug);
+                   return (
+                     <button
+                       key={tag._id}
+                       onClick={() => toggleFilter(slug)}
+                       className={`flex items-center gap-3 px-5 py-3 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-all w-full text-left border ${
+                         isActive
+                           ? 'bg-ondo-green text-white border-ondo-green scale-[1.02]'
+                           : 'bg-white text-ondo-black border-gray-100 hover:border-ondo-green'
+                       }`}
+                     >
+                       <div className={`w-5 h-5 ${tag.color || 'bg-ondo-green'} flex items-center justify-center shrink-0`}>
+                         <span className="text-[12px]">{tag.icon || '•'}</span>
+                       </div>
+                       {tag.name?.[lang] || tag.name?.es || tag.name?.en || slug}
+                     </button>
+                   );
+                 })
+               )}
+
+               <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-green hover:text-ondo-green transition-colors w-full justify-between">
+                 {getSettingText('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
+               </div>
+            </div>
+
+            {/* Products Grid Area */}
+            <div className="flex-1 flex flex-col">
+              
+              {/* Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {filteredProducts.map((product: any) => (
+                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => openProduct(product)}>
+
+                    {/* Hover Image Area */}
+                    <div
+                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6`}
+                    >
+                      <img
+                        src={resolveImage(product.image)}
+                        alt={resolveText(product.title)}
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0"
+                      />
+                      <img
+                        src={resolveImage(product.hoverImage) || resolveImage(product.image)}
+                        alt={`${resolveText(product.title)} hover`}
+                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
+                      />
+                      {product.soldOut && (
+                        <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
+                          <span className="font-title text-white font-bold uppercase tracking-widest text-[13px] bg-gray-800/60 px-4 py-2">
+                            {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
+                          </span>
+                        </div>
+                      )}
+                      {!product.soldOut && product.onlySubscriptions && (
+                        <div className="absolute inset-0 bg-ondo-orange/80 flex flex-col items-center justify-center z-10 gap-2">
+                          <Sparkles className="w-4 h-4 text-white" />
+                          <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] text-center leading-tight px-3">
+                            {lang === 'es' ? 'SOLO SUSCRIPTORES' : 'SUBSCRIBERS ONLY'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col flex-1 px-2">
+                      {/* Tags badges */}
+                      {product.tags && product.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {product.tags.map((tag: any) => (
+                            <span key={tag._id} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[9px] font-title font-bold uppercase tracking-wide px-2 py-0.5`}>
+                              {tag.icon} {resolveText(tag.name)}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
+                      <div className="font-body font-bold mb-5 text-[16px]">
+                        {cartItemCount >= 5 ? (
+                          <div className="flex items-center gap-2">
+                            <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
+                            <span className="text-ondo-orange">${(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                            <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
+                              -{cartItemCount > 9 ? '20' : '10'}%
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-ondo-green">${product.price?.toFixed(2)}</span>
+                        )}
+                      </div>
+                      <div className="mt-auto" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const productInCart = cart.find(item => item.product._id === product._id);
+                              if (productInCart && productInCart.quantity > 0) {
+                                updateQuantity(product._id, -1);
+                              }
+                            }}
+                            className={`p-3.5 w-1/3 flex justify-center bg-ondo-green text-white ${cart.find(item => item.product._id === product._id)?.quantity ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+
+                          <span className="font-title text-[15px] font-bold w-1/3 text-center bg-ondo-white py-3.5">
+                            {cart.find(item => item.product._id === product._id)?.quantity || 0}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (product.onlySubscriptions) { openFunnel(); }
+                              else if (!product.soldOut) { addToCart(product); }
+                            }}
+                            disabled={product.soldOut}
+                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : product.onlySubscriptions ? 'cursor-pointer bg-ondo-orange' : 'cursor-pointer bg-ondo-green'}`}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {cartItemCount === 4 && (
+                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>¡Añade 1 más para -10%!</span>
+                          </div>
+                        )}
+                        {cartItemCount === 9 && (
+                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>¡Añade 1 más para -20%!</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Soup-scription Banner — below products */}
+              <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
+                <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
+                  {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
+                  <button
+                    onClick={openFunnel}
+                    className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
+                  >
+                    {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
+                  </button>
+                </p>
+                <button
+                  onClick={openFunnel}
+                  className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
+                >
+                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
+                </button>
+              </div>
+            </div>
+         </div>
+      </section>
+
+      {/* Mid Banner — before products */}
+      {getSetting('showMidBanner', true) !== false && (
+      <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
+        <div className="animate-marquee inline-flex w-[200%] justify-around">
+          <span>{getSettingText('midBannerText', content.midBanner)}</span>
+          <span>{getSettingText('midBannerText', content.midBanner)}</span>
+        </div>
+      </div>
+      )}
 
       {/* Manifesto Section */}
       {getSetting('showManifesto', true) && (
@@ -1144,212 +1420,6 @@ export default function App() {
           </div>
         </section>
       )}
-
-      {/* Mid Banner — before products */}
-      {getSetting('showMidBanner', true) !== false && (
-      <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
-        <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSettingText('midBannerText', content.midBanner)}</span>
-          <span>{getSettingText('midBannerText', content.midBanner)}</span>
-        </div>
-      </div>
-      )}
-
-      {/* Products Section */}
-      <section className="py-20 px-6 bg-ondo-beige" id="shop">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
-            {/* Sidebar Filters — dynamic from Sanity productTag */}
-             <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
-               <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
-                 {getSettingText('filtersTitle', content.filtersTitle)}
-                 {activeFilters.length > 0 && (
-                   <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-green font-bold tracking-wide normal-case underline underline-offset-2">
-                     {lang === 'es' ? 'Borrar' : 'Clear'}
-                   </button>
-                 )}
-               </h3>
-
-               {tags.length === 0 ? (
-                 <>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-green flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
-                     {getSettingText('filterBundle', content.filterBundle)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-sky-400 flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
-                     {getSettingText('filterNew', content.filterNew)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
-                     <div className="w-5 h-5 bg-red-500 flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🔥</span></div>
-                     {getSettingText('filterBestseller', content.filterBestseller)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-light-green flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
-                     {getSettingText('filterVegan', content.filterVegan)}
-                   </button>
-                 </>
-               ) : (
-                 tags.map((tag: any) => {
-                   const slug = tag?.slug?.current || tag._id;
-                   const isActive = activeFilters.includes(slug);
-                   return (
-                     <button
-                       key={tag._id}
-                       onClick={() => toggleFilter(slug)}
-                       className={`flex items-center gap-3 px-5 py-3 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-all w-full text-left border ${
-                         isActive
-                           ? 'bg-ondo-green text-white border-ondo-green scale-[1.02]'
-                           : 'bg-white text-ondo-black border-gray-100 hover:border-ondo-green'
-                       }`}
-                     >
-                       <div className={`w-5 h-5 ${tag.color || 'bg-ondo-green'} flex items-center justify-center shrink-0`}>
-                         <span className="text-[12px]">{tag.icon || '•'}</span>
-                       </div>
-                       {tag.name?.[lang] || tag.name?.es || tag.name?.en || slug}
-                     </button>
-                   );
-                 })
-               )}
-
-               <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-green hover:text-ondo-green transition-colors w-full justify-between">
-                 {getSettingText('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
-               </div>
-            </div>
-
-            {/* Products Grid Area */}
-            <div className="flex-1 flex flex-col">
-              
-              {/* Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredProducts.map((product: any) => (
-                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => { setSelectedProduct(product); setPopupImageIndex(0); }}>
-
-                    {/* Hover Image Area */}
-                    <div
-                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6`}
-                    >
-                      <img
-                        src={resolveImage(product.image)}
-                        alt={resolveText(product.title)}
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0"
-                      />
-                      <img
-                        src={resolveImage(product.hoverImage) || resolveImage(product.image)}
-                        alt={`${resolveText(product.title)} hover`}
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
-                      />
-                      {product.soldOut && (
-                        <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
-                          <span className="font-title text-white font-bold uppercase tracking-widest text-[13px] bg-gray-800/60 px-4 py-2">
-                            {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
-                          </span>
-                        </div>
-                      )}
-                      {!product.soldOut && product.onlySubscriptions && (
-                        <div className="absolute inset-0 bg-ondo-orange/80 flex flex-col items-center justify-center z-10 gap-2">
-                          <Sparkles className="w-4 h-4 text-white" />
-                          <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] text-center leading-tight px-3">
-                            {lang === 'es' ? 'SOLO SUSCRIPTORES' : 'SUBSCRIBERS ONLY'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col flex-1 px-2">
-                      {/* Tags badges */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {product.tags.map((tag: any) => (
-                            <span key={tag._id} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[9px] font-title font-bold uppercase tracking-wide px-2 py-0.5`}>
-                              {tag.icon} {resolveText(tag.name)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
-                      <div className="font-body font-bold mb-5 text-[16px]">
-                        {cartItemCount >= 5 ? (
-                          <div className="flex items-center gap-2">
-                            <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">${(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
-                            <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                              -{cartItemCount > 9 ? '20' : '10'}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-ondo-green">${product.price?.toFixed(2)}</span>
-                        )}
-                      </div>
-                      <div className="mt-auto" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const productInCart = cart.find(item => item.product._id === product._id);
-                              if (productInCart && productInCart.quantity > 0) {
-                                updateQuantity(product._id, -1);
-                              }
-                            }}
-                            className={`p-3.5 w-1/3 flex justify-center bg-ondo-green text-white ${cart.find(item => item.product._id === product._id)?.quantity ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-
-                          <span className="font-title text-[15px] font-bold w-1/3 text-center bg-ondo-white py-3.5">
-                            {cart.find(item => item.product._id === product._id)?.quantity || 0}
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (product.onlySubscriptions) { openFunnel(); }
-                              else if (!product.soldOut) { addToCart(product); }
-                            }}
-                            disabled={product.soldOut}
-                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : product.onlySubscriptions ? 'cursor-pointer bg-ondo-orange' : 'cursor-pointer bg-ondo-green'}`}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                        {cartItemCount === 4 && (
-                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>¡Añade 1 más para -10%!</span>
-                          </div>
-                        )}
-                        {cartItemCount === 9 && (
-                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>¡Añade 1 más para -20%!</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Soup-scription Banner — below products */}
-              <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
-                <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
-                  {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
-                  <button
-                    onClick={openFunnel}
-                    className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
-                  >
-                    {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
-                  </button>
-                </p>
-                <button
-                  onClick={openFunnel}
-                  className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
-                >
-                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
-                </button>
-              </div>
-            </div>
-         </div>
-      </section>
 
       {/* Steps Section */}
       {getSetting('showSteps', true) !== false && (
@@ -1598,16 +1668,34 @@ export default function App() {
         </div>
       )}
 
+      {/* ── 404: producto no encontrado ── */}
+      {isProductRoute && !routeProduct && !isLoading && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-ondo-beige p-4">
+          <div className="text-center max-w-md">
+            <h2 className="font-title font-black text-[56px] uppercase text-ondo-green mb-4 leading-none">404</h2>
+            <p className="font-body text-ondo-green/70 text-[15px] font-bold mb-8">
+              {lang === 'es' ? 'No encontramos esa sopa. Puede que ya no esté disponible.' : 'We could not find that soup. It may no longer be available.'}
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3 px-8 transition-colors text-[13px]"
+            >
+              {lang === 'es' ? 'VOLVER A LA TIENDA' : 'BACK TO SHOP'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── MODAL: Product Detail ── */}
       {selectedProduct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedProduct(null)}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={closeProductModal}>
           <div
             className="bg-ondo-white shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto flex flex-col md:flex-row relative"
             onClick={e => e.stopPropagation()}
           >
             {/* Close button */}
             <button
-              onClick={() => setSelectedProduct(null)}
+              onClick={closeProductModal}
               className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity bg-white/50 rounded-full md:bg-transparent"
             >
               <X className="w-5 h-5 text-ondo-green" />
@@ -1739,7 +1827,7 @@ export default function App() {
               ) : selectedProduct.onlySubscriptions ? (
                 <button
                   type="button"
-                  onClick={() => { setSelectedProduct(null); openFunnel(); }}
+                  onClick={() => { closeProductModal(); openFunnel(); }}
                   className="border-[3px] border-ondo-orange bg-ondo-orange text-white hover:bg-ondo-orange/85 font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
@@ -1748,7 +1836,7 @@ export default function App() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => { addToCart(selectedProduct); setSelectedProduct(null); }}
+                  onClick={() => { addToCart(selectedProduct); closeProductModal(); }}
                   className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
                 >
                   {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
@@ -1784,7 +1872,7 @@ export default function App() {
             onClick={e => e.stopPropagation()}
           >
             <button
-              onClick={() => setShowPopupModal(false)}
+              onClick={closeFunnelModal}
               className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
             >
               <X className="w-5 h-5 text-ondo-green" />
