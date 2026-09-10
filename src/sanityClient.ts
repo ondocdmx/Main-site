@@ -20,5 +20,6 @@ export const writeClient = createClient({
 
 const builder = imageUrlBuilder(client)
 export function urlFor(source: any) {
-  return builder.image(source)
+  // auto=format: el CDN de Sanity sirve WebP/AVIF a navegadores compatibles (PNG de ~1.7MB -> ~50KB)
+  return builder.image(source).auto('format').quality(80)
 }

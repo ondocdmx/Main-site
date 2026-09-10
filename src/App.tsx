@@ -1097,11 +1097,15 @@ export default function App() {
                       <img
                         src={resolveImage(product.image)}
                         alt={resolveText(product.title)}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0"
                       />
                       <img
                         src={resolveImage(product.hoverImage) || resolveImage(product.image)}
                         alt={`${resolveText(product.title)} hover`}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
                       />
                       {product.soldOut && (
@@ -1430,7 +1434,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step1Image', null) ? urlFor(getSetting('step1Image', null)).url() : '/images/ondo-113.JPG'} alt="Step 1" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step1Image', null) ? urlFor(getSetting('step1Image', null)).url() : '/images/ondo-113.JPG'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step1Title', content.step1Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step1Desc', content.step1Desc)}</p>
@@ -1438,7 +1442,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step2Image', null) ? urlFor(getSetting('step2Image', null)).url() : '/images/ondo-051.JPG'} alt="Step 2" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step2Image', null) ? urlFor(getSetting('step2Image', null)).url() : '/images/ondo-051.JPG'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step2Title', content.step2Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step2Desc', content.step2Desc)}</p>
@@ -1446,7 +1450,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step3Image', null) ? urlFor(getSetting('step3Image', null)).url() : '/images/ondo-070.JPG'} alt="Step 3" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={getSetting('step3Image', null) ? urlFor(getSetting('step3Image', null)).url() : '/images/ondo-070.JPG'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step3Title', content.step3Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step3Desc', content.step3Desc)}</p>
