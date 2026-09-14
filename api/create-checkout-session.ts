@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? { subscription_data: { metadata } }
         : { payment_intent_data: { metadata } }
       ),
-      success_url: `${frontendUrl}?subscription=success`,
+      success_url: `${frontendUrl}?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: frontendUrl,
     });
 

@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 import { client, writeClient, urlFor } from './sanityClient';
+import {
+  pushEvent, pushEcommerce, productToItem, planItem,
+  captureAttribution, saveCheckoutSnapshot, readCheckoutSnapshot, firePurchaseOnce,
+} from './analytics';
 
 function getNextMonday(): Date {
   const today = new Date();
@@ -303,14 +307,21 @@ export default function App() {
   const [paymentSuccessType, setPaymentSuccessType] = useState<'subscription' | 'payment' | null>(null);
 
   useEffect(() => {
+    // Capturar atribución ANTES de limpiar la URL
+    captureAttribution();
     const params = new URLSearchParams(window.location.search);
-    if (params.get('subscription') === 'success') {
-      setPaymentSuccessType('subscription');
+    const isSubscriptionSuccess = params.get('subscription') === 'success';
+    const isPaymentSuccess = params.get('payment') === 'success';
+    if (isSubscriptionSuccess || isPaymentSuccess) {
+      const type = isSubscriptionSuccess ? 'subscription' : 'payment';
+      setPaymentSuccessType(type);
       setShowPaymentSuccess(true);
-      window.history.replaceState({}, '', window.location.pathname);
-    } else if (params.get('payment') === 'success') {
-      setPaymentSuccessType('payment');
-      setShowPaymentSuccess(true);
+      // purchase con transaction_id único (session_id de Stripe) y guard anti-refresco
+      const sessionId = params.get('session_id') || '';
+      const snap = readCheckoutSnapshot();
+      if (snap && snap.type === type) {
+        firePurchaseOnce(sessionId, type, snap.items, snap.value);
+      }
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -362,6 +373,7 @@ export default function App() {
       if (product._id !== selectedProduct?._id) {
         setSelectedProduct(product);
         setPopupImageIndex(0);
+        pushEcommerce('view_item', [productToItem(product)]);
       }
     } else if (!isLoading) {
       setSelectedProduct(null);
@@ -495,6 +507,7 @@ export default function App() {
     setNotifyEmail('');
     setEmailSent(false);
     setShowPopupModal(true);
+    pushEvent('view_item_list', { item_list_name: 'soupcripciones', item_list_id: 'soupcripciones' });
   };
 
   const openFunnelToDelivery = () => {
@@ -509,6 +522,18 @@ export default function App() {
     setEmailSent(false);
     setFunnelStep('delivery');
     setShowPopupModal(true);
+    pushEvent('view_item_list', { item_list_name: 'soupcripciones', item_list_id: 'soupcripciones' });
+  };
+
+  // Selección de plan confirmada (paso plan -> sopas)
+  const confirmPlanSelection = () => {
+    pushEvent('select_plan', {
+      plan_frequency: funnelFrequency,
+      plan_soups: funnelQuantity,
+      value: funnelPlanAmount || 0,
+      currency: 'MXN',
+    });
+    setFunnelStep('soups');
   };
 
   // Abrir ficha de producto con URL propia (/sopas/:slug)
@@ -573,6 +598,10 @@ export default function App() {
           deliveryPostal: savedPostal,
         }),
       });
+      // begin_checkout + snapshot para reconstruir el purchase tras el redirect
+      const subItem = planItem(productId, funnelFrequency, funnelQuantity, amount);
+      pushEcommerce('begin_checkout', [subItem]);
+      saveCheckoutSnapshot('subscription', [subItem], amount);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -594,6 +623,7 @@ export default function App() {
       }
       return [...prev, { product, quantity: 1 }];
     });
+    pushEcommerce('add_to_cart', [productToItem(product)]);
   };
 
   const addToCart = (product: any) => {
@@ -741,6 +771,11 @@ export default function App() {
           isPickup,
         }),
       });
+      // begin_checkout + snapshot (value con descuento aplicado, sin envío)
+      const cartGA4Items = cart.map((item: { product: any; quantity: number }) => productToItem(item.product, item.quantity));
+      const cartValue = cartGA4Items.reduce((sum: number, it: any) => sum + it.price * it.quantity, 0) * discountMult;
+      pushEcommerce('begin_checkout', cartGA4Items, { value: Number(cartValue.toFixed(2)) });
+      saveCheckoutSnapshot('payment', cartGA4Items, cartValue);
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
@@ -833,7 +868,7 @@ export default function App() {
               </button>
            </div>
 
-           <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => setIsCartOpen(true)}>
+           <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => { setIsCartOpen(true); if (cart.length > 0) pushEcommerce('view_cart', cart.map((item: any) => productToItem(item.product, item.quantity))); }}>
              <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8" />
              {cartItemCount > 0 && (
                <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-ondo-red text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors rounded-full">
@@ -2173,7 +2208,7 @@ export default function App() {
 
                   {/* Botón continuar */}
                   <button
-                    onClick={() => setFunnelStep('soups')}
+                    onClick={confirmPlanSelection}
                     className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-5 transition-all hover:bg-ondo-green text-[18px] flex items-center justify-center gap-3"
                   >
                     <span>{lang === 'es' ? 'CONTINUAR' : 'CONTINUE'}</span>
@@ -2380,7 +2415,7 @@ export default function App() {
             {funnelStep === 'slot' && (
               <div className="p-8 md:p-10 bg-ondo-white">
                 <button
-                  onClick={() => setFunnelStep('soups')}
+                  onClick={confirmPlanSelection}
                   className="text-ondo-green/50 font-body text-sm mb-8 flex items-center gap-1 hover:text-ondo-green transition-colors"
                 >
                   ← {lang === 'es' ? 'Atrás' : 'Back'}

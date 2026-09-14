@@ -42,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     shipping_address_collection: { allowed_countries: ['MX'] },
     line_items,
     ...(deliveryEmail ? { customer_email: deliveryEmail } : {}),
-    success_url: `${frontendUrl}?payment=success`,
+    success_url: `${frontendUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: frontendUrl,
     payment_intent_data: {
       receipt_email: deliveryEmail || undefined,
