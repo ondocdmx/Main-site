@@ -68,5 +68,11 @@ export const productSettings = defineType({
       title: 'Club Banner CTA',
       type: 'translationRecord',
     }),
+    defineField({
+      name: 'clubBannerCTALink',
+      title: 'Club Banner CTA — URL de destino',
+      type: 'string',
+      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
+    }),
   ]
 })

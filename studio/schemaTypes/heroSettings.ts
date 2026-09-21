@@ -27,6 +27,12 @@ export const heroSettings = defineType({
       type: 'translationRecord',
     }),
     defineField({
+      name: 'heroCTALink',
+      title: 'Hero CTA — URL de destino',
+      type: 'string',
+      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = ir a la sección de productos.',
+    }),
+    defineField({
       name: 'heroImages',
       title: 'Hero Images (Right Side)',
       type: 'array',

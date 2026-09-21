@@ -95,6 +95,13 @@ export const manifestoSettings = defineType({
       type: 'translationRecord',
       group: 'panel1',
     }),
+    defineField({
+      name: 'panel1CTALink',
+      title: 'CTA — URL de destino',
+      type: 'string',
+      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
+      group: 'panel1',
+    }),
 
     // ── PANEL 2 — Lo que incluye ──────────────────────────────────────
     defineField({
@@ -210,9 +217,9 @@ export const manifestoSettings = defineType({
     }),
     defineField({
       name: 'panel4CTALink',
-      title: 'Bottom Card — CTA Link (optional, leave empty to open subscription funnel)',
+      title: 'CTA — URL de destino',
       type: 'string',
-      description: 'Anchor or URL. Leave empty to open the subscription funnel.',
+      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
       group: 'panel3',
     }),
   ],

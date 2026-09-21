@@ -525,6 +525,24 @@ export default function App() {
     pushEvent('view_item_list', { item_list_name: 'soupcripciones', item_list_id: 'soupcripciones' });
   };
 
+  // Fallback: scroll a la sección de productos (#shop)
+  const scrollToShop = () => {
+    document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // CTA gestionado desde Sanity: URL vacía -> fallback (funnel o #shop)
+  const handleCTA = (url: string | null | undefined, fallback: () => void) => {
+    const link = (url || '').trim();
+    if (!link) { fallback(); return; }
+    if (link.startsWith('#')) {
+      document.getElementById(link.slice(1))?.scrollIntoView({ behavior: 'smooth' });
+    } else if (link.startsWith('/')) {
+      navigate(link);
+    } else {
+      window.open(link, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Selección de plan confirmada (paso plan -> sopas)
   const confirmPlanSelection = () => {
     pushEvent('select_plan', {
@@ -1047,7 +1065,7 @@ export default function App() {
                  {resolveText(getSetting('heroSub', content.heroSub))}
               </p>
               <div>
-                <button onClick={openFunnel} className="bg-ondo-orange text-white hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3.5 sm:py-4 px-8 sm:px-10 transition-colors text-[14px] sm:text-[15px] shadow-sm">
+                <button onClick={() => handleCTA(getSetting('heroCTALink'), scrollToShop)} className="bg-ondo-orange text-white hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3.5 sm:py-4 px-8 sm:px-10 transition-colors text-[14px] sm:text-[15px] shadow-sm">
                   {resolveText(getSetting('heroCTA', content.shopNow))}
                 </button>
               </div>
@@ -1246,7 +1264,7 @@ export default function App() {
                   </button>
                 </p>
                 <button
-                  onClick={openFunnel}
+                  onClick={() => handleCTA(getSetting('clubBannerCTALink'), openFunnel)}
                   className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
                 >
                   {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
@@ -1315,10 +1333,10 @@ export default function App() {
 
                {/* CTA at bottom */}
                <div className="z-10 mt-auto">
-                 <button
-                   onClick={openFunnelToDelivery}
-                   className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max bg-ondo-orange text-white hover:bg-ondo-green"
-                 >
+                   <button
+                     onClick={() => handleCTA(getSetting('panel1CTALink'), openFunnelToDelivery)}
+                     className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max bg-ondo-orange text-white hover:bg-ondo-green"
+                   >
                    {getSettingText('panel1CTAText', { es: 'ÚNETE AL CLUB', en: 'JOIN THE CLUB' })}
                    <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
                  </button>
@@ -1446,7 +1464,7 @@ export default function App() {
                  {/* CTA */}
                  <div className="mt-auto pt-4">
                    <button
-                     onClick={openFunnelToDelivery}
+                     onClick={() => handleCTA(getSetting('panel4CTALink'), openFunnelToDelivery)}
                      className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full bg-ondo-orange text-white hover:bg-ondo-green"
                    >
                      {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
@@ -1519,7 +1537,7 @@ export default function App() {
                <a href="#" className="text-[#6ca53a] font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
                  {getSettingText('aboutLink', { es: 'LEARN MORE', en: 'LEARN MORE' })}
                </a>
-               <button onClick={openFunnel} className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
+               <button onClick={() => handleCTA(getSetting('aboutCTALink'), scrollToShop)} className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
                  {getSettingText('aboutCTA', { es: '¡APAPÁCHATE!', en: '¡APAPÁCHATE!' })}
                </button>
              </div>
