@@ -9,6 +9,7 @@ export default defineConfig({
 
   projectId: 's3nnv28f',
   dataset: 'production',
+  studioHost: 'ondo',
 
   plugins: [
     structureTool({
