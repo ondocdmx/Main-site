@@ -39,7 +39,7 @@ Los planes de suscripción se envían como item con `item_id` = Stripe Price ID,
 
 | Evento | Cuándo |
 |---|---|
-| `view_item_list` (`item_list_name: "soupcripciones"`) | Se abre el funnel (botones de suscripción o URL `/soupcripciones`) |
+| `view_item_list` (`item_list_name: "soupscripciones"`) | Se abre el funnel (botones de suscripción o URL `/soupscripciones`) |
 | `select_plan` (`plan_frequency`, `plan_soups`, `value`) | El usuario confirma su plan (pasa a elegir sopas) |
 | `begin_checkout` | Inicia el pago del plan |
 | `purchase` (`checkout_type: "subscription"`) | Alta de suscripción confirmada |

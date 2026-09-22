@@ -4,6 +4,6 @@
   "framework": "vite",
   "rewrites": [
     { "source": "/sopas/:path*", "destination": "/index.html" },
-    { "source": "/soupcripciones", "destination": "/index.html" }
+    { "source": "/soupscripciones", "destination": "/index.html" }
   ]
 }

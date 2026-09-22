@@ -34,7 +34,7 @@ export const aboutSettings = defineType({
       name: 'aboutCTALink',
       title: 'About CTA — URL de destino',
       type: 'string',
-      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = ir a la sección de productos.',
+      description: 'Ej: /soupscripciones (interno), #shop (ancla) o https://... (externo). Vacío = ir a la sección de productos.',
     }),
   ]
 })

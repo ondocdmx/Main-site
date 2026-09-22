@@ -30,7 +30,7 @@ export const heroSettings = defineType({
       name: 'heroCTALink',
       title: 'Hero CTA — URL de destino',
       type: 'string',
-      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = ir a la sección de productos.',
+      description: 'Ej: /soupscripciones (interno), #shop (ancla) o https://... (externo). Vacío = ir a la sección de productos.',
     }),
     defineField({
       name: 'heroImages',

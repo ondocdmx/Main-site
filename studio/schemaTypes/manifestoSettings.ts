@@ -99,7 +99,7 @@ export const manifestoSettings = defineType({
       name: 'panel1CTALink',
       title: 'CTA — URL de destino',
       type: 'string',
-      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
+      description: 'Ej: /soupscripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
       group: 'panel1',
     }),
 
@@ -219,7 +219,7 @@ export const manifestoSettings = defineType({
       name: 'panel4CTALink',
       title: 'CTA — URL de destino',
       type: 'string',
-      description: 'Ej: /soupcripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
+      description: 'Ej: /soupscripciones (interno), #shop (ancla) o https://... (externo). Vacío = abrir el funnel de suscripción.',
       group: 'panel3',
     }),
   ],

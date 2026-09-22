@@ -139,6 +139,9 @@ const t = {
   }
 };
 
+// Ruta del funnel de suscripción (usada en nav, routing y vercel.json)
+const SOUPSCRIPTION_ROUTE = '/soupscripciones';
+
 // GROQ query — fetch products with dereferenced tags
 const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   _id,
@@ -149,6 +152,7 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   ingredients,
   stripePriceId,
   onlySubscriptions,
+  excludeFromFunnel,
   soldOut,
   description,
   tagline,
@@ -331,7 +335,7 @@ export default function App() {
   const productRouteMatch = route.match(/^\/sopas\/(.+?)\/?$/);
   const productSlugFromRoute = productRouteMatch ? decodeURIComponent(productRouteMatch[1]) : null;
   const isProductRoute = !!productSlugFromRoute;
-  const isSoupcripcionesRoute = route === '/soupcripciones' || route === '/soupcripciones/';
+  const isSoupcripcionesRoute = route === SOUPSCRIPTION_ROUTE || route === `${SOUPSCRIPTION_ROUTE}/`;
   const routeProduct = productSlugFromRoute
     ? (displayProducts.find((p: any) => p.slug === productSlugFromRoute) ?? null)
     : null;
@@ -350,7 +354,7 @@ export default function App() {
         setSelectedProduct(null);
         setPopupImageIndex(0);
       }
-      if (path !== '/soupcripciones' && path !== '/soupcripciones/') setShowPopupModal(false);
+      if (path !== SOUPSCRIPTION_ROUTE && path !== `${SOUPSCRIPTION_ROUTE}/`) setShowPopupModal(false);
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -380,19 +384,22 @@ export default function App() {
     }
   }, [productSlugFromRoute, displayProducts, isLoading]);
 
-  // /soupcripciones -> abre el funnel de suscripción sobre la home
+  // /soupscripciones -> abre el funnel de suscripción sobre la home
   useEffect(() => {
     if (isSoupcripcionesRoute) openFunnel();
   }, [isSoupcripcionesRoute]);
 
   // /sopas (sin slug) -> home anclado a la tienda
+  // Espera al fin de la carga: durante la pantalla de loading #shop aún no existe en el DOM
+  // y el scroll fallaba en silencio (carga directa de ondoclub.com/sopas dejaba en el hero)
   useEffect(() => {
+    if (isLoading) return;
     if (route.replace(/\/+$/, '') === '/sopas') {
       window.history.replaceState({}, '', '/#shop');
       setRoute('/');
       requestAnimationFrame(() => document.getElementById('shop')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior }));
     }
-  }, [route]);
+  }, [route, isLoading]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -485,8 +492,8 @@ export default function App() {
       );
 
   const ONDO_CHOICE_ID = '__ondo_choice__';
-  // Funnel shows all products (including subscription-only ones)
-  const subscriptionProds = displayProducts;
+  // Funnel: todos los productos salvo los excluidos desde Sanity (campo excludeFromFunnel — ej. el box de 5 sopas)
+  const subscriptionProds = displayProducts.filter((p: any) => !p.excludeFromFunnel);
   const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
   const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
   const funnelCanProceed = funnelTotal === funnelQuantity;
@@ -507,7 +514,7 @@ export default function App() {
     setNotifyEmail('');
     setEmailSent(false);
     setShowPopupModal(true);
-    pushEvent('view_item_list', { item_list_name: 'soupcripciones', item_list_id: 'soupcripciones' });
+    pushEvent('view_item_list', { item_list_name: 'soupscripciones', item_list_id: 'soupscripciones' });
   };
 
   const openFunnelToDelivery = () => {
@@ -522,7 +529,7 @@ export default function App() {
     setEmailSent(false);
     setFunnelStep('delivery');
     setShowPopupModal(true);
-    pushEvent('view_item_list', { item_list_name: 'soupcripciones', item_list_id: 'soupcripciones' });
+    pushEvent('view_item_list', { item_list_name: 'soupscripciones', item_list_id: 'soupscripciones' });
   };
 
   // Fallback: scroll a la sección de productos (#shop)
@@ -858,7 +865,7 @@ export default function App() {
         <div className="w-full mx-auto px-4 sm:px-6 py-4 md:py-7 flex items-center justify-between relative">
           <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[19px] tracking-wide">
             <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
-            <a href="/soupcripciones" onClick={(e) => { e.preventDefault(); navigate('/soupcripciones'); }} className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
+            <a href={SOUPSCRIPTION_ROUTE} onClick={(e) => { e.preventDefault(); navigate(SOUPSCRIPTION_ROUTE); }} className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
           </div>
           <button className="md:hidden p-1" onClick={() => setIsMobileMenuOpen((o: boolean) => !o)}>
             {isMobileMenuOpen ? <X className="w-6 h-6 text-ondo-green" /> : <Menu className="w-6 h-6 text-ondo-green" />}
@@ -902,7 +909,7 @@ export default function App() {
             <a href="#shop" className="px-6 py-4 border-b border-black/5 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
               {getSettingText('navShop', content.navShop)}
             </a>
-            <a href="/soupcripciones" className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={(e) => { e.preventDefault(); setIsMobileMenuOpen(false); navigate('/soupcripciones'); }}>
+            <a href={SOUPSCRIPTION_ROUTE} className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={(e) => { e.preventDefault(); setIsMobileMenuOpen(false); navigate(SOUPSCRIPTION_ROUTE); }}>
               {getSettingText('navSubs', content.navSubs)}
             </a>
           </div>

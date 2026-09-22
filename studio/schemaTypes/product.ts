@@ -108,6 +108,13 @@ export const product = defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'excludeFromFunnel',
+      title: '🚫 Excluir del funnel de suscripción',
+      type: 'boolean',
+      description: 'Si está activo, este producto NO aparece como sopa seleccionable en el funnel de la soupcripción (útil para boxes/bundles como el box de 5 sopas). Sí se muestra y se vende con normalidad en la tienda.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'soldOut',
       title: '🚫 Sold Out',
       type: 'boolean',
