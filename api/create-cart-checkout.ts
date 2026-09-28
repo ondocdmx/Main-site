@@ -58,7 +58,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   if (couponId) {
+    // Descuento automático por volumen: se aplica como cupón directo.
+    // Stripe no permite `discounts` + `allow_promotion_codes` en la misma sesión.
     sessionParams.discounts = [{ coupon: couponId }];
+  } else {
+    // Sin descuento automático: habilitamos el campo para que el cliente
+    // escriba su código de promoción (ej: ONDOFIRST).
+    sessionParams.allow_promotion_codes = true;
   }
 
   try {

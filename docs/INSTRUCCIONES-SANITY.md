@@ -42,6 +42,45 @@ La tienda muestra primero los productos con el número de orden más bajo.
 
 ---
 
+## 4. Códigos de promoción (como ONDOFIRST)
+
+Los códigos **no se crean en Sanity** — se crean en el **Dashboard de Stripe**:
+*Promotions → Crear código*. Puedes tener todos los que quieras (dos, tres…);
+no hay que configurar nada por código en la web.
+
+**Los clientes ya pueden escribir su código en la página de pago** (está
+habilitado, tanto para compras normales como para suscripciones).
+
+Una regla de Stripe que conviene conocer:
+
+- Carrito **sin** descuento automático (menos de 5 sopas) → el cliente puede
+  escribir su código sin problema.
+- Carrito **con** descuento automático (5+ sopas) → el descuento se aplica
+  solo, y en ese caso Stripe no permite añadir además un código. El campo
+  de código solo aparece cuando no hay descuento automático.
+
+El texto del banner que anuncia los códigos sí se cambia en Sanity:
+**Site Settings → Middle Banner Text**.
+
+---
+
+## 5. Descuentos por cantidad (5+ y 10+ sopas)
+
+Ahora se controlan completamente desde **Site Settings**:
+
+| Campo | Qué hace |
+|---|---|
+| Descuento 1 — mínimo de productos | Desde cuántas sopas se aplica (hoy: 5) |
+| Descuento 1 — porcentaje (%) | Cuánto se descuenta (hoy: 10) |
+| Descuento 1 — ID del cupón de Stripe | El cupón que se aplica al cobrar |
+| Descuento 2 — (ídem) | El segundo escalón (hoy: 10 sopas → 20%) |
+
+Cambia el número, pulsa **Publish**, y la tienda (precios, carrito y avisos
+de "añade 1 más") se ajusta sola. Si dejas un campo vacío, se usa el valor
+actual (5/10% y 10/20%).
+
+---
+
 ## Bonus: nueva dirección de la suscripción
 
 La suscripción ahora está en **ondoclub.com/soupscripciones**

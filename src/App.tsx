@@ -742,23 +742,35 @@ export default function App() {
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const cartSubtotal = (() => {
-    let discountMult = 1;
-    if (cartItemCount >= 10) discountMult = 0.8;
-    else if (cartItemCount >= 5) discountMult = 0.9;
-    return cart.reduce((a: number, b: { product: any; quantity: number }) => a + b.product.price * discountMult * b.quantity, 0);
-  })();
-  const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
+  // Descuentos por volumen — dinámicos desde Sanity (Site Settings).
+  // Defaults = comportamiento histórico: 5+ → 10%, 10+ → 20%.
+  const discount1 = {
+    min: getSetting('cartDiscount1Min', 5) as number,
+    pct: getSetting('cartDiscount1Percent', 10) as number,
+    couponId: getSetting('cartDiscount1CouponId', '') as string,
+  };
+  const discount2 = {
+    min: getSetting('cartDiscount2Min', 10) as number,
+    pct: getSetting('cartDiscount2Percent', 20) as number,
+    couponId: getSetting('cartDiscount2CouponId', '') as string,
+  };
 
   const activeDiscount = (() => {
-    if (cartItemCount >= 10) {
-      return { pct: 20, couponId: getSetting('cartDiscount2CouponId', '') };
+    if (cartItemCount >= discount2.min) {
+      return { pct: discount2.pct, couponId: discount2.couponId };
     }
-    if (cartItemCount >= 5) {
-      return { pct: 10, couponId: getSetting('cartDiscount1CouponId', '') };
+    if (cartItemCount >= discount1.min) {
+      return { pct: discount1.pct, couponId: discount1.couponId };
     }
     return null;
   })();
+  const activeDiscountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
+
+  const cartSubtotal = cart.reduce(
+    (a: number, b: { product: any; quantity: number }) => a + b.product.price * activeDiscountMult * b.quantity,
+    0
+  );
+  const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
 
   const handleCartCheckout = async (slot: string) => {
     setIsCheckingOut(true);
@@ -1198,12 +1210,12 @@ export default function App() {
                       )}
                       <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
                       <div className="font-body font-bold mb-5 text-[16px]">
-                        {cartItemCount >= 5 ? (
+                        {activeDiscount ? (
                           <div className="flex items-center gap-2">
                             <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">${(product.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                            <span className="text-ondo-orange">${(product.price * (1 - activeDiscount.pct / 100)).toFixed(2)}</span>
                             <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                              -{cartItemCount > 9 ? '20' : '10'}%
+                              -{activeDiscount.pct}%
                             </span>
                           </div>
                         ) : (
@@ -1241,18 +1253,18 @@ export default function App() {
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
-                        {cartItemCount === 4 && (
-                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>¡Añade 1 más para -10%!</span>
-                          </div>
-                        )}
-                        {cartItemCount === 9 && (
-                          <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>¡Añade 1 más para -20%!</span>
-                          </div>
-                        )}
+                         {cartItemCount === discount1.min - 1 && (
+                           <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                             <Sparkles className="w-3.5 h-3.5" />
+                             <span>¡Añade 1 más para -{discount1.pct}%!</span>
+                           </div>
+                         )}
+                         {cartItemCount === discount2.min - 1 && (
+                           <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
+                             <Sparkles className="w-3.5 h-3.5" />
+                             <span>¡Añade 1 más para -{discount2.pct}%!</span>
+                           </div>
+                         )}
                       </div>
                     </div>
                   </div>
@@ -1851,12 +1863,12 @@ export default function App() {
 
                 {/* Price */}
                 <div className="font-title font-black text-[28px] mb-5">
-                  {cartItemCount >= 5 ? (
+                  {activeDiscount ? (
                     <div className="flex items-center gap-3">
                       <span className="line-through text-gray-400 text-[20px]">${selectedProduct.price?.toFixed(2)}</span>
-                      <span className="text-ondo-orange">${(selectedProduct.price * (cartItemCount > 9 ? 0.8 : 0.9)).toFixed(2)}</span>
+                      <span className="text-ondo-orange">${(selectedProduct.price * (1 - activeDiscount.pct / 100)).toFixed(2)}</span>
                       <span className="bg-ondo-orange text-white text-[12px] px-2 py-1 rounded-sm uppercase tracking-wide self-center mb-1">
-                        -{cartItemCount > 9 ? '20' : '10'}%
+                        -{activeDiscount.pct}%
                       </span>
                     </div>
                   ) : (

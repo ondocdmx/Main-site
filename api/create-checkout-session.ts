@@ -47,6 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mode: isRecurring ? 'subscription' : 'payment',
       phone_number_collection: { enabled: true },
       shipping_address_collection: { allowed_countries: ['MX'] },
+      allow_promotion_codes: true,
       line_items: [{ price: productId, quantity: 1 }],
       ...(isRecurring
         ? { subscription_data: { metadata } }
