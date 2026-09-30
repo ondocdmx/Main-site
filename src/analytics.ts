@@ -1,6 +1,6 @@
-// ── Tracking ecommerce GA4 vía dataLayer (consumido por GTM) ──
-// Snippet de GTM pendiente del Container ID de la agencia; mientras tanto
-// todos los eventos quedan en window.dataLayer listos para ser leídos.
+// ── Tracking ecommerce GA4 vía dataLayer (consumido por GTM o gtag.js) ──
+// Con VITE_GA4_ID (G-...) la web carga gtag.js sola y refleja todos los
+// eventos. Sin ella, los eventos quedan en window.dataLayer listos para GTM.
 
 declare global {
   interface Window {
@@ -10,6 +10,34 @@ declare global {
 
 const isDev = (import.meta as any).env?.DEV ?? false;
 export const CURRENCY = 'MXN';
+
+// ── GA4 directo (gtag.js) — opcional vía VITE_GA4_ID ──
+const GA4_ID = (import.meta as any).env?.VITE_GA4_ID as string | undefined;
+
+// Carga gtag.js una sola vez si hay ID de medición configurado.
+export const initGA4 = () => {
+  const w = window as any;
+  if (!GA4_ID || w.gtag) return;
+  w.dataLayer = w.dataLayer || [];
+  w.gtag = function gtag(...args: unknown[]) { w.dataLayer.push(args); };
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`;
+  document.head.appendChild(s);
+  w.gtag('js', new Date());
+  w.gtag('config', GA4_ID);
+  if (isDev) console.debug('[GA4] gtag inicializado con', GA4_ID);
+};
+
+// Espejo de cada evento hacia gtag (GA4) si está activo.
+// El payload { ecommerce: {...} } se aplana: GA4 espera los parámetros
+// ecommerce (value, items, transaction_id...) al nivel superior.
+const mirrorToGtag = (event: string, data: Record<string, unknown>) => {
+  const gtag = (window as any).gtag;
+  if (!gtag) return;
+  const { ecommerce, ...rest } = data as { ecommerce?: Record<string, unknown> };
+  gtag('event', event, { ...rest, ...(ecommerce || {}) });
+};
 
 const UTMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
 const ATTR_KEY = 'ondo_attribution';
@@ -31,6 +59,7 @@ export const pushEvent = (event: string, data: Record<string, unknown> = {}) => 
   window.dataLayer = window.dataLayer || [];
   const payload = { event, ...data };
   window.dataLayer.push(payload);
+  mirrorToGtag(event, data);
   if (isDev) console.debug('[dataLayer]', payload);
 };
 

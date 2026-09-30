@@ -1,14 +1,29 @@
 # ONDO — Especificación de eventos de tracking (dataLayer)
 
-Implementación completa en `src/analytics.ts`. Todos los eventos se envían a
-`window.dataLayer` (lista para GTM). Pendiente: insertar snippet de GTM cuando
-la agencia proporcione el **Container ID**.
+Implementación completa en `src/analytics.ts`. Todos los eventos van a
+`window.dataLayer` y, si hay `VITE_GA4_ID` configurado, se reflejan también
+en GA4 vía gtag.js (sin necesitar GTM).
 
-## Configuración recomendada en GTM (agencia)
+## Activación
 
-- Variable de tipo **Data Layer Variable** por cada campo usado (ej. `ecommerce.transaction_id`).
-- Trigger **History Change** para `page_view` (es una SPA: los cambios de vista son `pushState`).
-- En GA4, marcar `purchase` y `begin_checkout` como **conversiones**.
+1. **gtag.js directo (recomendada)**: poner el ID de medición (`G-...`, en
+   GA4 → Admin → Flujos de datos → Web) como `VITE_GA4_ID` en `.env`
+   local y en las variables de entorno de Vercel. La web carga gtag.js
+   sola y todos los eventos empiezan a fluir. Sin la variable, los eventos
+   quedan solo en `dataLayer`.
+2. **GTM (alternativa)**: insertar el snippet del container en `index.html`;
+   los eventos ya están en `dataLayer` con formato GTM.
+   Configuración recomendada: variable Data Layer por campo (ej.
+   `ecommerce.transaction_id`), trigger **History Change** para
+   `page_view` (SPA), y marcar `purchase` y `begin_checkout` como
+   **conversiones**.
+
+## Post-activación (configuración de cuenta, sin código)
+
+- En GA4: marcar `purchase` y `begin_checkout` como **eventos clave**.
+- Vincular GA4 ↔ Google Ads e importar `purchase` como conversión.
+- `page_view` se dispara en la carga inicial y en cada navegación interna
+  (`navigate()` y back/forward del navegador).
 
 ## Eventos ecommerce estándar
 
@@ -64,5 +79,5 @@ Los planes de suscripción se envían como item con `item_id` = Stripe Price ID,
 - **Envío** excluido del `value` (GA4 = productos con descuento). Si se quiere
   revenue exacto incluyendo envío, hay que sumar `shippingPrice` — decidir.
 - Moneda fija **MXN**.
-- Sin GTM activo, los eventos solo quedan en `dataLayer` (inspeccionables en
-  consola; en dev se loguean con `[dataLayer]`).
+- Sin `VITE_GA4_ID` los eventos solo quedan en `dataLayer` (inspeccionables
+  en consola; en dev se loguean con `[dataLayer]`).
