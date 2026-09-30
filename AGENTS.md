@@ -16,6 +16,18 @@ para cualquier asistente de IA o desarrollador que lo retome.
 Sanity: projectId `s3nnv28f`, dataset `production` (ver `studio/sanity.cli.ts`).
 Dominio: `www.ondoclub.com` (el apex redirige con 307 a www, es normal).
 
+## Arranque (día 1)
+
+```bash
+git clone https://github.com/ondocdmx/Main-site.git ondo && cd ondo
+npm install
+cp .env.example .env    # rellenar valores (ver docs/TRASPASO.md sección 2)
+npm run dev             # http://localhost:3000
+```
+
+Los secretos, las cuentas a ceder y la verificación post-traspaso están en
+**`docs/TRASPASO.md`** — es el documento de entrada del proyecto.
+
 ## Comandos
 
 ```bash
@@ -89,6 +101,7 @@ escritura limitados a ese uso).
 
 ## Documentación relacionada
 
+- `docs/TRASPASO.md` — accesos, secretos y verificación post-traspaso (leer primero).
 - `docs/TRACKING.md` — eventos GA4 y garantías (purchase sin duplicados).
 - `docs/INSTRUCCIONES-SANITY.md` — tareas del cliente paso a paso (CTA hero,
   box, orden, códigos promoción, descuentos).
