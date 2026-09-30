@@ -4,7 +4,6 @@ import { client, writeClient, urlFor } from './sanityClient';
 import {
   pushEvent, pushEcommerce, productToItem, planItem,
   captureAttribution, saveCheckoutSnapshot, readCheckoutSnapshot, firePurchaseOnce,
-  initGA4,
 } from './analytics';
 
 function getNextMonday(): Date {
@@ -312,8 +311,7 @@ export default function App() {
   const [paymentSuccessType, setPaymentSuccessType] = useState<'subscription' | 'payment' | null>(null);
 
   useEffect(() => {
-    // GA4 (si hay VITE_GA4_ID) y captura de atribución ANTES de limpiar la URL
-    initGA4();
+    // Capturar atribución ANTES de limpiar la URL
     captureAttribution();
     const params = new URLSearchParams(window.location.search);
     const isSubscriptionSuccess = params.get('subscription') === 'success';
@@ -345,8 +343,6 @@ export default function App() {
   const navigate = (path: string) => {
     window.history.pushState({}, '', path);
     setRoute(path);
-    // SPA: page_view manual en cada navegación interna
-    pushEvent('page_view', { page_path: path });
   };
 
   // Back/forward del navegador: sincroniza UI con la ruta
@@ -354,7 +350,6 @@ export default function App() {
     const onPopState = () => {
       const path = window.location.pathname;
       setRoute(path);
-      pushEvent('page_view', { page_path: path });
       if (!path.startsWith('/sopas/')) {
         setSelectedProduct(null);
         setPopupImageIndex(0);

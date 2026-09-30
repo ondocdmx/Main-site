@@ -34,7 +34,6 @@ proyecto Sanity.
 |---|---|
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys. Para pruebas usar la `sk_test_...` |
 | `VITE_SANITY_WRITE_TOKEN` | sanity.io/manage → API → Tokens (solo permiso de crear `deliveryLead`). Sin él, la web funciona pero no guarda leads de zona de reparto |
-| `VITE_GA4_ID` | GA4 → Admin → Flujos de datos → Web → ID de medición (`G-...`). Opcional: sin él no se envía nada a Google Analytics |
 | `FRONTEND_URL` | `http://localhost:3000` en local |
 | `PORT` | Puerto del server local opcional (3001) |
 
