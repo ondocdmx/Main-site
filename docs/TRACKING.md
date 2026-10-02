@@ -1,10 +1,10 @@
 # ONDO — Especificación de eventos de tracking (dataLayer)
 
 Implementación completa en `src/analytics.ts`. Todos los eventos se envían a
-`window.dataLayer` (lista para GTM). Pendiente: insertar snippet de GTM cuando
-la agencia proporcione el **Container ID**.
+`window.dataLayer`, consumidos por el **GTM de la agencia** (container
+`GTM-TBTXDQ72` — snippet ya insertado en `index.html`).
 
-## Configuración recomendada en GTM (agencia)
+## Configuración en GTM (agencia)
 
 - Variable de tipo **Data Layer Variable** por cada campo usado (ej. `ecommerce.transaction_id`).
 - Trigger **History Change** para `page_view` (es una SPA: los cambios de vista son `pushState`).
