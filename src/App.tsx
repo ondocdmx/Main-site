@@ -743,23 +743,25 @@ export default function App() {
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   // Descuentos por volumen — dinámicos desde Sanity (Site Settings).
-  // Defaults = comportamiento histórico: 5+ → 10%, 10+ → 20%.
-  const discount1 = {
-    min: getSetting('cartDiscount1Min', 5) as number,
-    pct: getSetting('cartDiscount1Percent', 10) as number,
-    couponId: getSetting('cartDiscount1CouponId', '') as string,
+  // Un escalón con porcentaje vacío/0 está DESACTIVADO: no se muestra en
+  // precios, carrito ni avisos (así se elimina desde Sanity).
+  const makeDiscountTier = (n: 1 | 2) => {
+    const pct = getSetting(`cartDiscount${n}Percent`, null) as number | null;
+    if (!pct || pct <= 0) return null;
+    return {
+      min: getSetting(`cartDiscount${n}Min`, n === 1 ? 5 : 10) as number,
+      pct,
+      couponId: getSetting(`cartDiscount${n}CouponId`, '') as string,
+    };
   };
-  const discount2 = {
-    min: getSetting('cartDiscount2Min', 10) as number,
-    pct: getSetting('cartDiscount2Percent', 20) as number,
-    couponId: getSetting('cartDiscount2CouponId', '') as string,
-  };
+  const discount1 = makeDiscountTier(1);
+  const discount2 = makeDiscountTier(2);
 
   const activeDiscount = (() => {
-    if (cartItemCount >= discount2.min) {
+    if (discount2 && cartItemCount >= discount2.min) {
       return { pct: discount2.pct, couponId: discount2.couponId };
     }
-    if (cartItemCount >= discount1.min) {
+    if (discount1 && cartItemCount >= discount1.min) {
       return { pct: discount1.pct, couponId: discount1.couponId };
     }
     return null;
@@ -1253,13 +1255,13 @@ export default function App() {
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
-                         {cartItemCount === discount1.min - 1 && (
+                         {discount1 && cartItemCount === discount1.min - 1 && (
                            <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
                              <Sparkles className="w-3.5 h-3.5" />
                              <span>¡Añade 1 más para -{discount1.pct}%!</span>
                            </div>
                          )}
-                         {cartItemCount === discount2.min - 1 && (
+                         {discount2 && cartItemCount === discount2.min - 1 && (
                            <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
                              <Sparkles className="w-3.5 h-3.5" />
                              <span>¡Añade 1 más para -{discount2.pct}%!</span>

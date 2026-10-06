@@ -76,8 +76,12 @@ Ahora se controlan completamente desde **Site Settings**:
 | Descuento 2 — (ídem) | El segundo escalón (hoy: 10 sopas → 20%) |
 
 Cambia el número, pulsa **Publish**, y la tienda (precios, carrito y avisos
-de "añade 1 más") se ajusta sola. Si dejas un campo vacío, se usa el valor
-actual (5/10% y 10/20%).
+de "añade 1 más") se ajusta sola.
+
+**¿Quieres ELIMINAR un descuento?** Vacía su campo de porcentaje (o ponlo
+en `0`) y Publish — desaparece de toda la web: precios, carrito y avisos.
+Así se quitó el descuento de 10% (5+ sopas); el de 20% (10+ sopas) sigue
+activo. Para reactivarlo, vuelve a poner su porcentaje.
 
 ---
 
