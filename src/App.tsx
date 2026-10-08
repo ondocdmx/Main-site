@@ -150,7 +150,9 @@ const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
   purchaseType,
   price,
   ingredients,
-  stripePriceId,
+  // Tolerancia histórica: el campo del schema llegó a llamarse stripeProductId.
+  // Se acepta cualquiera de los dos; coalesce evita "precio no configurado".
+  "stripePriceId": coalesce(stripePriceId, stripeProductId),
   onlySubscriptions,
   excludeFromFunnel,
   soldOut,
