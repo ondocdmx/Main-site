@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { saveLeadToGithub, postToSheets } from './_lib/leads.js';
 
-// Leads de zona de reparto (validación de código postal) -> Google Sheets.
-// Antes se guardaban en Sanity (deliveryLead). Son datos personales: solo van a la hoja.
-// Usa GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL si existe (hoja propia); si no, la misma
-// GOOGLE_SHEETS_WEBHOOK_URL del formulario de sopas, distinguiendo por `source`.
+// Leads de zona de reparto (validación de código postal) -> repo privado de leads (GitHub).
+// Son datos personales: nunca van al repo público de la web.
+// Opcional: GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL los copia además a una hoja propia.
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -17,48 +17,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const webhookUrl = process.env.GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL || process.env.GOOGLE_SHEETS_WEBHOOK_URL;
-  if (!webhookUrl) {
-    res.status(500).json({ error: 'GOOGLE_SHEETS_WEBHOOK_URL not configured' });
-    return;
-  }
-
   // Recorte defensivo: el endpoint es público
   const clip = (v: unknown, max: number) => String(v ?? '').slice(0, max);
-
-  const payload = JSON.stringify({
-    postalCode: clip(postalCode, 10),
-    address: clip(address, 300),
-    isServiceable: !!isServiceable,
+  const lead = {
+    codigo_postal: clip(postalCode, 10),
+    direccion: clip(address, 300),
+    en_zona: !!isServiceable,
     email: clip(email, 200),
-    timestamp: new Date().toISOString(),
-    source: 'Zona de reparto',
-  });
+  };
 
-  try {
-    // Apps Script Web Apps redirect (302) and Node.js converts POST→GET on redirect.
-    // We follow the redirect manually and re-POST to the final URL.
-    const firstResponse = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      redirect: 'manual',
-      body: payload,
-    });
+  // Mientras el repo de leads no esté configurado, se sigue usando la hoja del
+  // formulario de sopas (como antes) para no perder leads.
+  const githubConfigured = !!(process.env.LEADS_GITHUB_TOKEN && process.env.LEADS_GITHUB_REPO);
+  const sheetsUrl = process.env.GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL
+    || (githubConfigured ? undefined : process.env.GOOGLE_SHEETS_WEBHOOK_URL);
 
-    if (firstResponse.status === 301 || firstResponse.status === 302) {
-      const redirectUrl = firstResponse.headers.get('location');
-      if (redirectUrl) {
-        await fetch(redirectUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: payload,
-        });
-      }
-    }
+  const [githubOk, sheetsOk] = await Promise.all([
+    saveLeadToGithub({ tipo: 'zona-reparto', ...lead }),
+    sheetsUrl
+      ? postToSheets(sheetsUrl, {
+          postalCode: lead.codigo_postal,
+          address: lead.direccion,
+          isServiceable: lead.en_zona,
+          email: lead.email,
+          timestamp: new Date().toISOString(),
+          source: 'Zona de reparto',
+        })
+      : Promise.resolve(false),
+  ]);
 
-    res.json({ ok: true });
-  } catch (err: any) {
-    console.error('Google Sheets webhook error:', err);
-    res.status(500).json({ error: err.message });
+  if (!githubOk && !sheetsOk) {
+    res.status(500).json({ error: 'lead not saved (configurar LEADS_GITHUB_TOKEN y LEADS_GITHUB_REPO)' });
+    return;
   }
+  res.json({ ok: true });
 }

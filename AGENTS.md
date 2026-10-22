@@ -14,7 +14,7 @@ para cualquier asistente de IA o desarrollador que lo retome.
 | Web (frontend) | React 19 + TypeScript + Vite + Tailwind 4 | `src/App.tsx` (toda la app está aquí) |
 | APIs de pago | Serverless functions (Vercel) + Stripe | `api/` |
 | Contenido (textos, sopas, fotos, zonas) | Archivos JSON en el repo (antes Sanity) | `src/content/*.json`, fotos en `public/images/cms/` |
-| Leads (formularios) | Serverless → Google Sheets (Apps Script) | `api/submit-soup-lead.ts`, `api/submit-delivery-lead.ts` |
+| Leads (formularios) | Serverless → repo privado `ondocdmx/ondo-leads` (CSV mensual) | `api/submit-soup-lead.ts`, `api/submit-delivery-lead.ts`, `api/_lib/leads.ts` |
 | Hospedaje web | Vercel (deploy automático al push) | repo GitHub `ondocdmx/Main-site`, rama `main` |
 | Analítica | GA4 vía dataLayer | `src/analytics.ts`, eventos en `docs/TRACKING.md` |
 
@@ -119,13 +119,15 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 ## Variables de entorno
 
 Ver `.env.example`. En local usa `.env`; en Vercel deben estar configuradas:
-`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
-que recibe el formulario de sopas y los leads de zona de reparto) y,
-opcional, `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (hoja aparte para los leads
-de zona). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.
+`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `LEADS_GITHUB_REPO` +
+`LEADS_GITHUB_TOKEN` (repo **privado** `ondocdmx/ondo-leads` donde se
+guardan los leads como CSV mensual, ver `api/_lib/leads.ts`) y, opcionales,
+`GOOGLE_SHEETS_WEBHOOK_URL` / `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (copias en
+Google Sheets). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.
 
-Los leads de zona de reparto (dirección, CP, email) son datos personales:
-nunca al repo (es público) ni a logs.
+Los leads (dirección, CP, email) son datos personales: nunca a este repo
+(es público) ni a logs. Para consultarlos, leer `ondocdmx/ondo-leads`
+(`docs/CONTEXTO-CLAUDE-DUENO.md` §14).
 
 ## Documentación relacionada
 

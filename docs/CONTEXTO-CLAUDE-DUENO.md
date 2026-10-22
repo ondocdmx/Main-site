@@ -20,14 +20,17 @@ Fecha del traspaso: octubre 2026. Desarrollador anterior: Jesús Valenzuela
 - ONDO vende sopas en CDMX: **compra única** (carrito) y **suscripciones**
   quincenales/mensuales ("soupscripciones").
 - La web es **una sola app React** (`src/App.tsx`, ~2.600 líneas) + **4
-  funciones de servidor** en `api/` (2 crean los pagos en Stripe, 2 mandan
-  formularios a Google Sheets).
+  funciones de servidor** en `api/` (2 crean los pagos en Stripe, 2 guardan
+  los leads de los formularios).
 - Se publica sola: **cada push a `main` en GitHub → Vercel la construye y la
   pone en `www.ondoclub.com` en 1-2 minutos.**
 - Los textos, sopas y fotos viven **en archivos del repo** (`src/content/*.json`
   y `public/images/cms/`). Antes venían de Sanity (cuenta de Jesús); la
   migración está hecha (sección 6). El dueño cambia el contenido
   pidiéndotelo a ti.
+- Los **leads** (contactos que deja la gente) se guardan en un repo
+  **privado** aparte, `ondocdmx/ondo-leads`, como CSV por mes. Si el dueño
+  pregunta por leads, léelos de ahí (sección 14).
 - El dinero vive en **Stripe** (cuenta del negocio). La web nunca decide
   cuánto se cobra: solo dice a Stripe *qué precio* (Price ID) cobrar.
 
@@ -43,7 +46,8 @@ Fecha del traspaso: octubre 2026. Desarrollador anterior: Jesús Valenzuela
 | **Dominio** `ondoclub.com` | La dirección de la web | Dueño (registrador donde lo compró) | No lo toques. DNS apunta a Vercel. El apex redirige 307 a `www` (normal) |
 | **Google Tag Manager / GA4** | Analítica. Container `GTM-TBTXDQ72` | Agencia de marketing del dueño | El código solo empuja eventos a `dataLayer`; la agencia configura GTM |
 | **Sanity** (proyecto `s3nnv28f`) | Ya no se usa: el contenido se migró al repo | **Jesús** | Nada. **Se borra** cuando la migración esté en producción y verificada (sección 6.4) |
-| **Google Sheets** (webhook) | Recibe el formulario "¿Qué sopa amas más?" y los leads de zona de reparto | Dueño (verificar) | Variables `GOOGLE_SHEETS_WEBHOOK_URL` (y opcional `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`) en Vercel |
+| **GitHub** `ondocdmx/ondo-leads` (**privado**) | Leads: zona de reparto y "¿Qué sopa amas más?", un CSV por mes | Dueño | Con la misma conexión de GitHub. Ver sección 14 |
+| **Google Sheets** (webhook) | Copia del formulario "¿Qué sopa amas más?" (histórico; opcional) | Dueño (verificar) | Variable `GOOGLE_SHEETS_WEBHOOK_URL` en Vercel |
 
 ⚠️ **El repo es PÚBLICO** en GitHub. Cualquiera puede leer el código y su
 historial. Nunca escribas secretos en archivos del repo (ver sección 9).
@@ -130,8 +134,9 @@ momento; no asumas.
 | `src/index.css` | Estilos globales y tema Tailwind (colores `ondo-*`, fuentes) |
 | `api/create-cart-checkout.ts` | Crea la sesión de Stripe del **carrito** (compra única) |
 | `api/create-checkout-session.ts` | Crea la sesión de Stripe de la **suscripción** |
-| `api/submit-soup-lead.ts` | Envía el formulario "¿Qué sopa amas más?" a Google Sheets |
-| `api/submit-delivery-lead.ts` | Envía los leads de zona de reparto (CP, dirección, email si está fuera de zona) a Google Sheets |
+| `api/submit-soup-lead.ts` | Formulario "¿Qué sopa amas más?" → repo privado de leads (+ Google Sheets si está configurado) |
+| `api/submit-delivery-lead.ts` | Leads de zona de reparto (CP, dirección, email si está fuera de zona) → repo privado de leads |
+| `api/_lib/leads.ts` | Lógica común: añade una fila al CSV del mes en `ondocdmx/ondo-leads` vía API de GitHub (el `_` evita que Vercel lo publique como endpoint) |
 | `vercel.json` | Rewrites de rutas SPA a `index.html` |
 | `index.html` | Snippet de GTM, meta tags, fuentes |
 | `public/images/`, `public/fonts/` | Imágenes y fuentes locales |
@@ -307,8 +312,8 @@ de la tienda):
   y queda versionado en Git (se puede deshacer cualquier cambio).
 - **Privacidad**: el dataset de Sanity era de lectura pública y contenía los
   "leads" de zona de reparto (direcciones y códigos postales de clientes).
-  Ahora esos leads van a Google Sheets (`api/submit-delivery-lead.ts`) y los
-  21 históricos se entregaron al dueño en un CSV **fuera del repo**.
+  Ahora esos leads van al repo privado `ondocdmx/ondo-leads` (sección 14),
+  incluidos los 21 históricos.
 - **Seguridad**: `migrate-to-sanity.mjs` tenía un token de Sanity escrito en
   el código (repo público). El archivo se borró, pero sigue en el historial
   de Git: **el token debe revocarse** (lo hace Jesús al borrar el proyecto).
@@ -323,7 +328,8 @@ de la tienda):
 2. `App.tsx` importa esos JSON (sin `fetchData`, sin `urlFor`, sin
    `MOCK_PRODUCTS`); el checkout usa los productos importados; se mantiene
    la pantalla de carga de ~1 s.
-3. Leads de zona → `api/submit-delivery-lead.ts` → Google Sheets.
+3. Leads de zona → `api/submit-delivery-lead.ts` → repo privado de leads
+   (cambio posterior a la migración, ver sección 14).
 4. Borrados: `src/sanityClient.ts`, `studio/`, `migrate-to-sanity.mjs`,
    `scripts/fix-drafts.mjs`, `scripts/migrate-i18n.mjs`,
    `docs/INSTRUCCIONES-SANITY.md`, dependencias `@sanity/*`.
@@ -334,12 +340,9 @@ de la tienda):
 
 ### 6.3 Pendiente antes/después del merge
 
-- **Google Sheets**: el Apps Script de `GOOGLE_SHEETS_WEBHOOK_URL` recibe
-  `{ soupIdea, email, timestamp, source }`. Los leads de zona mandan
-  `{ postalCode, address, isServiceable, email, timestamp, source: "Zona de reparto" }`.
-  Comprobar que el script guarda esos campos (o crear una hoja/script aparte
-  y poner su URL en `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`). Probar un CP
-  válido e inválido en la preview y ver que llega la fila.
+- **Leads**: configurar el repo privado de leads (sección 14.3). Hasta
+  entonces ambos formularios siguen llegando solo a Google Sheets
+  (`GOOGLE_SHEETS_WEBHOOK_URL`), como antes de la migración.
 - **Vercel**: borrar `VITE_SANITY_PROJECT_ID`, `VITE_SANITY_DATASET` y
   `VITE_SANITY_WRITE_TOKEN` (Settings → Environment Variables).
 - Probar en la preview el checkout de carrito y suscripción hasta la página
@@ -395,8 +398,10 @@ funcionar (queda solo como referencia).
 |---|---|---|
 | `STRIPE_SECRET_KEY` | Vercel (Production: `sk_live_…`) y `.env` local (`sk_test_…`) | **Nunca** en el repo ni en el chat en claro |
 | `FRONTEND_URL` | Vercel: `https://www.ondoclub.com` | Fallback de las URLs de retorno |
-| `GOOGLE_SHEETS_WEBHOOK_URL` | Vercel | URL de Apps Script del formulario de sopas y de los leads de zona de reparto |
-| `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` | Vercel (opcional) | Hoja aparte para los leads de zona; si no existe se usa la anterior |
+| `LEADS_GITHUB_REPO` | Vercel | `ondocdmx/ondo-leads` (repo privado de leads) |
+| `LEADS_GITHUB_TOKEN` | Vercel | Token fine-grained de GitHub, solo *Contents: Read and write* sobre `ondo-leads`. **Caduca**: renovarlo (sección 14.4) |
+| `GOOGLE_SHEETS_WEBHOOK_URL` | Vercel (opcional) | Copia del formulario de sopas en Google Sheets (Apps Script) |
+| `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` | Vercel (opcional) | Copia de los leads de zona en una hoja propia |
 | `VITE_SANITY_WRITE_TOKEN` (+ `VITE_SANITY_PROJECT_ID/DATASET`) | Vercel | Ya no se usan: **borrarlas** (sección 6.3) |
 
 Reglas:
@@ -502,10 +507,68 @@ compáralo antes de fiarte).
 2. Confirma con el dueño que tiene acceso de admin a: GitHub
    (`ondocdmx`), Vercel (proyecto de ondoclub.com), Stripe, dominio.
 3. Confirma que en Vercel existen `STRIPE_SECRET_KEY` (live),
-   `FRONTEND_URL` y `GOOGLE_SHEETS_WEBHOOK_URL`.
+   `FRONTEND_URL`, `LEADS_GITHUB_REPO` y `LEADS_GITHUB_TOKEN`. Si faltan las
+   de leads, ayúdale a configurarlas (sección 14.3) y comprueba que llega un
+   lead de prueba.
 4. Revisa con él los 3 pendientes de catálogo de la sección 5.
 5. Revisa con él los pendientes de la sección 6.3 (Google Sheets, variables
    de Vercel) si la migración aún no está en producción.
 6. Recomiéndale hacer el repo privado (sección 9).
 7. Con la migración en producción y verificada, avísale de que puede pedir
    a Jesús que borre Sanity (sección 6.4).
+
+---
+
+## 14. Leads: dónde están y cómo consultarlos
+
+### 14.1 Qué son y dónde viven
+
+La web guarda automáticamente dos tipos de contacto en el repo **privado**
+`ondocdmx/ondo-leads` (nunca en `Main-site`, que es público):
+
+- `zona-reparto`: alguien escribió su código postal (y a veces su dirección)
+  para ver si le repartimos. Si estaba fuera de zona puede dejar su email
+  para que le avisemos.
+- `sopa-deseada`: formulario "¿Qué sopa amas más?" (sopa + email).
+
+Formato: un CSV por mes, `leads/AAAA-MM.csv`, hora de CDMX, columnas
+`fecha,tipo,codigo_postal,direccion,en_zona,email,sopa`. `en_zona` es `si`/`no`
+según las zonas vigentes en ese momento. Cada lead es un commit en ese repo.
+`leads/2026-05.csv` y `leads/2026-07.csv` son el histórico de Sanity.
+
+### 14.2 Cómo responder al dueño
+
+Preguntas típicas: "¿cuántos leads hubo este mes?", "¿desde qué códigos
+postales nos piden y no llegamos?" (agrupa `zona-reparto` con `en_zona=no`
+por `codigo_postal`), "¿qué sopas piden más?", "dame los correos de quienes
+pidieron aviso en la colonia X".
+
+- Lee los CSV con la conexión de GitHub (o clona `ondocdmx/ondo-leads` si
+  trabajas en local) y responde con números concretos y, si ayuda, una tabla.
+- Sugerencia útil: si muchos CP fuera de zona se repiten, proponle ampliar
+  `src/content/deliveryZones.json`.
+- Son datos personales: nunca los copies al repo de la web, a issues, PRs ni
+  a ningún sitio público. Si el dueño quiere exportarlos, dáselos a él.
+
+### 14.3 Puesta en marcha (una vez)
+
+1. En GitHub (cuenta `ondocdmx`): **New repository** → nombre `ondo-leads`
+   → **Private** → crear. Subir el contenido inicial (README + `leads/`
+   histórico) que entregó Jesús.
+2. GitHub → Settings → Developer settings → Personal access tokens →
+   **Fine-grained tokens** → Generate: *Repository access: Only select
+   repositories* → `ondo-leads`; *Permissions → Repository → Contents:
+   Read and write*. La caducidad más larga posible; **apunta la fecha**.
+3. Vercel → proyecto de ondoclub.com → Settings → Environment Variables
+   (Production): `LEADS_GITHUB_REPO=ondocdmx/ondo-leads` y
+   `LEADS_GITHUB_TOKEN=<token>`. Después **Redeploy** del último deploy.
+4. Prueba: en www.ondoclub.com añade una sopa al carrito, escribe un CP y
+   comprueba que aparece la fila en `leads/<mes>.csv` de `ondo-leads`.
+
+### 14.4 Si dejan de llegar leads
+
+Casi siempre es el **token caducado** o revocado: la web sigue funcionando
+pero no guarda. Generar uno nuevo (14.3 paso 2), cambiarlo en Vercel y
+redeploy. Los errores salen en los logs de Vercel de las funciones
+`api/submit-*-lead` con el prefijo `Leads:`.
+

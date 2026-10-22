@@ -96,12 +96,16 @@ IA — entienda todo rápidamente.
 
 ---
 
-## Los leads de zona de reparto
+## Tus leads (contactos de clientes)
 
 Cuando alguien escribe su código postal para ver si repartimos en su zona
-(y, si está fuera, deja su correo), esos datos llegan a tu **Google
-Sheets**, igual que las respuestas del formulario "¿Qué sopa amas más?".
-Te sirven para saber dónde te piden reparto.
+(y, si está fuera, deja su correo), o te cuenta qué sopa le gustaría en
+"¿Qué sopa amas más?", queda guardado en tu repositorio **privado**
+`ondo-leads` de GitHub.
+
+No tienes que abrir nada: **pregúntaselo a tu Claude**. Por ejemplo:
+"¿cuántos leads hubo este mes?", "¿desde qué códigos postales nos piden y
+no llegamos?", "¿qué sopas piden más?".
 
 ---
 

@@ -17,6 +17,7 @@ que dar, en qué orden, y cómo arrancar a desarrollar el primer día.
 | 1 | **GitHub** | Propiedad del repo `ondocdmx/Main-site` (o admin al dueño) | Repo → Settings → Transfer ownership |
 | 2 | **Vercel** | Propiedad del proyecto (hospedaje y deploys) | Proyecto → Settings → General → Transfer project. Las variables de entorno viajan con el proyecto: revisarlas tras transferir |
 | 3 | **Sanity** | **No se cede**: el contenido ya vive en el repo (`src/content/`). El proyecto Sanity del desarrollador anterior se borra cuando la migración esté en producción y verificada (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §6) | — |
+| 3b | **GitHub** `ondocdmx/ondo-leads` | Crear este repo **privado** para los leads + token (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §14.3) | github.com/new |
 | 4 | **Stripe** | La cuenta ya es del negocio; verificar que el dueño tiene acceso de admin | dashboard.stripe.com → Settings → Team |
 | 5 | **Dominio** `ondoclub.com` | Acceso al registrador donde se compró | DNS apunta a Vercel — no tocar sin saber |
 | 6 | **Google Analytics** | Admin de la propiedad GA4 | analytics.google.com → Admin → gestión de accesos |
@@ -29,8 +30,9 @@ que dar, en qué orden, y cómo arrancar a desarrollar el primer día.
 | Variable | De dónde sale |
 |---|---|
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys. Para pruebas usar la `sk_test_...` |
-| `GOOGLE_SHEETS_WEBHOOK_URL` | URL del Apps Script (Google Sheets) que recibe el formulario "¿Qué sopa amas más?" y los leads de zona de reparto. Opcional en local |
-| `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` | Opcional: hoja aparte para los leads de zona de reparto. Si no existe, van a `GOOGLE_SHEETS_WEBHOOK_URL` con `source: "Zona de reparto"` |
+| `LEADS_GITHUB_REPO` / `LEADS_GITHUB_TOKEN` | Repo privado de leads y su token (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §14.3). Opcional en local: sin ellos los leads no se guardan |
+| `GOOGLE_SHEETS_WEBHOOK_URL` | Opcional: copia del formulario "¿Qué sopa amas más?" en Google Sheets (Apps Script) |
+| `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` | Opcional: copia de los leads de zona en una hoja propia |
 | `FRONTEND_URL` | `http://localhost:3000` en local |
 | `PORT` | Puerto del server local opcional (3001) |
 
@@ -38,9 +40,11 @@ que dar, en qué orden, y cómo arrancar a desarrollar el primer día.
 
 - `STRIPE_SECRET_KEY` — la **live** (`sk_live_...`)
 - `FRONTEND_URL` — `https://www.ondoclub.com`
-- `GOOGLE_SHEETS_WEBHOOK_URL` — Apps Script de Google Sheets (formulario de
-  sopas + leads de zona de reparto). Opcional: `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`
-  para mandar los leads de zona a otra hoja.
+- `LEADS_GITHUB_REPO` = `ondocdmx/ondo-leads` y `LEADS_GITHUB_TOKEN` — donde se
+  guardan los leads (repo privado). Sin ellos la web funciona pero no guarda
+  leads. Puesta en marcha: `docs/CONTEXTO-CLAUDE-DUENO.md` §14.3.
+- Opcional: `GOOGLE_SHEETS_WEBHOOK_URL` (copia del formulario de sopas en
+  Google Sheets) y `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`.
 - Tras la migración se **borran** `VITE_SANITY_PROJECT_ID`,
   `VITE_SANITY_DATASET` y `VITE_SANITY_WRITE_TOKEN` (ya no se usan).
 
