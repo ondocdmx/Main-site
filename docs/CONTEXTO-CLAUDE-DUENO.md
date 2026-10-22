@@ -527,7 +527,7 @@ compáralo antes de fiarte).
    (`ondocdmx`), Vercel (proyecto de ondoclub.com), Stripe, dominio.
 3. Confirma que en Vercel existen `STRIPE_SECRET_KEY` (live),
    `FRONTEND_URL` y `GOOGLE_SHEETS_WEBHOOK_URL`.
-4. Revisa con él los 3 pendientes de catálogo de la sección 5.
+4. Revisa con él los 2 pendientes de catálogo de la sección 5.
 5. Revisa con él los pendientes de la sección 6.3 (Google Sheets, variables
    de Vercel) si la migración aún no está en producción.
 6. Recomiéndale hacer el repo privado (sección 9).
