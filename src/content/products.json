@@ -141,7 +141,7 @@
     },
     "onlySubscriptions": false,
     "price": 125,
-    "purchaseType": "subscription",
+    "purchaseType": "single",
     "slug": "betabespelta",
     "soldOut": false,
     "stripePriceId": "price_1TQYUT3Xzew6cmN1uTb0KAL5",
@@ -347,7 +347,7 @@
     "purchaseType": "single",
     "slug": "mega-verde",
     "soldOut": null,
-    "stripePriceId": "price_1TW40k3Xzew6cmN1KiqeAIqn",
+    "stripePriceId": "price_1TQYFh3Xzew6cmN1DvHLvB5H",
     "tagline": {
       "en": "A green bombshell | 500 ml",
       "es": "Una bomba boscosa | 500 ml"
