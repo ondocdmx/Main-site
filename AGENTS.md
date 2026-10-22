@@ -3,6 +3,10 @@
 Proyecto e-commerce de sopas (México). Este documento es el mapa del proyecto
 para cualquier asistente de IA o desarrollador que lo retome.
 
+> **Si trabajas con el dueño de ONDO** (traspaso de octubre 2026): lee
+> también **`docs/CONTEXTO-CLAUDE-DUENO.md`** — contexto completo, accesos,
+> principios de trabajo y la tarea pendiente de eliminar Sanity.
+
 ## Stack y piezas
 
 | Pieza | Tecnología | Dónde |

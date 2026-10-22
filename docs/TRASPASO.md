@@ -16,7 +16,7 @@ que dar, en qué orden, y cómo arrancar a desarrollar el primer día.
 |---|---|---|---|
 | 1 | **GitHub** | Propiedad del repo `ondocdmx/Main-site` (o admin al dueño) | Repo → Settings → Transfer ownership |
 | 2 | **Vercel** | Propiedad del proyecto (hospedaje y deploys) | Proyecto → Settings → General → Transfer project. Las variables de entorno viajan con el proyecto: revisarlas tras transferir |
-| 3 | **Sanity** | Rol Owner en el proyecto `s3nnv28f` | sanity.io/manage → Members → invitar |
+| 3 | **Sanity** | **No se cede**: es cuenta del desarrollador anterior y se elimina tras migrar el contenido al repo (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §6) | — |
 | 4 | **Stripe** | La cuenta ya es del negocio; verificar que el dueño tiene acceso de admin | dashboard.stripe.com → Settings → Team |
 | 5 | **Dominio** `ondoclub.com` | Acceso al registrador donde se compró | DNS apunta a Vercel — no tocar sin saber |
 | 6 | **Google Analytics** | Admin de la propiedad GA4 | analytics.google.com → Admin → gestión de accesos |
