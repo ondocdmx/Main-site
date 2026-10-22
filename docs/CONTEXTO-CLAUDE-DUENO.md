@@ -117,6 +117,11 @@ Dueño pide un cambio en palabras normales
   `STRIPE_SECRET_KEY` solo está configurada para *Production*. No es un bug
   del cambio; verifica el checkout en local con la clave de test o después
   del merge.
+- **Comprueba que el merge llegó a producción**: en Vercel → Deployments
+  debe aparecer una fila *Production* con el commit del merge en `main`.
+  En octubre 2026 un merge no generó deploy (la web siguió con la versión
+  anterior). Si pasa: Deployments → ⋯ → *Create Deployment* con la rama
+  `main`, o un nuevo push a `main`.
 
 ### 2.3 Conectores opcionales (que el dueño puede añadir en Claude)
 
