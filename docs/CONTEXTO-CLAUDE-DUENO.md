@@ -305,23 +305,21 @@ de la tienda):
 | 1 | Ondo Box: 5 sopas | 600 | single | excluido del funnel |
 | 2 | garbanzo y rabo | 150 | single | |
 | 3 | Estofado inglés | 150 | single | |
-| 4 | betabespelta | 125 | **subscription** | revisar si es intencional |
+| 4 | betabespelta | 125 | single | |
 | 5 | calabaza de castilla dahl | 125 | single | |
 | 6 | coliflor avellanada | 125 | single | |
-| 7 | pro-gazpacho | 125 | single | ⚠️ **mismo Price ID que "mega verde"** |
-| 8 | mega verde | 125 | single | ⚠️ ídem (`price_1TW40k…`) |
+| 7 | pro-gazpacho | 125 | single | |
+| 8 | mega verde | 125 | single | |
 | 9 | berenjena y lenteja | 125 | single | slug `berenjena-al-fuego` |
 | 10 | sopa tlalpeña | 150 | single | |
 | 11 | salchispätzle | 150 | single | |
 | 12 | cebolla caramelizada | 125 | single | |
 
-**Pendientes a revisar con el dueño** (no los "arregles" sin preguntar):
-1. *pro-gazpacho* y *mega verde* cobran el mismo Price de Stripe. Si son
-   el mismo importe puede que no importe para el cobro, pero en Stripe
-   aparecerán como el mismo producto (los reportes de ventas no
-   distinguen). Probablemente hay que crear un Price propio para una.
-2. *betabespelta* tiene `purchaseType: subscription`: no se puede mezclar en
-   el carrito con las demás. Confirmar si es lo deseado.
+**Pendientes resueltos con el dueño** (octubre 2026):
+1. *mega verde* cobraba el Price de *pro-gazpacho*; ahora usa el suyo
+   (`price_1TQYFh…`, confirmado por el dueño en Stripe).
+2. *betabespelta* pasó de `subscription` a `single`: se compra en el
+   carrito con las demás (el dueño la sacó de la suscripción).
 
 ---
 
@@ -527,7 +525,7 @@ compáralo antes de fiarte).
    (`ondocdmx`), Vercel (proyecto de ondoclub.com), Stripe, dominio.
 3. Confirma que en Vercel existen `STRIPE_SECRET_KEY` (live),
    `FRONTEND_URL` y `GOOGLE_SHEETS_WEBHOOK_URL`.
-4. Revisa con él los 2 pendientes de catálogo de la sección 5.
+4. Revisa con él los pendientes de catálogo de la sección 5 (resueltos en octubre 2026).
 5. Revisa con él los pendientes de la sección 6.3 (Google Sheets, variables
    de Vercel) si la migración aún no está en producción.
 6. Recomiéndale hacer el repo privado (sección 9).
