@@ -34,7 +34,7 @@ export const pushEvent = (event: string, data: Record<string, unknown> = {}) => 
   if (isDev) console.debug('[dataLayer]', payload);
 };
 
-// Item estándar GA4 a partir de un producto de Sanity
+// Item estándar GA4 a partir de un producto (src/content/products.json)
 export const productToItem = (product: any, quantity = 1) => ({
   item_id: product?.slug || product?.stripePriceId || product?._id || 'desconocido',
   item_name: product?.title?.es || product?.title?.en || 'Producto',

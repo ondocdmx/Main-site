@@ -5,7 +5,7 @@ para cualquier asistente de IA o desarrollador que lo retome.
 
 > **Si trabajas con el dueño de ONDO** (traspaso de octubre 2026): lee
 > también **`docs/CONTEXTO-CLAUDE-DUENO.md`** — contexto completo, accesos,
-> principios de trabajo y la tarea pendiente de eliminar Sanity.
+> principios de trabajo y recetas de cambios habituales.
 
 ## Stack y piezas
 
@@ -13,11 +13,13 @@ para cualquier asistente de IA o desarrollador que lo retome.
 |---|---|---|
 | Web (frontend) | React 19 + TypeScript + Vite + Tailwind 4 | `src/App.tsx` (toda la app está aquí) |
 | APIs de pago | Serverless functions (Vercel) + Stripe | `api/` |
-| Panel de administración | Sanity Studio v3, hosteado en Sanity | `studio/` → https://ondo.sanity.studio |
+| Contenido (textos, sopas, fotos, zonas) | Archivos JSON en el repo (antes Sanity) | `src/content/*.json`, fotos en `public/images/cms/` |
+| Leads (formularios) | Serverless → Google Sheets (Apps Script) | `api/submit-soup-lead.ts`, `api/submit-delivery-lead.ts` |
 | Hospedaje web | Vercel (deploy automático al push) | repo GitHub `ondocdmx/Main-site`, rama `main` |
 | Analítica | GA4 vía dataLayer | `src/analytics.ts`, eventos en `docs/TRACKING.md` |
 
-Sanity: projectId `s3nnv28f`, dataset `production` (ver `studio/sanity.cli.ts`).
+No hay CMS ni base de datos: el contenido se cambia editando los JSON y se
+publica con push, igual que el código.
 Dominio: `www.ondoclub.com` (el apex redirige con 307 a www, es normal).
 
 ## Arranque (día 1)
@@ -39,16 +41,10 @@ Los secretos, las cuentas a ceder y la verificación post-traspaso están en
 npm run dev        # dev server en :3000
 npm run lint       # tsc --noEmit (typecheck)
 npm run build      # build de producción
-
-# Studio (panel de administración)
-cd studio
-npm run dev        # studio local
-npm run deploy     # publica el studio en ondo.sanity.studio (no interactivo)
 ```
 
 Deploy a producción = `git push origin main` (Vercel construye solo, incluye
-las funciones de `api/`). Cambios de schema en Sanity **requieren** además
-`cd studio && npm run deploy`.
+las funciones de `api/`).
 
 ## Estructura de la app (`src/App.tsx`)
 
@@ -59,37 +55,62 @@ las funciones de `api/`). Cambios de schema en Sanity **requieren** además
     termine `isLoading`; la pantalla de carga dura mínimo 1s por diseño)
   - `/soupscripciones` → abre el funnel de suscripción sobre la home
 - `vercel.json` reescribe esas rutas a `/index.html`.
-- `fetchData()` mergea en un solo objeto varios documentos de Sanity
-  (`siteSettings`, `heroSettings`, `funnelSettings`, etc.) — se leen con
-  `getSetting(clave, default)`.
-- Textos bilingües: tipo `translationRecord` `{es, en}`; resolver con
-  `resolveText()`. El objeto `t` tiene defaults hardcodeados.
-- **Fallback mock**: si Sanity devuelve 0 productos, la web muestra
-  `MOCK_PRODUCTS` (datos de demo). No es un bug si aparecen: significa que
-  el dataset está vacío o falló el fetch.
+- El contenido se importa estático desde `src/content/` (ver sección
+  Contenido). Los ajustes se leen con `getSetting(clave, default)` /
+  `getSettingText(...)`; si una clave no existe se usa el default (muchos
+  textos tienen default en el objeto `t` de `App.tsx`).
+- Textos bilingües: objetos `{es, en}`; resolver con `resolveText()`.
+- Imágenes: rutas en texto (`/images/cms/x.webp`), resueltas con
+  `resolveImage()`.
+- Pantalla de carga de ~1 s a propósito (diseño); el scroll de `/sopas`
+  espera a `isLoading`.
 - El checkout de suscripción manda la selección de sopas en metadata de
   Stripe (`selected_soups`), no como line items.
 
+## Contenido (`src/content/`)
+
+Exportado de Sanity en octubre 2026 con `scripts/export-sanity.mjs` (queda
+como referencia: Sanity se da de baja tras la migración). Se edita a mano:
+
+| Archivo | Qué contiene |
+|---|---|
+| `settings.json` | Objeto plano con todos los ajustes: textos (`{es,en}`), banners (`bannerText`, `showMidBanner`, `midBannerText`), hero (`heroTitle`, `heroCTA`, `heroCTALink`, `heroImages`), pasos (`step1Title`…), manifiesto (`panel*`), funnel (`intro*`, `productId*`, `amount*`, `price*`), footer, envío, descuentos por volumen |
+| `products.json` | Array de sopas **en el orden en que se muestran** en la tienda |
+| `tags.json` | Filtros de la tienda (`name {es,en}`, `slug.current`, `icon`, `color` = clase Tailwind) |
+| `deliveryZones.json` | `allowedPostalCodes` (lista vacía = acepta todos) y mensajes dentro/fuera de zona |
+
+Imágenes en `public/images/cms/` (webp, ~800 px las de producto, ~1600 px
+hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
+
 ## Dinero (Stripe)
 
-- Cada producto en Sanity guarda un **Price ID de Stripe** (`stripePriceId`).
-  Cambiar un precio = crear el Price nuevo en Stripe y pegar el ID en Sanity.
+- Cada producto de `products.json` guarda un **Price ID de Stripe**
+  (`stripePriceId`). Cambiar un precio = crear el Price nuevo en Stripe y
+  poner el ID (y el `price` mostrado) en el JSON.
 - **Carrito** (`api/create-cart-checkout.ts`): compras únicas. Descuentos por
-  volumen configurados en Sanity (`cartDiscount1/2`: mínimo, %, couponId) —
+  volumen en `settings.json` (`cartDiscount1/2`: `Min`, `Percent`, `CouponId`; `Percent` vacío/0 = escalón desactivado) —
   el frontend los lee dinámicos y la API aplica el cupón con `discounts`.
   **Stripe no permite `discounts` + `allow_promotion_codes` juntos**: si no
   hay descuento por volumen se habilita `allow_promotion_codes` (códigos
   tipo ONDOFIRST); si lo hay, el cupón automático va solo.
 - **Suscripción** (`api/create-checkout-session.ts`): funnel quincenal/mensual
-  × 4/6/10 sopas. Price IDs y montos en `funnelSettings` (`productId*`,
-  `amount*`). Siempre con `allow_promotion_codes: true`.
-- Envío: producto de Stripe + precio dinámico (`shippingStripeProductId` +
-  `shippingPrice` en `siteSettings`); no se cobra en pickup.
+  × 4/6/10 sopas. Price IDs y montos en `settings.json` (`productId*`,
+  `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
+- Envío: `shippingStripeProductId` (pese al nombre, es el **Price ID**
+  `price_…` que se cobra) + `shippingPrice` (importe mostrado) en
+  `settings.json`; no se cobra en pickup. `shippingStripePriceId` (`prod_…`)
+  no lo usa el código.
 - `apiVersion` de Stripe fijada en `'2024-06-20'`.
 
-## Campos de producto importantes (`studio/schemaTypes/product.ts`)
+## Campos de producto (`src/content/products.json`)
 
-- `order` (número) → orden en la tienda (asc). Evitar empates.
+- `_id` → identificador interno estable (carrito y funnel). Único, no cambiarlo.
+- `slug` → URL `/sopas/<slug>` e `item_id` de GA4. No cambiarlo en sopas existentes.
+- `title`, `tagline`, `description`, `ingredients` → `{es, en}`.
+- `price` (mostrado) + `stripePriceId` (cobrado): deben coincidir.
+- `image`, `hoverImage`, `images[]` (galería de la ficha), `bgColor`, `tags[]`
+  (copias de objetos de `tags.json`: `_id`, `name`, `slug`, `icon`, `color`).
+- Orden en la tienda = orden del array.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
 - `soldOut` → overlay AGOTADO, bloquea compra.
@@ -98,25 +119,26 @@ las funciones de `api/`). Cambios de schema en Sanity **requieren** además
 ## Variables de entorno
 
 Ver `.env.example`. En local usa `.env`; en Vercel deben estar configuradas:
-`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `VITE_SANITY_PROJECT_ID`,
-`VITE_SANITY_DATASET`, `VITE_SANITY_WRITE_TOKEN` (usado por el frontend para
-guardar leads de zona de reparto en Sanity — es un token con permisos de
-escritura limitados a ese uso).
+`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
+que recibe el formulario de sopas y los leads de zona de reparto) y,
+opcional, `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (hoja aparte para los leads
+de zona). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.
+
+Los leads de zona de reparto (dirección, CP, email) son datos personales:
+nunca al repo (es público) ni a logs.
 
 ## Documentación relacionada
 
 - `docs/TRASPASO.md` — accesos, secretos y verificación post-traspaso (leer primero).
 - `docs/TRACKING.md` — eventos GA4 y garantías (purchase sin duplicados).
-- `docs/INSTRUCCIONES-SANITY.md` — tareas del cliente paso a paso (CTA hero,
-  box, orden, códigos promoción, descuentos).
+- `docs/CONTEXTO-CLAUDE-DUENO.md` — contexto completo para el Claude del dueño.
 - `docs/MANUAL-DEL-NEGOCIO.md` — manual no técnico para el dueño.
 
 ## Convenciones
 
 - Contenido y comentarios de negocio: español. Commits: minúsculas, español,
   una línea describiendo el cambio.
-- Cambios visibles por el cliente en Sanity requieren **Publish** (el studio
-  avisa, pero recordarlo al probar).
+- Al tocar textos, cambiar siempre `es` y `en`.
 - Al tocar routing, actualizar también `vercel.json` (rewrites).
 - Al tocar precios/descuentos, verificar los tres puntos donde se pintan:
   grid de productos, popup de producto y carrito (todos usan `activeDiscount`).

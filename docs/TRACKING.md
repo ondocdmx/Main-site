@@ -26,7 +26,7 @@ Implementación completa en `src/analytics.ts`. Todos los eventos se envían a
 
 ```json
 {
-  "item_id": "sopa-tlalpena",          // slug de Sanity (estable y único)
+  "item_id": "sopa-tlalpena",          // slug del producto (estable y único)
   "item_name": "Sopa tlalpeña",        // título en español
   "item_category": "Sopas",            // "Sopas" | "Soupcripciones"
   "price": 180,

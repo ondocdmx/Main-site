@@ -1,0 +1,54 @@
+[
+  {
+    "_id": "HKnJcdg5mBoLDonMNgZ97k",
+    "color": "bg-ondo-green",
+    "icon": "🥦",
+    "name": {
+      "en": "Vegetarian",
+      "es": "Vegetariano"
+    },
+    "order": 1,
+    "slug": {
+      "current": "vegetariano"
+    }
+  },
+  {
+    "_id": "HKnJcdg5mBoLDonMNgZ9Gu",
+    "color": "bg-ondo-beige",
+    "icon": "🍖",
+    "name": {
+      "en": "meat",
+      "es": "carne"
+    },
+    "order": 2,
+    "slug": {
+      "current": "carne"
+    }
+  },
+  {
+    "_id": "HKnJcdg5mBoLDonMNgZ9Q4",
+    "color": "bg-ondo-orange",
+    "icon": "🌶️",
+    "name": {
+      "en": "spicy",
+      "es": "picante\n"
+    },
+    "order": 4,
+    "slug": {
+      "current": "picante"
+    }
+  },
+  {
+    "_id": "mxAS2Q3l09qdFj5vZIYCTe",
+    "color": "bg-ondo-light-green",
+    "icon": "🌿",
+    "name": {
+      "en": "Vegan",
+      "es": "Vegano"
+    },
+    "order": 4,
+    "slug": {
+      "current": "vegano"
+    }
+  }
+]

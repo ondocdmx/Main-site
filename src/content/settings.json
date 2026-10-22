@@ -1,0 +1,321 @@
+{
+  "bannerText": {
+    "en": "save up to 55% - join our SOUP-SCRIPTION!!",
+    "es": "ahorros hasta 55% - únete a la SOUP-SCRIPTIÓN!!"
+  },
+  "cartDiscount2CouponId": "C9taQCso",
+  "cartDiscount2Label": "20% descuento",
+  "cartDiscount2Min": 10,
+  "cartDiscount2Percent": 20,
+  "checkout": {
+    "en": "Go to checkout",
+    "es": "Ir a pagar"
+  },
+  "emptyCart": {
+    "en": "Your cart is empty",
+    "es": "Tu carrito está vacío"
+  },
+  "midBannerText": {
+    "en": "Order 10+ soup and save 20%!",
+    "es": "Pide 10+ sopas y ahorra 20%! "
+  },
+  "navAbout": {
+    "en": "ABOUT",
+    "es": "NOSOTROS"
+  },
+  "navShop": {
+    "en": "SHOP",
+    "es": "TIENDA"
+  },
+  "navSteps": {
+    "en": "HOW IT WORKS",
+    "es": "CÓMO FUNCIONA"
+  },
+  "navSubs": {
+    "en": "SOUPSCRIPTION",
+    "es": "SOUPSCRIPCIÓN"
+  },
+  "shippingPrice": 50,
+  "shippingStripePriceId": "prod_UUdEqDF0zlN9EI",
+  "shippingStripeProductId": "price_1TVdyM3Xzew6cmN1XeoTHlMC",
+  "showMidBanner": true,
+  "subtotal": {
+    "en": "Subtotal",
+    "es": "Subtotal"
+  },
+  "filterBestseller": {
+    "en": "Hot",
+    "es": "Caliente"
+  },
+  "filterBundle": {
+    "en": "Vegetarian",
+    "es": "Vegetariano"
+  },
+  "filterNew": {
+    "en": "Cold",
+    "es": "Frío"
+  },
+  "filterVegan": {
+    "en": "Vegan",
+    "es": "Vegano"
+  },
+  "filtersTitle": {
+    "en": "Filters",
+    "es": "Filtros"
+  },
+  "singleTab": {
+    "en": "Single Purchase",
+    "es": "Una sola compra"
+  },
+  "sortBy": {
+    "en": "Sort by",
+    "es": "Ordenar por"
+  },
+  "subscribeTab": {
+    "en": "Subscription",
+    "es": "Suscripción"
+  },
+  "showSteps": true,
+  "step1Desc": {
+    "en": "We source local, high-quality ingredients free of agrochemicals.\n\n",
+    "es": "Escogemos ingredientes de la más alta calidad y libres de agrouquímicos de proveedores locales "
+  },
+  "step1Image": "/images/cms/step1image.webp",
+  "step1Title": {
+    "en": "1. From the farm",
+    "es": "1. Desde el huerto"
+  },
+  "step2Desc": {
+    "en": "Our chefs create unique recipes inspired by both local and international culinary traditions",
+    "es": "Nuestros chefs crean recetas únicas e interpretaciones internaciones y locales\n\n"
+  },
+  "step2Image": "/images/cms/step2image.webp",
+  "step2Title": {
+    "en": "2. Professional & creative preparation",
+    "es": "2. Elaboración profesional y creativa"
+  },
+  "step3Desc": {
+    "en": "Thaw and enjoy delicious soups that nourish and restore\n\n",
+    "es": "Descongela y disfruta deliciosas sopas que nutren y restauran\n\n"
+  },
+  "step3Image": "/images/cms/step3image.webp",
+  "step3Title": {
+    "en": "3. Enjoy with confidence",
+    "es": "3. Disfruta con confianza\n"
+  },
+  "stepsTitle": {
+    "en": "Go deeper into Ondo's process",
+    "es": "Metete más profundo al proceso de Ondo"
+  },
+  "panel1BgColor": "#6ca53a",
+  "panel1CTAText": {
+    "en": "SOUPSCRIBE!",
+    "es": "¡SOUPSCRÍBEME!"
+  },
+  "panel1Eyebrow": {
+    "en": "THE ONDO CLUB",
+    "es": "El CLUB ONDO"
+  },
+  "panel1SubAccentWord": {
+    "en": "soupscription",
+    "es": "SOUPSCRIPCIÓN"
+  },
+  "panel1Subheadline": {
+    "en": "Dive into Ondo's soupscription.",
+    "es": "Échate un clavado a la soupscripción de Ondo. "
+  },
+  "panel1Tagline": {
+    "en": "The best, always in your fridge.",
+    "es": "De lo mejor, siempre en tu refri. "
+  },
+  "panel1TextColor1": "#f1f3b0",
+  "panel1TextColor2": "#e8632a",
+  "panel1TitleLine1": {
+    "en": "The ONDO",
+    "es": "LA ONDO "
+  },
+  "panel1TitleLine2": {
+    "en": "SOUP-SCRIPTION",
+    "es": "SOUP-SCRIPCIóN"
+  },
+  "panel2Benefits": [
+    {
+      "en": "Incredible discounts",
+      "es": "Increíbles descuentos",
+      "subtitleEn": "Get up to 50% off on orders",
+      "subtitleEs": "Obtén hasta 50% en pedidos"
+    },
+    {
+      "en": "Beta taster",
+      "es": "Beta taster",
+      "subtitleEn": "Try new recipes in development",
+      "subtitleEs": "Prueba recetas nuevas en producción"
+    },
+    {
+      "en": "Soup founders' club",
+      "es": "Soup founders' club",
+      "subtitleEn": "Support and shape Ondo",
+      "subtitleEs": "Apoya y dale forma a Ondo"
+    },
+    {
+      "en": "Free delivery",
+      "es": "Entrega gratis",
+      "subtitleEn": "Delivery is on us",
+      "subtitleEs": "La entrega va por nuestra cuenta"
+    },
+    {
+      "en": "Club member perks",
+      "es": "Club member perks",
+      "subtitleEn": "Swag, perks and tasty treats",
+      "subtitleEs": "Swag, perks y cositas ricas"
+    }
+  ],
+  "panel2BgColor": "#2d4a1e",
+  "panel2Eyebrow": {
+    "en": "WHAT IT'S ABOUT",
+    "es": "DE LO QUE SE TRATA"
+  },
+  "panel2HeadlineAccent": {
+    "en": "Beyond delicious.",
+    "es": "Mas allá de lo delicioso."
+  },
+  "panel2HeadlinePrimary": {
+    "en": "The benefits.",
+    "es": "Los beneficios. "
+  },
+  "panel3Eyebrow": {
+    "en": "WHO WE ARE",
+    "es": "QUIÉNES SOMOS"
+  },
+  "panel3FounderName": "Ana & Omar",
+  "panel3FounderRole": {
+    "en": "Co-founders · Ondo",
+    "es": "Cofundadores · Ondo "
+  },
+  "panel3IllustrationImage": "/images/cms/panel3illustrationimage.webp",
+  "panel3OrangeBg": "#e8632a",
+  "panel3OrangeEyebrow": {
+    "en": "YOU DECIDE",
+    "es": "TU DECIDES"
+  },
+  "panel3OrangeHeadline": {
+    "en": "WHEN YOU WANT IT MOST.",
+    "es": "CUANDO TU LO QUIERAS MAS."
+  },
+  "panel3TopBgColor": "#2d4a1e",
+  "panel4CTALink": "#about",
+  "panel4CTAText": {
+    "en": "soupscribe!",
+    "es": "¡soupscríbeme!"
+  },
+  "panel4CityLeft": {
+    "en": "SOUP FIRST",
+    "es": "SOUP FIRST"
+  },
+  "panel4CityRight": {
+    "en": "CDMX",
+    "es": "CDMX"
+  },
+  "panel4Eyebrow": {
+    "en": "OUR MISSION",
+    "es": "NUESTRA MISIÓN"
+  },
+  "panel4Quote": {
+    "en": "\"We make these soups because we believe eating well shouldn't be complicated.\"",
+    "es": "\"Hacemos estas sopas porque creemos que comer bien no debería ser complicado.\""
+  },
+  "panel4QuoteAuthor": "— Ana & Omar",
+  "panel4TextColor": "#5b9538",
+  "showManifesto": true,
+  "heroCTA": {
+    "en": "¡APAPÁCHATE!",
+    "es": "¡APAPÁCHATE!"
+  },
+  "heroImages": [
+    "/images/cms/heroimages-1.webp"
+  ],
+  "heroSub": {
+    "en": "Our Mission is to nourish body, soul, and community — in flavor, sourcing, and experience.\n\nStraight from your freezer, make any meal the best one of the day in minutes",
+    "es": "Nuestra misión es nutrir cuerpo, alma y comunidad  — en sabor, origen y experiencia. \n\n\nDesde tu congelador, resuelve cualquier apuro en solo minutos."
+  },
+  "heroTitle": {
+    "en": "soups with soul",
+    "es": "sopas apapachosas"
+  },
+  "showHero": true,
+  "aboutCTA": {
+    "en": "¡APAPÁCHATE!",
+    "es": "¡APAPÁCHATE!"
+  },
+  "aboutHeader": {
+    "en": "ABOUT",
+    "es": "ABOUT"
+  },
+  "aboutSub": {
+    "en": "Ondo is a soup-first brand in Mexico City, creating soulful, seasonal soups that blend tradition and innovation. Our Mission is to nourish body and community with depth — in flavor, sourcing, and experience.",
+    "es": "Ondo es una marca soup-first en Ciudad de México, creando sopas con alma, de temporada, que mezclan tradición e innovación. Nuestra misión es nutrir cuerpo y comunidad con profundidad — en sabor, origen y experiencia."
+  },
+  "aboutTitle": {
+    "en": "Nutrition for a\nrushed world.",
+    "es": "Nutrición para un\nmundo acelerado."
+  },
+  "amountMensual10": 2850,
+  "amountMensual4": 1275,
+  "amountMensual6": 1800,
+  "amountQuincenal10": 5400,
+  "amountQuincenal4": 2400,
+  "amountQuincenal6": 3450,
+  "introBenefits": [
+    {
+      "en": "Incredible discounts - get up to 50% off on orders",
+      "es": "Increíbles descuentos - Obtén hasta 50% en pedidos"
+    },
+    {
+      "en": "Beta tasters - Try hot new recipes before anyone else",
+      "es": "Beta taster - Prueba recetas nuevas en producción"
+    },
+    {
+      "en": "Soup founders' club - Support and help shape Ondo",
+      "es": "Soup founders' club - Apoya y dale forma a Ondo"
+    },
+    {
+      "en": "Free delivery - Delivery is on us",
+      "es": "Entrega gratis - La entrega va por nuestra cuenta"
+    },
+    {
+      "en": "Club member perks - Swag, perks and other nice things",
+      "es": "Club member perks - Swag, perks y cositas ricas"
+    }
+  ],
+  "introCtaText": {
+    "en": "Get started",
+    "es": "Comenzar"
+  },
+  "introDescription": {
+    "en": "Dive into the SOUP-SCRIPTION!",
+    "es": "Échate un clavado a la SOUP-SCRIPCIÓN!\n"
+  },
+  "introTitle": {
+    "en": "Join the Ondo Club",
+    "es": "Únete al Club de Ondo"
+  },
+  "ondoChoiceImage": "/images/cms/ondochoiceimage.webp",
+  "priceMensual10": "ahorros al 45%",
+  "priceMensual4": "ahorros al 29%",
+  "priceMensual6": "ahorros al 38%",
+  "priceQuincenal10": "ahorros al 53%",
+  "priceQuincenal4": "ahorros al 38%",
+  "priceQuincenal6": "ahorros al 43%",
+  "productIdMensual10": "price_1TQYxd3Xzew6cmN11VB3NK66",
+  "productIdMensual4": "price_1TQYwy3Xzew6cmN1nDiT6SS5",
+  "productIdMensual6": "price_1TWVm63Xzew6cmN1hB7PvfxK",
+  "productIdQuincenal10": "price_1TQYvk3Xzew6cmN10EkAry8Z",
+  "productIdQuincenal4": "price_1TQYuE3Xzew6cmN1Pk0W5lPO",
+  "productIdQuincenal6": "price_1TW0MY3Xzew6cmN1hgpyTZtn",
+  "contactEmail": "ola@ondoclub.com",
+  "contactPhone": "+52 55 8525 9797",
+  "copyrightText": "© 2026 ONDO. All rights reserved.",
+  "footerLogo": "/images/cms/footerlogo.webp",
+  "instagramUrl": "https://instagram.com/ondo_cdmx",
+  "showInstagram": true
+}

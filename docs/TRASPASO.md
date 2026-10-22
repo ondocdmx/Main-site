@@ -16,15 +16,11 @@ que dar, en qué orden, y cómo arrancar a desarrollar el primer día.
 |---|---|---|---|
 | 1 | **GitHub** | Propiedad del repo `ondocdmx/Main-site` (o admin al dueño) | Repo → Settings → Transfer ownership |
 | 2 | **Vercel** | Propiedad del proyecto (hospedaje y deploys) | Proyecto → Settings → General → Transfer project. Las variables de entorno viajan con el proyecto: revisarlas tras transferir |
-| 3 | **Sanity** | **No se cede**: es cuenta del desarrollador anterior y se elimina tras migrar el contenido al repo (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §6) | — |
+| 3 | **Sanity** | **No se cede**: el contenido ya vive en el repo (`src/content/`). El proyecto Sanity del desarrollador anterior se borra cuando la migración esté en producción y verificada (ver `docs/CONTEXTO-CLAUDE-DUENO.md` §6) | — |
 | 4 | **Stripe** | La cuenta ya es del negocio; verificar que el dueño tiene acceso de admin | dashboard.stripe.com → Settings → Team |
 | 5 | **Dominio** `ondoclub.com` | Acceso al registrador donde se compró | DNS apunta a Vercel — no tocar sin saber |
 | 6 | **Google Analytics** | Admin de la propiedad GA4 | analytics.google.com → Admin → gestión de accesos |
 | 7 | **Secretos** (`.env`) | Los valores de abajo, por gestor de contraseñas | **Nunca** por chat o email en claro |
-
-Para publicar el panel de administración (`ondo.sanity.studio`) hace falta
-además `npx sanity login` (una sola vez) con una cuenta con acceso al
-proyecto Sanity.
 
 ---
 
@@ -33,7 +29,8 @@ proyecto Sanity.
 | Variable | De dónde sale |
 |---|---|
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys. Para pruebas usar la `sk_test_...` |
-| `VITE_SANITY_WRITE_TOKEN` | sanity.io/manage → API → Tokens (solo permiso de crear `deliveryLead`). Sin él, la web funciona pero no guarda leads de zona de reparto |
+| `GOOGLE_SHEETS_WEBHOOK_URL` | URL del Apps Script (Google Sheets) que recibe el formulario "¿Qué sopa amas más?" y los leads de zona de reparto. Opcional en local |
+| `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` | Opcional: hoja aparte para los leads de zona de reparto. Si no existe, van a `GOOGLE_SHEETS_WEBHOOK_URL` con `source: "Zona de reparto"` |
 | `FRONTEND_URL` | `http://localhost:3000` en local |
 | `PORT` | Puerto del server local opcional (3001) |
 
@@ -41,6 +38,11 @@ proyecto Sanity.
 
 - `STRIPE_SECRET_KEY` — la **live** (`sk_live_...`)
 - `FRONTEND_URL` — `https://www.ondoclub.com`
+- `GOOGLE_SHEETS_WEBHOOK_URL` — Apps Script de Google Sheets (formulario de
+  sopas + leads de zona de reparto). Opcional: `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`
+  para mandar los leads de zona a otra hoja.
+- Tras la migración se **borran** `VITE_SANITY_PROJECT_ID`,
+  `VITE_SANITY_DATASET` y `VITE_SANITY_WRITE_TOKEN` (ya no se usan).
 
 ---
 
@@ -53,11 +55,6 @@ git clone https://github.com/ondocdmx/Main-site.git ondo && cd ondo
 npm install
 cp .env.example .env    # rellenar con los valores de la sección 2
 npm run dev             # web en http://localhost:3000
-
-# Panel de administración (local):
-cd studio && npm install && npm run dev
-# Publicar cambios del panel:
-npm run deploy          # requiere `npx sanity login` antes (una vez)
 ```
 
 Flujo de trabajo diario:
@@ -66,10 +63,9 @@ Flujo de trabajo diario:
    validar de verdad.
 2. Commit: minúsculas, español, una línea describiendo el cambio.
 3. `git push origin main` → **Vercel despliega solo** (1-2 min).
-4. Si se tocó el schema de Sanity (`studio/schemaTypes/`) → además
-   `cd studio && npm run deploy`.
-5. Cambios de contenido (textos, sopas, fotos) no requieren code: directo
-   en `ondo.sanity.studio` + Publish.
+4. Cambios de contenido (textos, sopas, fotos, zonas de reparto): se editan
+   los JSON de `src/content/` y las fotos de `public/images/cms/`, y se
+   publican igual que el código (commit + push).
 
 El mapa completo del proyecto está en `AGENTS.md` (léelo primero).
 
@@ -79,8 +75,8 @@ El mapa completo del proyecto está en `AGENTS.md` (léelo primero).
 
 1. **Web**: hacer un push de prueba → vercel.com/dashboard muestra deploy
    "Ready" y `ondoclub.com` carga bien.
-2. **Panel**: abrir `ondo.sanity.studio`, cambiar un texto, Publish, verlo
-   reflejado en la web.
+2. **Contenido**: cambiar un texto en `src/content/settings.json`, push, y
+   verlo reflejado en la web.
 3. **Pago**: en local con la `sk_test_...`, completar una compra con la
    tarjeta de test `4242 4242 4242 4242` (cualquier fecha futura) → llega
    al checkout de Stripe.
@@ -93,5 +89,8 @@ El mapa completo del proyecto está en `AGENTS.md` (léelo primero).
 
 - `sk_live_...` y tokens: solo por gestor de contraseñas.
 - Si se rota la llave de Stripe: actualizar `.env` local + Vercel + redeploy.
-- `VITE_SANITY_WRITE_TOKEN` viaja en el código del navegador por diseño
-  (tiene permisos mínimos), pero no exhibirlo en docs públicas.
+- Cualquier variable `VITE_*` acaba en el código del navegador: nunca poner
+  ahí nada secreto.
+- Los tokens de Sanity que existieron (incluido el que estuvo escrito en
+  `migrate-to-sanity.mjs`, visible en el historial del repo público) deben
+  revocarse al borrar el proyecto Sanity.

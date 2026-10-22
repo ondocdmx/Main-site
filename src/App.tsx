@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
-import { client, writeClient, urlFor } from './sanityClient';
+// Contenido de la web (textos, sopas, fotos, zonas de reparto): se edita en estos JSON.
+// Exportado de Sanity en la migración (scripts/export-sanity.mjs); ver AGENTS.md.
+import settingsContent from './content/settings.json';
+import productsContent from './content/products.json';
+import tagsContent from './content/tags.json';
+import deliveryZonesContent from './content/deliveryZones.json';
 import {
   pushEvent, pushEcommerce, productToItem, planItem,
   captureAttribution, saveCheckoutSnapshot, readCheckoutSnapshot, firePurchaseOnce,
@@ -142,126 +147,17 @@ const t = {
 // Ruta del funnel de suscripción (usada en nav, routing y vercel.json)
 const SOUPSCRIPTION_ROUTE = '/soupscripciones';
 
-// GROQ query — fetch products with dereferenced tags
-const PRODUCTS_QUERY = `*[_type == "product"] | order(order asc) {
-  _id,
-  "slug": slug.current,
-  title,
-  purchaseType,
-  price,
-  ingredients,
-  // Tolerancia histórica: el campo del schema llegó a llamarse stripeProductId.
-  // Se acepta cualquiera de los dos; coalesce evita "precio no configurado".
-  "stripePriceId": coalesce(stripePriceId, stripeProductId),
-  onlySubscriptions,
-  excludeFromFunnel,
-  soldOut,
-  description,
-  tagline,
-  bgColor,
-  image,
-  hoverImage,
-  images,
-  "tags": tags[]->{ _id, name, slug, icon, color }
-}`;
-
-// ── Mock products (fallback when Sanity has no data) ──
-const MOCK_TAG_VEG = { _id: 'mt1', name: { es: 'Vegetariano', en: 'Vegetarian' }, slug: { current: 'vegetariano' }, icon: '🥦', color: 'bg-ondo-green' };
-const MOCK_TAG_HOT = { _id: 'mt2', name: { es: 'Caliente', en: 'Hot' }, slug: { current: 'caliente' }, icon: '🔥', color: 'bg-red-500' };
-const MOCK_TAG_COLD = { _id: 'mt3', name: { es: 'Frío', en: 'Cold' }, slug: { current: 'frio' }, icon: '❄️', color: 'bg-sky-400' };
-const MOCK_TAG_VEGAN = { _id: 'mt4', name: { es: 'Vegano', en: 'Vegan' }, slug: { current: 'vegano' }, icon: '🌿', color: 'bg-ondo-light-green' };
-
-const MOCK_PRODUCTS = [
-  {
-    _id: 'mock-1',
-    slug: 'crema-de-elote',
-    title: { es: 'Crema de Elote', en: 'Corn Cream Soup' },
-    purchaseType: 'subscription',
-    price: 89,
-    tagline: { es: 'Dulce y ahumado, como debe ser.', en: 'Sweet and smoky, as it should be.' },
-    description: { es: 'Crema suave de elote asado con un toque de chile poblano y crema mexicana. Reconfortante y lista en 5 minutos.', en: 'Smooth roasted corn cream with poblano chile and Mexican crema. Comforting and ready in 5 minutes.' },
-    bgColor: 'bg-amber-50',
-    image: '/images/ondo-113.JPG',
-    hoverImage: '/images/ondo-051.JPG',
-    tags: [MOCK_TAG_VEG],
-  },
-  {
-    _id: 'mock-2',
-    slug: 'pozole-rojo',
-    title: { es: 'Pozole Rojo', en: 'Red Pozole' },
-    purchaseType: 'subscription',
-    price: 115,
-    tagline: { es: 'La fiesta en tu mesa.', en: 'The party at your table.' },
-    description: { es: 'Caldo rojo intenso con maíz cacahuazintle, chile guajillo y todo el sabor de la tradición mexicana.', en: 'Intense red broth with hominy corn, guajillo chile and all the flavor of Mexican tradition.' },
-    bgColor: 'bg-red-50',
-    image: '/images/ondo-070.JPG',
-    hoverImage: '/images/ondo-113.JPG',
-    tags: [MOCK_TAG_HOT],
-  },
-  {
-    _id: 'mock-3',
-    slug: 'sopa-de-lima-yucateca',
-    title: { es: 'Sopa de Lima Yucateca', en: 'Yucatan Lime Soup' },
-    purchaseType: 'subscription',
-    price: 99,
-    tagline: { es: 'El sur en cada sorbo.', en: 'The south in every sip.' },
-    description: { es: 'Caldo ligero con pollo deshebrado, chile xcatic, lima yucateca y tortilla crujiente.', en: 'Light broth with shredded chicken, xcatic chile, Yucatan lime and crispy tortilla.' },
-    bgColor: 'bg-lime-50',
-    image: '/images/ondo-051.JPG',
-    hoverImage: '/images/ondo-070.JPG',
-    tags: [MOCK_TAG_HOT],
-  },
-  {
-    _id: 'mock-4',
-    slug: 'gazpacho-verde',
-    title: { es: 'Gazpacho Verde', en: 'Green Gazpacho' },
-    purchaseType: 'single',
-    price: 79,
-    tagline: { es: 'Frío y lleno de vida.', en: 'Cold and full of life.' },
-    description: { es: 'Pepino, aguacate, espinaca y limón batidos en frío. Perfecto para el verano.', en: 'Cucumber, avocado, spinach and lemon blended cold. Perfect for summer.' },
-    bgColor: 'bg-green-50',
-    image: '/images/green-soup.png',
-    hoverImage: '/images/green-soup.png',
-    tags: [MOCK_TAG_VEGAN, MOCK_TAG_COLD],
-  },
-  {
-    _id: 'mock-5',
-    slug: 'caldo-tlalpeno',
-    title: { es: 'Caldo Tlalpeño', en: 'Tlalpeño Broth' },
-    purchaseType: 'single',
-    price: 105,
-    tagline: { es: 'Humo, garbanzo y corazón.', en: 'Smoke, chickpea and heart.' },
-    description: { es: 'Caldo de pollo ahumado con garbanzos, chile chipotle, epazote y ejotes. Un clásico chilango con alma.', en: 'Smoked chicken broth with chickpeas, chipotle chile and green beans. A soulful classic.' },
-    bgColor: 'bg-orange-50',
-    image: '/images/ondo-070.JPG',
-    hoverImage: '/images/ondo-113.JPG',
-    tags: [MOCK_TAG_HOT],
-  },
-  {
-    _id: 'mock-6',
-    slug: 'vichyssoise-de-huitlacoche',
-    title: { es: 'Vichyssoise de Huitlacoche', en: 'Huitlacoche Vichyssoise' },
-    purchaseType: 'single',
-    price: 125,
-    tagline: { es: 'Lujo mexicano frío.', en: 'Cold Mexican luxury.' },
-    description: { es: 'Crema fría de papa y poro realzada con el intenso sabor terroso del huitlacoche.', en: 'Cold cream of potato and leek elevated with the intense earthy flavor of huitlacoche.' },
-    bgColor: 'bg-stone-100',
-    image: '/images/ondo-051.JPG',
-    hoverImage: '/images/green-soup.png',
-    tags: [MOCK_TAG_VEGAN, MOCK_TAG_COLD],
-  },
-];
-
 export default function App() {
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const [purchaseMode, setPurchaseMode] = useState<'subscription' | 'single'>('subscription');
   const [cart, setCart] = useState<{product: any, quantity: number}[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [settings, setSettings] = useState<any>(null);
+  const settings: any = settingsContent;
+  // Pantalla de carga de ~1 s (diseño). El scroll de /sopas espera a que termine.
   const [isLoading, setIsLoading] = useState(true);
-  // Products state: starts with mock data, replaced only if Sanity returns real products
-  const [displayProducts, setDisplayProducts] = useState<any[]>(MOCK_PRODUCTS);
+  // Productos ya ordenados por `order` (asc)
+  const displayProducts: any[] = productsContent;
 
   // Delivery modal
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
@@ -271,7 +167,7 @@ export default function App() {
   const [notifyEmail, setNotifyEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [pendingProduct, setPendingProduct] = useState<any>(null);
-  const [deliveryZones, setDeliveryZones] = useState<any>(null);
+  const deliveryZones: any = deliveryZonesContent;
   const hasValidatedDelivery = typeof window !== 'undefined' && localStorage.getItem('ondo_delivery_validated') === 'true';
 
 
@@ -285,7 +181,7 @@ export default function App() {
   const popupTouchStartX = useRef<number | null>(null);
 
   // Tags / filtering
-  const [tags, setTags] = useState<any[]>([]);
+  const tags: any[] = tagsContent;
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
   // Subscription Popup / Funnel
@@ -404,57 +300,8 @@ export default function App() {
   }, [route, isLoading]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [results] = await Promise.all([
-          Promise.all([
-            client.fetch('*[_id == "siteSettings"][0]'),
-            client.fetch('*[_id == "productSettings"][0]'),
-            client.fetch('*[_id == "processSettings"][0]'),
-            client.fetch('*[_id == "manifestoSettings"][0]'),
-            client.fetch('*[_id == "popupSettings"][0]'),
-            client.fetch('*[_id == "heroSettings"][0]'),
-            client.fetch('*[_id == "aboutSettings"][0]'),
-            client.fetch('*[_id == "funnelSettings"][0]'),
-            client.fetch('*[_id == "footerSettings"][0]'),
-            client.fetch('*[_type == "productTag"] | order(order asc)'),
-            client.fetch('*[_type == "deliveryZones"][0]'),
-            client.fetch(PRODUCTS_QUERY),
-          ]),
-          new Promise(resolve => setTimeout(resolve, 1000)),
-        ]);
-        const [siteSettings, productSettings, processSettings, manifestoSettings, popupSettings, heroSettings, aboutSettings, funnelSettingsData, footerSettingsData, fetchedTags, fetchedZones, fetchedProducts] = results;
-        console.log('[Sanity] processSettings raw:', processSettings);
-        console.log('[Sanity] siteSettings raw:', siteSettings);
-        const merged = {
-          ...siteSettings,
-          ...productSettings,
-          ...processSettings,
-          ...manifestoSettings,
-          ...popupSettings,
-          ...heroSettings,
-          ...aboutSettings,
-          ...funnelSettingsData,
-          ...footerSettingsData,
-        };
-        console.log('[Sanity] merged settings step1Title:', merged.step1Title);
-        setSettings(merged);
-        setTags(fetchedTags || []);
-        setDeliveryZones(fetchedZones || null);
-        // Only replace mock data if Sanity actually has products
-        if (Array.isArray(fetchedProducts) && fetchedProducts.length > 0) {
-          console.log('[SANITY IDs]', fetchedProducts.map((p: any) => `${p.title?.es}: ${p.stripePriceId}`));
-          setDisplayProducts(fetchedProducts);
-        }
-        // If 0 real products: keep showing mock data (already initialized)
-      } catch (e) {
-        console.error('Sanity fetch error, mock data will stay:', e);
-        // Mock data remains unchanged on error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+    const timer = setTimeout(() => setIsLoading(false), 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const getSetting = (key: string, defaultVal: any = null) => {
@@ -478,12 +325,8 @@ export default function App() {
 
   const products = displayProducts;
 
-  // Helper: resolve image src from Sanity image or plain URL string
-  const resolveImage = (img: any): string => {
-    if (!img) return '';
-    if (typeof img === 'string') return img;
-    try { return urlFor(img).width(800).url(); } catch { return ''; }
-  };
+  // Helper: ruta de imagen (texto, ej. /images/cms/foto.webp) o '' si no hay
+  const resolveImage = (img: any): string => (typeof img === 'string' ? img : '');
 
   const filteredProducts = activeFilters.length === 0
     ? products
@@ -494,7 +337,7 @@ export default function App() {
       );
 
   const ONDO_CHOICE_ID = '__ondo_choice__';
-  // Funnel: todos los productos salvo los excluidos desde Sanity (campo excludeFromFunnel — ej. el box de 5 sopas)
+  // Funnel: todos los productos salvo los excluidos (campo excludeFromFunnel en products.json — ej. el box de 5 sopas)
   const subscriptionProds = displayProducts.filter((p: any) => !p.excludeFromFunnel);
   const funnelTotal: number = (Object.values(funnelSoupQty) as number[]).reduce((a, b) => a + b, 0);
   const funnelRemaining: number = (funnelQuantity as number) - funnelTotal;
@@ -539,7 +382,7 @@ export default function App() {
     document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // CTA gestionado desde Sanity: URL vacía -> fallback (funnel o #shop)
+  // CTA desde settings.json (heroCTALink): URL vacía -> fallback (funnel o #shop)
   const handleCTA = (url: string | null | undefined, fallback: () => void) => {
     const link = (url || '').trim();
     if (!link) { fallback(); return; }
@@ -671,21 +514,21 @@ export default function App() {
     doAddToCart(product);
   };
 
+  const saveDeliveryLead = (lead: { address: string; postalCode: string; isServiceable: boolean; email?: string }) => {
+    fetch('/api/submit-delivery-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead),
+    }).catch(e => console.error('Lead save error', e));
+  };
+
   const checkDelivery = async () => {
     setDeliveryStatus('checking');
     const allowed: string[] = deliveryZones?.allowedPostalCodes || [];
     const isOk = allowed.length === 0 || allowed.map((c: string) => c.trim()).includes(deliveryPostal.trim());
     setDeliveryStatus(isOk ? 'ok' : 'nok');
-    // Save lead to Sanity
-    try {
-      await writeClient.create({
-        _type: 'deliveryLead',
-        address: deliveryAddress,
-        postalCode: deliveryPostal,
-        isServiceable: isOk,
-        createdAt: new Date().toISOString(),
-      });
-    } catch (e) { console.error('Lead save error', e); }
+    // Guarda el lead (dirección + CP) en Google Sheets; si falla no bloquea al cliente
+    saveDeliveryLead({ address: deliveryAddress, postalCode: deliveryPostal, isServiceable: isOk });
     if (isOk) {
       localStorage.setItem('ondo_delivery_validated', 'true');
       localStorage.setItem('ondo_delivery_address', deliveryAddress);
@@ -694,11 +537,8 @@ export default function App() {
   };
 
   const submitNotifyEmail = async () => {
-    try {
-      await writeClient.patch(
-        { query: `*[_type == "deliveryLead" && postalCode == "${deliveryPostal}" && !defined(email)][0]` }
-      ).set({ email: notifyEmail }).commit();
-    } catch (e) { console.error(e); }
+    // Fuera de zona: el cliente deja su correo para que le avisemos (nueva fila con email)
+    saveDeliveryLead({ address: deliveryAddress, postalCode: deliveryPostal, isServiceable: false, email: notifyEmail });
     setEmailSent(true);
   };
 
@@ -744,9 +584,9 @@ export default function App() {
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Descuentos por volumen — dinámicos desde Sanity (Site Settings).
+  // Descuentos por volumen — desde src/content/settings.json (cartDiscount1/2*).
   // Un escalón con porcentaje vacío/0 está DESACTIVADO: no se muestra en
-  // precios, carrito ni avisos (así se elimina desde Sanity).
+  // precios, carrito ni avisos (así se elimina un escalón).
   const makeDiscountTier = (n: 1 | 2) => {
     const pct = getSetting(`cartDiscount${n}Percent`, null) as number | null;
     if (!pct || pct <= 0) return null;
@@ -780,12 +620,9 @@ export default function App() {
     setIsCheckingOut(true);
     try {
       const discountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
-      const freshProducts = await client.fetch(PRODUCTS_QUERY);
-      console.log('[CHECKOUT IDs]', freshProducts.map((p: any) => `${p.title?.es}: ${p.stripePriceId}`));
-      const cartItems = cart.map((item: { product: any; quantity: number }) => {
-        const fresh = freshProducts.find((p: any) => p._id === item.product._id);
-        return { productId: (fresh || item.product).stripePriceId, quantity: item.quantity };
-      });
+      const cartItems = cart.map((item: { product: any; quantity: number }) => ({
+        productId: item.product.stripePriceId, quantity: item.quantity,
+      }));
       const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
@@ -1072,7 +909,7 @@ export default function App() {
         {/* Render hero images centered in the right half */}
         <div className="absolute bottom-0 right-0 flex items-end justify-center pointer-events-none z-0 h-[45vh] w-full md:inset-y-0 md:h-auto md:w-1/2 md:items-center pr-4 md:pr-12 lg:pr-20 opacity-30 md:opacity-100 transition-opacity">
             <img
-              src={getSetting('heroImages', null)?.[0] ? urlFor(getSetting('heroImages', null)[0]).url() : '/images/green-soup.png'}
+              src={resolveImage(getSetting('heroImages', null)?.[0]) || '/images/green-soup.png'}
               alt="Hero Soup"
               className="h-full w-auto object-contain md:h-auto md:w-[90%] lg:w-[85%] md:max-h-[90vh]"
             />
@@ -1100,7 +937,7 @@ export default function App() {
       {/* Products Section */}
       <section className="py-20 px-6 bg-ondo-beige" id="shop">
          <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
-            {/* Sidebar Filters — dynamic from Sanity productTag */}
+            {/* Sidebar Filters — tags de src/content/tags.json */}
              <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
                <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
                  {getSettingText('filtersTitle', content.filtersTitle)}
@@ -1437,7 +1274,7 @@ export default function App() {
                     style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
                  {/* Full-panel image, not clipped */}
                  <img
-                   src={getSetting('panel3IllustrationImage', null) ? urlFor(getSetting('panel3IllustrationImage', null)).url() : '/images/Group 1597787.png'}
+                   src={resolveImage(getSetting('panel3IllustrationImage', null)) || '/images/Group 1597787.png'}
                    alt=""
                    className="absolute inset-0 w-full h-full object-cover object-top"
                  />
@@ -1510,7 +1347,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step1Image', null) ? urlFor(getSetting('step1Image', null)).url() : '/images/ondo-113.JPG'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step1Image', null)) || '/images/ondo-113.JPG'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step1Title', content.step1Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step1Desc', content.step1Desc)}</p>
@@ -1518,7 +1355,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step2Image', null) ? urlFor(getSetting('step2Image', null)).url() : '/images/ondo-051.JPG'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step2Image', null)) || '/images/ondo-051.JPG'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step2Title', content.step2Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step2Desc', content.step2Desc)}</p>
@@ -1526,7 +1363,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={getSetting('step3Image', null) ? urlFor(getSetting('step3Image', null)).url() : '/images/ondo-070.JPG'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step3Image', null)) || '/images/ondo-070.JPG'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step3Title', content.step3Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step3Desc', content.step3Desc)}</p>
@@ -1572,7 +1409,7 @@ export default function App() {
       <footer className="bg-ondo-beige text-ondo-black py-20 px-6 border-t border-black/5">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
            <div className="flex flex-col items-center md:items-start gap-4">
-             <img src={getSetting('footerLogo', null) ? urlFor(getSetting('footerLogo')).url() : '/images/ondo-logo-orange.png'} alt="ONDO Logo" className="h-12 object-contain" />
+             <img src={resolveImage(getSetting('footerLogo', null)) || '/images/ondo-logo-orange.png'} alt="ONDO Logo" className="h-12 object-contain" />
              <div className="text-gray-500 font-body text-sm font-medium">
                {getSetting('copyrightText', '© 2026 ONDO. All rights reserved.')}
              </div>
@@ -1961,7 +1798,7 @@ export default function App() {
             {/* ── PASO 1: INTRO — estética sección About ────────────────── */}
             {funnelStep === 'intro' && (
               <div className="flex flex-col md:flex-row min-h-[480px]">
-                {/* Imagen lateral (si existe en Sanity) */}
+                {/* Imagen lateral (si existe introImage en settings.json) */}
                 {getSetting('introImage') && (
                   <div className="md:w-2/5 shrink-0 overflow-hidden">
                     <img
