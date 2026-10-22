@@ -26,6 +26,19 @@
     }
   },
   {
+    "_id": "pescadoTagOndo2026Oct22",
+    "color": "bg-sky-700",
+    "icon": "🐟",
+    "name": {
+      "en": "fish",
+      "es": "pescado"
+    },
+    "order": 3,
+    "slug": {
+      "current": "pescado"
+    }
+  },
+  {
     "_id": "HKnJcdg5mBoLDonMNgZ9Q4",
     "color": "bg-ondo-orange",
     "icon": "🌶️",

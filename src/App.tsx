@@ -1026,9 +1026,9 @@ export default function App() {
                         </div>
                       )}
                       {!product.soldOut && product.onlySubscriptions && (
-                        <div className="absolute inset-0 bg-ondo-orange/80 flex flex-col items-center justify-center z-10 gap-2">
-                          <Sparkles className="w-4 h-4 text-white" />
-                          <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] text-center leading-tight px-3">
+                        <div className="absolute top-2 left-2 bg-ondo-orange flex items-center z-10 gap-1.5 px-2.5 py-1.5 shadow-md">
+                          <Sparkles className="w-3.5 h-3.5 text-white" />
+                          <span className="font-title text-white font-bold uppercase tracking-widest text-[10px] leading-tight">
                             {lang === 'es' ? 'SOLO SUSCRIPTORES' : 'SUBSCRIBERS ONLY'}
                           </span>
                         </div>

@@ -108,15 +108,15 @@
     },
     "tags": [
       {
-        "_id": "HKnJcdg5mBoLDonMNgZ9Gu",
-        "color": "bg-ondo-beige",
-        "icon": "🍖",
+        "_id": "pescadoTagOndo2026Oct22",
+        "color": "bg-sky-700",
+        "icon": "🐟",
         "name": {
-          "en": "meat",
-          "es": "carne"
+          "en": "fish",
+          "es": "pescado"
         },
         "slug": {
-          "current": "carne"
+          "current": "pescado"
         }
       }
     ],
