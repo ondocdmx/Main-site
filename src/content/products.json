@@ -82,6 +82,50 @@
     }
   },
   {
+    "_id": "426a504e-5a54-4615-b7a3-298fd51de371",
+    "bgColor": null,
+    "description": {
+      "es": "Un chowder inventado para superar a todos los demás.",
+      "en": "A chowder invented to outdo all the others."
+    },
+    "excludeFromFunnel": false,
+    "hoverImage": "/images/cms/chowder-bacalao-hoverimage.webp",
+    "image": "/images/cms/chowder-bacalao-image.webp",
+    "images": [],
+    "ingredients": {
+      "es": "Bacalao, maíz",
+      "en": "Cod, corn"
+    },
+    "onlySubscriptions": true,
+    "price": 150,
+    "purchaseType": "subscription",
+    "slug": "chowder-bacalao",
+    "soldOut": false,
+    "stripePriceId": "price_1TQYWw3Xzew6cmN1N4xx8ZH5",
+    "tagline": {
+      "es": "Un chowder como ningún otro | 500 ml",
+      "en": "A chowder like no other | 500 ml"
+    },
+    "tags": [
+      {
+        "_id": "HKnJcdg5mBoLDonMNgZ9Gu",
+        "color": "bg-ondo-beige",
+        "icon": "🍖",
+        "name": {
+          "en": "meat",
+          "es": "carne"
+        },
+        "slug": {
+          "current": "carne"
+        }
+      }
+    ],
+    "title": {
+      "es": "chowder de bacalao",
+      "en": "cod chowder"
+    }
+  },
+  {
     "_id": "8c2ee7fc-c28e-4ee1-b22f-dbe13d0025aa",
     "bgColor": null,
     "description": {
