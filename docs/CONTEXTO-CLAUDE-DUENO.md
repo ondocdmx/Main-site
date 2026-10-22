@@ -28,6 +28,9 @@ Fecha del traspaso: octubre 2026. Desarrollador anterior: Jesús Valenzuela
   y `public/images/cms/`). Antes venían de Sanity (cuenta de Jesús); la
   migración está hecha (sección 6). El dueño cambia el contenido
   pidiéndotelo a ti.
+- Los **leads** (contactos que deja la gente) llegan a su Google Sheets
+  **"Customer Database"**. Si pregunta por leads, léelos de ahí con el
+  conector de Google Drive (sección 14).
 - El dinero vive en **Stripe** (cuenta del negocio). La web nunca decide
   cuánto se cobra: solo dice a Stripe *qué precio* (Price ID) cobrar.
 
@@ -307,8 +310,9 @@ de la tienda):
   y queda versionado en Git (se puede deshacer cualquier cambio).
 - **Privacidad**: el dataset de Sanity era de lectura pública y contenía los
   "leads" de zona de reparto (direcciones y códigos postales de clientes).
-  Ahora esos leads van a Google Sheets (`api/submit-delivery-lead.ts`) y los
-  21 históricos se entregaron al dueño en un CSV **fuera del repo**.
+  Ahora esos leads van a Google Sheets (`api/submit-delivery-lead.ts`,
+  sección 14) y los 21 históricos se entregaron al dueño en un CSV **fuera
+  del repo**.
 - **Seguridad**: `migrate-to-sanity.mjs` tenía un token de Sanity escrito en
   el código (repo público). El archivo se borró, pero sigue en el historial
   de Git: **el token debe revocarse** (lo hace Jesús al borrar el proyecto).
@@ -334,12 +338,8 @@ de la tienda):
 
 ### 6.3 Pendiente antes/después del merge
 
-- **Google Sheets**: el Apps Script de `GOOGLE_SHEETS_WEBHOOK_URL` recibe
-  `{ soupIdea, email, timestamp, source }`. Los leads de zona mandan
-  `{ postalCode, address, isServiceable, email, timestamp, source: "Zona de reparto" }`.
-  Comprobar que el script guarda esos campos (o crear una hoja/script aparte
-  y poner su URL en `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`). Probar un CP
-  válido e inválido en la preview y ver que llega la fila.
+- **Leads**: comprobar que llega a la hoja una fila de zona de reparto
+  (sección 14.3).
 - **Vercel**: borrar `VITE_SANITY_PROJECT_ID`, `VITE_SANITY_DATASET` y
   `VITE_SANITY_WRITE_TOKEN` (Settings → Environment Variables).
 - Probar en la preview el checkout de carrito y suscripción hasta la página
@@ -509,3 +509,56 @@ compáralo antes de fiarte).
 6. Recomiéndale hacer el repo privado (sección 9).
 7. Con la migración en producción y verificada, avísale de que puede pedir
    a Jesús que borre Sanity (sección 6.4).
+
+---
+
+## 14. Leads: dónde están y cómo consultarlos
+
+### 14.1 Dónde viven
+
+Todos los leads llegan al Google Sheets **"Customer Database"** del Drive del
+dueño (`ondocdmx@gmail.com`), vía un Apps Script cuya URL está en
+`GOOGLE_SHEETS_WEBHOOK_URL` (Vercel). El script escribe 4 columnas:
+
+| Columna | Formulario de sopas (`api/submit-soup-lead.ts`) | Zona de reparto (`api/submit-delivery-lead.ts`) |
+|---|---|---|
+| Timestamp | fecha (UTC, ISO) | fecha (UTC, ISO) |
+| Email | email del cliente | email solo si estaba fuera de zona y pidió aviso |
+| Sopa que ama | la sopa que pidió | detalle: `CP 11800 · EN ZONA · <dirección>` |
+| Fuente | `¿Qué sopa amas más?` | `Zona de reparto` |
+
+Los leads de zona reutilizan la columna "Sopa que ama" para no tener que
+cambiar el script. Si el dueño quiere columnas propias, la función ya manda
+también `postalCode`, `address` e `isServiceable`: bastaría con que el
+script (Extensiones → Apps Script en la hoja) los escriba, o crear una hoja
+aparte y poner su URL en `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL`.
+
+Los 21 leads históricos (de Sanity, mayo-julio 2026) no están en la hoja: se
+le entregaron al dueño en un CSV. Si quiere, puede pegarlos en la hoja.
+
+### 14.2 Cómo responder al dueño
+
+Para leer la hoja necesitas el **conector de Google Drive** en Claude,
+conectado con la cuenta `ondocdmx@gmail.com`. Si no lo tiene, pídele que lo
+active (Ajustes → Conectores → Google Drive). Busca el archivo por su
+nombre, "Customer Database".
+
+Preguntas típicas: "¿cuántos leads hubo este mes?", "¿desde qué códigos
+postales nos piden y no llegamos?" (filtra Fuente = Zona de reparto, `FUERA
+DE ZONA`, agrupa por CP), "¿qué sopas piden más?", "dame los correos de
+quienes pidieron aviso". Responde con números concretos y, si ayuda, una
+tabla. Si muchos CP fuera de zona se repiten, propón ampliar
+`src/content/deliveryZones.json`.
+
+Son datos personales: nunca los copies al repo (es público), a issues, PRs
+ni a ningún sitio público.
+
+### 14.3 Si dejan de llegar leads
+
+- Comprobar que `GOOGLE_SHEETS_WEBHOOK_URL` sigue en Vercel y que el Apps
+  Script sigue desplegado como Web App (si alguien lo vuelve a desplegar,
+  la URL cambia y hay que actualizarla en Vercel + redeploy).
+- Prueba: en www.ondoclub.com, añadir una sopa al carrito, escribir un CP y
+  ver que aparece la fila con Fuente "Zona de reparto".
+- Los errores salen en los logs de Vercel de `api/submit-*-lead`.
+

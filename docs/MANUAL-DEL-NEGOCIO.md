@@ -101,7 +101,13 @@ IA — entienda todo rápidamente.
 Cuando alguien escribe su código postal para ver si repartimos en su zona
 (y, si está fuera, deja su correo), esos datos llegan a tu **Google
 Sheets**, igual que las respuestas del formulario "¿Qué sopa amas más?".
-Te sirven para saber dónde te piden reparto.
+Te sirven para saber dónde te piden reparto. La hoja se llama **"Customer
+Database"** (en tu Google Drive).
+
+No hace falta que la abras: **pregúntaselo a tu Claude** (con el conector
+de Google Drive activado). Por ejemplo: "¿cuántos leads hubo este mes?",
+"¿desde qué códigos postales nos piden y no llegamos?", "¿qué sopas piden
+más?".
 
 ---
 

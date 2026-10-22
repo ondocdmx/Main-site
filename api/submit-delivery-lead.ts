@@ -26,13 +26,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Recorte defensivo: el endpoint es público
   const clip = (v: unknown, max: number) => String(v ?? '').slice(0, max);
 
+  // El Apps Script de la hoja "Customer Database" solo escribe 4 columnas:
+  // Timestamp (timestamp) · Email (email) · Sopa que ama (soupIdea) · Fuente (source).
+  // El detalle del lead va en `soupIdea` para que quede legible sin tocar el script.
+  const detail = [
+    `CP ${clip(postalCode, 10)}`,
+    isServiceable ? 'EN ZONA' : 'FUERA DE ZONA',
+    clip(address, 300).replace(/\s+/g, ' ').trim(),
+  ].filter(Boolean).join(' · ');
+
   const payload = JSON.stringify({
-    postalCode: clip(postalCode, 10),
-    address: clip(address, 300),
-    isServiceable: !!isServiceable,
+    soupIdea: detail,
     email: clip(email, 200),
     timestamp: new Date().toISOString(),
     source: 'Zona de reparto',
+    // Campos sueltos por si algún día el script los guarda en columnas propias
+    postalCode: clip(postalCode, 10),
+    address: clip(address, 300),
+    isServiceable: !!isServiceable,
   });
 
   try {

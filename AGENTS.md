@@ -124,6 +124,9 @@ que recibe el formulario de sopas y los leads de zona de reparto) y,
 opcional, `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (hoja aparte para los leads
 de zona). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.
 
+Leads: hoja "Customer Database" del Drive del dueño; formato y cómo
+consultarlos en `docs/CONTEXTO-CLAUDE-DUENO.md` §14.
+
 Los leads de zona de reparto (dirección, CP, email) son datos personales:
 nunca al repo (es público) ni a logs.
 
