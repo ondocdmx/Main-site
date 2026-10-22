@@ -55,18 +55,42 @@ historial. Nunca escribas secretos en archivos del repo (ver sección 9).
 
 ## 2. Cómo se conecta el dueño contigo
 
-### 2.1 Opción recomendada: Claude Code (app de escritorio, pestaña "Code", o claude.ai/code)
+### 2.1 Cómo se conecta (Claude Code en la nube)
 
-1. El dueño abre Claude → **Code**.
-2. Conecta su cuenta de GitHub (`ondocdmx`) y elige el repo **`ondocdmx/Main-site`**.
-   - En la versión web/nube (claude.ai/code) no necesita instalar nada en su
-     computadora: tú trabajas en una copia en la nube, creas una rama y
-     abres un Pull Request.
-   - En la app de escritorio con carpeta local necesita: Git, Node 20+, y
-     clonar el repo (`git clone https://github.com/ondocdmx/Main-site.git`).
-     Si elige esta vía, guíalo paso a paso y haz tú los comandos.
-3. Al abrir el repo, Claude Code carga `CLAUDE.md` → `AGENTS.md`
-   automáticamente. Este documento está enlazado desde ahí.
+Requisito: plan de Claude **Pro, Max o Team** (el plan gratis no incluye
+Claude Code). No hace falta instalar nada en su computadora.
+
+1. Entrar a **claude.ai/code** (o la app de escritorio → pestaña **Code** →
+   elegir **Cloud**, o la app del celular → pestaña **Code**).
+2. **Conectar GitHub**: claude.ai/code lo pide al entrar → autorizar con la
+   cuenta `ondocdmx`. Cuando lo ofrezca, **instalar la Claude GitHub App** en
+   la cuenta `ondocdmx` (dar acceso a `Main-site`). Es imprescindible si el
+   repo pasa a privado (recomendado, sección 9). Directo:
+   https://github.com/apps/claude/installations/new
+3. El entorno **Default** se crea solo (Pro/Max). Sirve tal cual: tiene
+   acceso a npm, y no necesita claves (los secretos viven en Vercel).
+4. En el selector de repositorio (debajo del cuadro de texto) elegir
+   **`ondocdmx/Main-site`**, rama `main`. Modo de permisos: **Plan** si
+   quiere revisar antes qué vas a hacer, o **Auto**/**Accept edits**.
+5. Escribir la petición. Primera vez: *"Lee docs/CONTEXTO-CLAUDE-DUENO.md y
+   haz el checklist de la primera sesión."*
+
+Cómo vuelven los cambios a la web: trabajas en una copia en la nube y
+**subes una rama** a GitHub. El dueño pulsa **Create PR** en la vista de
+cambios → en el PR de GitHub aparece la **Preview de Vercel** → si le gusta,
+pulsa **Merge pull request** en GitHub → Vercel publica en 1-2 min.
+
+`CLAUDE.md` → `AGENTS.md` se cargan solos al abrir el repo, y desde ahí
+llegas a este documento.
+
+Alternativa (solo si el dueño quiere trabajar en su propia computadora):
+app de escritorio → Code → **Local**; necesita Git, Node 20+ y clonar el
+repo (`git clone https://github.com/ondocdmx/Main-site.git`). Guíalo y haz
+tú los comandos.
+
+El **chat normal** de Claude (sin "Code") puede leer el repo si conecta
+GitHub como conector, pero no publica cambios: para editar la web, siempre
+Claude Code.
 
 ### 2.2 Flujo de trabajo estándar (úsalo SIEMPRE salvo indicación contraria)
 
