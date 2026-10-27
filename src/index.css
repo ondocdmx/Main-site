@@ -112,3 +112,22 @@ h6 {
     transform: translateX(-50%);
   }
 }
+/* Fundido de la foto del hero hacia el fondo beige */
+.hero-fade-y {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 30%, #000 100%);
+}
+.hero-fade-x {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+@media (min-width: 768px) {
+  .hero-fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 86%, transparent 100%);
+  }
+  .hero-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 25%, #000 55%);
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 25%, #000 55%);
+  }
+}

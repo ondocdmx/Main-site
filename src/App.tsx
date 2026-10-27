@@ -903,13 +903,16 @@ export default function App() {
       <section className="relative overflow-hidden flex items-center h-[calc(100vh-98px)] bg-ondo-beige pb-10">
         <div className="absolute inset-0 bg-ondo-beige/10 z-0 transition-opacity duration-300"></div>
         
-        {/* Render hero images centered in the right half */}
-        <div className="absolute bottom-0 right-0 flex items-end justify-center pointer-events-none z-0 h-[45vh] w-full md:inset-y-0 md:h-auto md:w-1/2 md:items-center pr-4 md:pr-12 lg:pr-20 opacity-30 md:opacity-100 transition-opacity">
+        {/* Foto del hero: llena el lado derecho y se funde con el beige (máscaras
+            horizontal + vertical anidadas). En móvil va abajo, tenue, tras el texto. */}
+        <div className="hero-fade-y absolute bottom-0 right-0 pointer-events-none z-0 h-[50vh] w-full md:inset-y-0 md:h-auto md:w-[58%] opacity-35 md:opacity-100 transition-opacity">
+          <div className="hero-fade-x h-full w-full">
             <img
               src={resolveImage(getSetting('heroImages', null)?.[0]) || '/images/green-soup.png'}
-              alt="Hero Soup"
-              className="h-full w-auto object-contain md:h-auto md:w-[90%] lg:w-[85%] md:max-h-[90vh]"
+              alt="Sopas ONDO en el congelador"
+              className="h-full w-full object-cover object-center"
             />
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-16 h-full flex flex-col justify-center">
