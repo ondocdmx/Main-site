@@ -82,50 +82,6 @@
     }
   },
   {
-    "_id": "426a504e-5a54-4615-b7a3-298fd51de371",
-    "bgColor": null,
-    "description": {
-      "es": "Un chowder inventado para superar a todos los demás.",
-      "en": "A chowder invented to outdo all the others."
-    },
-    "excludeFromFunnel": false,
-    "hoverImage": "/images/cms/chowder-bacalao-hoverimage.webp",
-    "image": "/images/cms/chowder-bacalao-image.webp",
-    "images": [],
-    "ingredients": {
-      "es": "Bacalao, maíz",
-      "en": "Cod, corn"
-    },
-    "onlySubscriptions": true,
-    "price": 150,
-    "purchaseType": "subscription",
-    "slug": "chowder-bacalao",
-    "soldOut": false,
-    "stripePriceId": "price_1TQYWw3Xzew6cmN1N4xx8ZH5",
-    "tagline": {
-      "es": "Un chowder como ningún otro | 500 ml",
-      "en": "A chowder like no other | 500 ml"
-    },
-    "tags": [
-      {
-        "_id": "pescadoTagOndo2026Oct22",
-        "color": "bg-sky-700",
-        "icon": "🐟",
-        "name": {
-          "en": "fish",
-          "es": "pescado"
-        },
-        "slug": {
-          "current": "pescado"
-        }
-      }
-    ],
-    "title": {
-      "es": "chowder de bacalao",
-      "en": "cod chowder"
-    }
-  },
-  {
     "_id": "8c2ee7fc-c28e-4ee1-b22f-dbe13d0025aa",
     "bgColor": null,
     "description": {
@@ -308,6 +264,143 @@
     }
   },
   {
+    "_id": "1c5a3f6f-cdd2-4f80-90b5-2cd295cd37dd",
+    "bgColor": null,
+    "description": {
+      "en": "There's something about putting an eggplant directly into flames; No pan, no oven, nothing in between. It that feels primal and honest. The skin burns. The flesh surrenders. What comes out is smoky, silky, transformed into something you can't replicate any other way.\n\nThat's where everything begins. The lentils, yogurt, lemon, cumin, paprika, and herb oil simply accompany something that already arrived whole.\n\nAs simple as that. As impossible as that.  \n—— * contains: dairy",
+      "es": "Hay algo con meter una berenjena directamente al fuego. Sin sartén, sin horno, sin intermediarios... se siente primitivo y honesto. La cáscara se quema. La pulpa se rinde. Lo que sale es ahumado, suave, transformado en algo que no se puede replicar de otra manera.\n\nDe ahí viene todo. Las lentejas, el yogurt, el limón, el comino, el pimentón y el aceite de hierbas no hacen más que acompañar algo que ya llegó completo.\nTan simple como eso. Tan imposible como eso. —— * contiene: leche"
+    },
+    "excludeFromFunnel": null,
+    "hoverImage": "/images/cms/berenjena-al-fuego-hoverimage.webp",
+    "image": "/images/cms/berenjena-al-fuego-image.webp",
+    "images": [
+      "/images/cms/berenjena-al-fuego-images-1.webp"
+    ],
+    "ingredients": {
+      "en": "Aubergine, lentils, yoghurt, lemon, olive oil, garlic, onions, cumin, paprika",
+      "es": "Berenjena, lentejas, yogurt, limon eureka, aceite de oliva, cebolla, comino, paprika"
+    },
+    "onlySubscriptions": false,
+    "price": 125,
+    "purchaseType": "single",
+    "slug": "berenjena-al-fuego",
+    "soldOut": false,
+    "stripePriceId": "price_1TWQ4o3Xzew6cmN1SZ5X8Sqj",
+    "tagline": {
+      "en": "burned to perfection | 500 ml",
+      "es": "quemada y perfecta | 500 ml "
+    },
+    "tags": [
+      {
+        "_id": "HKnJcdg5mBoLDonMNgZ97k",
+        "color": "bg-ondo-green",
+        "icon": "🥦",
+        "name": {
+          "en": "Vegetarian",
+          "es": "Vegetariano"
+        },
+        "slug": {
+          "current": "vegetariano"
+        }
+      }
+    ],
+    "title": {
+      "en": "eggplant n' lentils",
+      "es": "berenjena y lenteja"
+    }
+  },
+  {
+    "_id": "gk8n1Y45KbppZEAYCEfG7O",
+    "bgColor": "bg-green-50",
+    "description": {
+      "en": "Green, herby, honest. Pea base with broccoli, quelites, spinach, chard, mint and nasturtium. The kind of soup that makes you feel like you did something right today.\n\n——*Contains cashew.",
+      "es": "Verde, herboso, honesto. Chícharo, brócoli, quelites, espinacas, acelga, menta y capuchinas. El tipo de sopa que te hace sentir que hiciste algo bien hoy. \n\n——*Contiene: nuez de la india."
+    },
+    "excludeFromFunnel": null,
+    "hoverImage": "/images/cms/mega-verde-hoverimage.webp",
+    "image": "/images/cms/ondo-box-images-5.webp",
+    "images": [
+      "/images/cms/mega-verde-images-1.webp",
+      "/images/cms/mega-verde-images-2.webp"
+    ],
+    "ingredients": {
+      "en": "Peas, broccoli, spinach, wild greens, kale, celery, onion, mint, parsley, vegetable broth, cashews",
+      "es": "Chícharo, brócoli, espinacas, quelites, kale, apio, cebolla, menta, perejil, caldo vegetal, nuez de la India"
+    },
+    "onlySubscriptions": null,
+    "price": 125,
+    "purchaseType": "single",
+    "slug": "mega-verde",
+    "soldOut": null,
+    "stripePriceId": "price_1TQYFh3Xzew6cmN1DvHLvB5H",
+    "tagline": {
+      "en": "A green bombshell | 500 ml",
+      "es": "Una bomba boscosa | 500 ml"
+    },
+    "tags": [
+      {
+        "_id": "mxAS2Q3l09qdFj5vZIYCTe",
+        "color": "bg-ondo-light-green",
+        "icon": "🌿",
+        "name": {
+          "en": "Vegan",
+          "es": "Vegano"
+        },
+        "slug": {
+          "current": "vegano"
+        }
+      }
+    ],
+    "title": {
+      "en": "mega green",
+      "es": "mega verde"
+    }
+  },
+  {
+    "_id": "426a504e-5a54-4615-b7a3-298fd51de371",
+    "bgColor": null,
+    "description": {
+      "es": "Un chowder inventado para superar a todos los demás.",
+      "en": "A chowder invented to outdo all the others."
+    },
+    "excludeFromFunnel": false,
+    "hoverImage": "/images/cms/chowder-bacalao-hoverimage.webp",
+    "image": "/images/cms/chowder-bacalao-image.webp",
+    "images": [],
+    "ingredients": {
+      "es": "Bacalao, maíz",
+      "en": "Cod, corn"
+    },
+    "onlySubscriptions": true,
+    "price": 150,
+    "purchaseType": "subscription",
+    "slug": "chowder-bacalao",
+    "soldOut": false,
+    "stripePriceId": "price_1TQYWw3Xzew6cmN1N4xx8ZH5",
+    "tagline": {
+      "es": "Un chowder como ningún otro | 500 ml",
+      "en": "A chowder like no other | 500 ml"
+    },
+    "tags": [
+      {
+        "_id": "pescadoTagOndo2026Oct22",
+        "color": "bg-sky-700",
+        "icon": "🐟",
+        "name": {
+          "en": "fish",
+          "es": "pescado"
+        },
+        "slug": {
+          "current": "pescado"
+        }
+      }
+    ],
+    "title": {
+      "es": "chowder de bacalao",
+      "en": "cod chowder"
+    }
+  },
+  {
     "_id": "HKnJcdg5mBoLDonMNgZAde",
     "bgColor": "bg-red-50",
     "description": {
@@ -366,99 +459,6 @@
     "title": {
       "en": "pro-gazpacho",
       "es": "pro-gazpacho"
-    }
-  },
-  {
-    "_id": "gk8n1Y45KbppZEAYCEfG7O",
-    "bgColor": "bg-green-50",
-    "description": {
-      "en": "Green, herby, honest. Pea base with broccoli, quelites, spinach, chard, mint and nasturtium. The kind of soup that makes you feel like you did something right today.\n\n——*Contains cashew.",
-      "es": "Verde, herboso, honesto. Chícharo, brócoli, quelites, espinacas, acelga, menta y capuchinas. El tipo de sopa que te hace sentir que hiciste algo bien hoy. \n\n——*Contiene: nuez de la india."
-    },
-    "excludeFromFunnel": null,
-    "hoverImage": "/images/cms/mega-verde-hoverimage.webp",
-    "image": "/images/cms/ondo-box-images-5.webp",
-    "images": [
-      "/images/cms/mega-verde-images-1.webp",
-      "/images/cms/mega-verde-images-2.webp"
-    ],
-    "ingredients": {
-      "en": "Peas, broccoli, spinach, wild greens, kale, celery, onion, mint, parsley, vegetable broth, cashews",
-      "es": "Chícharo, brócoli, espinacas, quelites, kale, apio, cebolla, menta, perejil, caldo vegetal, nuez de la India"
-    },
-    "onlySubscriptions": null,
-    "price": 125,
-    "purchaseType": "single",
-    "slug": "mega-verde",
-    "soldOut": null,
-    "stripePriceId": "price_1TQYFh3Xzew6cmN1DvHLvB5H",
-    "tagline": {
-      "en": "A green bombshell | 500 ml",
-      "es": "Una bomba boscosa | 500 ml"
-    },
-    "tags": [
-      {
-        "_id": "mxAS2Q3l09qdFj5vZIYCTe",
-        "color": "bg-ondo-light-green",
-        "icon": "🌿",
-        "name": {
-          "en": "Vegan",
-          "es": "Vegano"
-        },
-        "slug": {
-          "current": "vegano"
-        }
-      }
-    ],
-    "title": {
-      "en": "mega green",
-      "es": "mega verde"
-    }
-  },
-  {
-    "_id": "1c5a3f6f-cdd2-4f80-90b5-2cd295cd37dd",
-    "bgColor": null,
-    "description": {
-      "en": "There's something about putting an eggplant directly into flames; No pan, no oven, nothing in between. It that feels primal and honest. The skin burns. The flesh surrenders. What comes out is smoky, silky, transformed into something you can't replicate any other way.\n\nThat's where everything begins. The lentils, yogurt, lemon, cumin, paprika, and herb oil simply accompany something that already arrived whole.\n\nAs simple as that. As impossible as that.  \n—— * contains: dairy",
-      "es": "Hay algo con meter una berenjena directamente al fuego. Sin sartén, sin horno, sin intermediarios... se siente primitivo y honesto. La cáscara se quema. La pulpa se rinde. Lo que sale es ahumado, suave, transformado en algo que no se puede replicar de otra manera.\n\nDe ahí viene todo. Las lentejas, el yogurt, el limón, el comino, el pimentón y el aceite de hierbas no hacen más que acompañar algo que ya llegó completo.\nTan simple como eso. Tan imposible como eso. —— * contiene: leche"
-    },
-    "excludeFromFunnel": null,
-    "hoverImage": "/images/cms/berenjena-al-fuego-hoverimage.webp",
-    "image": "/images/cms/berenjena-al-fuego-image.webp",
-    "images": [
-      "/images/cms/berenjena-al-fuego-images-1.webp"
-    ],
-    "ingredients": {
-      "en": "Aubergine, lentils, yoghurt, lemon, olive oil, garlic, onions, cumin, paprika",
-      "es": "Berenjena, lentejas, yogurt, limon eureka, aceite de oliva, cebolla, comino, paprika"
-    },
-    "onlySubscriptions": false,
-    "price": 125,
-    "purchaseType": "single",
-    "slug": "berenjena-al-fuego",
-    "soldOut": false,
-    "stripePriceId": "price_1TWQ4o3Xzew6cmN1SZ5X8Sqj",
-    "tagline": {
-      "en": "burned to perfection | 500 ml",
-      "es": "quemada y perfecta | 500 ml "
-    },
-    "tags": [
-      {
-        "_id": "HKnJcdg5mBoLDonMNgZ97k",
-        "color": "bg-ondo-green",
-        "icon": "🥦",
-        "name": {
-          "en": "Vegetarian",
-          "es": "Vegetariano"
-        },
-        "slug": {
-          "current": "vegetariano"
-        }
-      }
-    ],
-    "title": {
-      "en": "eggplant n' lentils",
-      "es": "berenjena y lenteja"
     }
   },
   {
