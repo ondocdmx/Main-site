@@ -61,8 +61,11 @@ Where things live:
   Charged on every home-delivery order. There is no free-shipping threshold today.
 * Pickup (Roma Norte): free, no postal-code check.
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
-  by the API as Stripe coupon `C9taQCso`. `cartDiscount1` is not set (off). The cart counts items, so
-  the 5-soup box counts as 1 (correct, per owner). Today the 20% coupon also discounts the box's price.
+  by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is not set (off).
+  Items with `excludeFromVolumeDiscount: true` in products.json (the box) count as 1 item toward the 10
+  but never get the 20%. Stripe can't exclude products from a coupon, only include them, so the coupon
+  lists every individual soup. ADDING A NEW SOUP: it must be on that coupon, or Stripe charges it at full
+  price while the cart shows −20%. Coupons can't be edited: create a new one and update the ID.
 * Promo codes: when no volume discount applies, the cart checkout shows Stripe's promo-code field.
   The subscription checkout always shows it. ONDOFIRST does NOT exist in Stripe yet (owner, 27 Oct 2026);
   it only appears in a code comment and an unused default banner text.
@@ -109,7 +112,7 @@ Decisions already made:
   Session line items), calculated on the server from products.json, never from prices sent by the
   browser. Each line points at the soup's existing Stripe Product (`price_data.product`), so sales keep
   rolling up per soup in Stripe's reports. Test mode uses its own copy of the catalog, with the IDs
-  chosen by an environment variable. Coupons (e.g. the 20% `C9taQCso`) also need test-mode copies.
+  chosen by an environment variable. Coupons (e.g. the 20% volume coupon) also need test-mode copies.
   Subscriptions keep their Price IDs until Phase 5.
 * Business rules live in the existing `settings.json`, `products.json` and `deliveryZones.json`.
   Do not create a new config file.
