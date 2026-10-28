@@ -10,7 +10,7 @@ import {
   pushEvent, pushEcommerce, productToItem, planItem,
   captureAttribution, saveCheckoutSnapshot, readCheckoutSnapshot, firePurchaseOnce,
 } from './analytics';
-import { priceCart, discountPercentFor, applyPercent } from './commerce/priceCart';
+import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
 
 function getNextMonday(): Date {
@@ -590,6 +590,11 @@ export default function App() {
   const productDiscountPct = (product: any) => discountPercentFor(product, pricing);
   const productUnitPrice = (product: any) => applyPercent(toCents(product.price), productDiscountPct(product));
   const pricedLine = (productId: string) => pricing.lines.find(l => l.productId === productId);
+  // Aviso "te falta poco" bajo las tarjetas y en el popup de producto.
+  const nudge = cartNudge(pricing);
+  const nudgeText = !nudge ? '' : nudge.type === 'freeShipping'
+    ? (lang === 'es' ? `¡Añade ${nudge.count} más y tu envío es gratis!` : `Add ${nudge.count} more for free shipping!`)
+    : (lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`);
   const freeShippingProgress = pricing.freeShippingReason
     ? 100
     : Math.min((pricing.soupCount / (pricing.soupCount + pricing.soupsToFreeShipping)) * 100, 100);
@@ -1082,10 +1087,10 @@ export default function App() {
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
-                         {pricing.soupsToBulkDiscount === 1 && (
+                         {nudge && !product.soldOut && !product.onlySubscriptions && (
                            <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
                              <Sparkles className="w-3.5 h-3.5" />
-                             <span>{lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`}</span>
+                             <span>{nudgeText}</span>
                            </div>
                          )}
                       </div>
@@ -1740,6 +1745,12 @@ export default function App() {
                 >
                   {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
                 </button>
+              )}
+              {nudge && !selectedProduct.soldOut && !selectedProduct.onlySubscriptions && (
+                <p className="mt-3 text-ondo-orange flex items-center gap-1.5 text-[13px] font-body font-semibold">
+                  <Sparkles className="w-4 h-4" />
+                  <span>{nudgeText}</span>
+                </p>
               )}
             </div>
           </div>

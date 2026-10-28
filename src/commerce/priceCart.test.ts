@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { priceCart, type CartItem, type PricedProduct } from './priceCart.js';
+import { cartNudge, priceCart, type CartItem, type PricedProduct } from './priceCart.js';
 import { COMMERCE } from './config.js';
 
 const veg: PricedProduct = { _id: 'veg', price: 125 };
@@ -104,5 +104,28 @@ describe('priceCart', () => {
   it('rechaza cantidades inválidas', () => {
     expect(() => priceCart([soups(-1)])).toThrow();
     expect(() => priceCart([soups(1.5)])).toThrow();
+  });
+});
+
+describe('cartNudge (aviso en la tienda)', () => {
+  it('no avisa con el carrito vacío ni lejos del envío gratis (4 sopas)', () => {
+    expect(cartNudge(priceCart([]))).toBeNull();
+    expect(cartNudge(priceCart([soups(4)]))).toBeNull();
+  });
+  it('5 sopas: faltan 2 para envío gratis', () => {
+    expect(cartNudge(priceCart([soups(5)]))).toEqual({ type: 'freeShipping', count: 2 });
+  });
+  it('6 sopas: falta 1 para envío gratis', () => {
+    expect(cartNudge(priceCart([soups(6)]))).toEqual({ type: 'freeShipping', count: 1 });
+  });
+  it('7 a 8 sopas: ya tiene envío gratis, sin aviso', () => {
+    expect(cartNudge(priceCart([soups(7)]))).toBeNull();
+    expect(cartNudge(priceCart([soups(8)]))).toBeNull();
+  });
+  it('9 sopas: falta 1 para el 20%', () => {
+    expect(cartNudge(priceCart([soups(9)]))).toEqual({ type: 'bulk', count: 1 });
+  });
+  it('caja + 5 sopas: el envío ya es gratis, sin aviso', () => {
+    expect(cartNudge(priceCart([{ product: box, quantity: 1 }, soups(5)]))).toBeNull();
   });
 });

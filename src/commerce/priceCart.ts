@@ -107,3 +107,15 @@ export function priceCart(
     soupsToBulkDiscount: bulkOn ? Math.max(0, config.bulkDiscountMinItems - itemCount) : 0,
   };
 }
+
+export type CartNudge = { type: 'freeShipping' | 'bulk'; count: number } | null;
+
+// Aviso en la tienda cuando falta poco para un beneficio: envío gratis desde
+// `shippingWithin` sopas de distancia; el 20% cuando falta 1 artículo.
+export function cartNudge(pricing: CartPricing, shippingWithin = 2): CartNudge {
+  if (pricing.soupsToFreeShipping > 0 && pricing.soupsToFreeShipping <= shippingWithin) {
+    return { type: 'freeShipping', count: pricing.soupsToFreeShipping };
+  }
+  if (pricing.soupsToBulkDiscount === 1) return { type: 'bulk', count: 1 };
+  return null;
+}
