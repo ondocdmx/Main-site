@@ -111,11 +111,15 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
     if (slot && !postalValid) document.getElementById('cart-postal')?.focus({ preventScroll: true });
   }
 
-  const hasBox = pricing.freeShippingReason === 'box';
+  // Barra en dos tramos: hasta el envío gratis cuenta pesos; después cuenta artículos hacia el 20%.
   const bulkOn = COMMERCE.bulkDiscountPercent > 0;
-  const barMax = bulkOn ? COMMERCE.bulkDiscountMinItems : COMMERCE.freeShippingMinSoups;
-  const barFill = Math.min(pricing.itemCount / barMax, 1) * 100;
-  const markerAt = (COMMERCE.freeShippingMinSoups / barMax) * 100;
+  const towardShipping = !pricing.freeShippingReason;
+  const barFill = towardShipping
+    ? Math.min(pricing.subtotal / COMMERCE.freeShippingMinAmount, 1) * 100
+    : bulkOn ? Math.min(pricing.itemCount / COMMERCE.bulkDiscountMinItems, 1) * 100 : 100;
+  const barGoal = towardShipping
+    ? `${formatMXN(COMMERCE.freeShippingMinAmount)} · ${es ? 'envío gratis' : 'free shipping'}`
+    : bulkOn ? `${COMMERCE.bulkDiscountMinItems} ${es ? 'sopas' : 'soups'} · ${COMMERCE.bulkDiscountPercent}% ${es ? 'menos' : 'off'}` : '';
   const dateText = formatDeliveryDate(deliveryDate, lang);
 
   return (
@@ -145,27 +149,13 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
           </div>
         ) : (
           <>
-            {/* Barra: envío gratis a 7 sopas, 20% a 10 artículos */}
+            {/* Barra: envío gratis por monto, luego 20% por artículos */}
             <div className="px-4 pb-4 border-b border-brand-ink/10">
               <p className="font-body font-semibold text-[15px] mb-2" aria-live="polite">{progressMessage(pricing, lang)}</p>
-              <div className="relative h-2.5 rounded-full bg-brand-cream">
+              <div className="h-2.5 rounded-full bg-brand-cream">
                 <div className="h-full rounded-full bg-brand-mid transition-all duration-500" style={{ width: `${barFill}%` }} />
-                {bulkOn && !hasBox && (
-                  <div className="absolute -top-1 w-[3px] h-[18px] bg-brand-ink rounded" style={{ left: `calc(${markerAt}% - 1px)` }} aria-hidden />
-                )}
               </div>
-              {bulkOn && (
-                <div className="relative h-5 mt-1 font-body text-[12px] text-brand-ink/75">
-                  {!hasBox && (
-                    <span className="absolute -translate-x-full pr-2 whitespace-nowrap" style={{ left: `${markerAt}%` }}>
-                      {es ? `${COMMERCE.freeShippingMinSoups} sopas · envío gratis` : `${COMMERCE.freeShippingMinSoups} soups · free shipping`}
-                    </span>
-                  )}
-                  <span className="absolute right-0 whitespace-nowrap">
-                    {es ? `${COMMERCE.bulkDiscountMinItems} · ${COMMERCE.bulkDiscountPercent}% menos` : `${COMMERCE.bulkDiscountMinItems} · ${COMMERCE.bulkDiscountPercent}% off`}
-                  </span>
-                </div>
-              )}
+              {barGoal && <p className="mt-1 text-right font-body text-[12px] text-brand-ink/75">{barGoal}</p>}
             </div>
 
             {/* Sopas + entrega (se desplaza); totales y botón quedan fijos abajo */}

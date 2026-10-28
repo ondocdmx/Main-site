@@ -22,24 +22,33 @@ export function cartTitle(p: Pick<CartPricing, 'soupCount' | 'itemCount'>, lang:
   return `${lang === 'es' ? 'Tu carrito' : 'Your cart'} · ${parts.filter(Boolean).join(lang === 'es' ? ' y ' : ' and ')}`;
 }
 
-// Mensaje sobre la barra de progreso (envío gratis a 7 sopas, 20% a 10 artículos).
+// Mensaje sobre la barra de progreso: primero el envío gratis (por monto), luego el 20% (por artículos).
 export function progressMessage(p: CartPricing, lang: Lang = 'es'): string {
   const pct = COMMERCE.bulkDiscountPercent;
-  const bulkDone = pct > 0 && p.soupsToBulkDiscount === 0 && p.discountType === 'bulk';
+  const bulkDone = pct > 0 && p.discountType === 'bulk';
   const toBulk = pct > 0 && !bulkDone ? p.soupsToBulkDiscount : 0;
-  if (lang === 'en') {
-    if (!p.freeShippingReason) return `${plural(p.soupsToFreeShipping, 'more soup', 'more soups')} for free shipping`;
-    const shipping = p.freeShippingReason === 'box' ? 'Your box includes free shipping' : 'You have free shipping';
-    if (bulkDone) return `You have free shipping and ${pct}% off`;
-    return toBulk ? `${shipping}. ${toBulk} more for ${pct}% off` : shipping;
-  }
   if (!p.freeShippingReason) {
-    return p.soupsToFreeShipping === 1 ? 'Te falta 1 sopa para envío gratis' : `Te faltan ${p.soupsToFreeShipping} sopas para envío gratis`;
+    const oneSoup = p.itemCount > 0 && p.amountToFreeShipping <= COMMERCE.cheapestSoupPrice;
+    if (lang === 'en') return oneSoup ? 'Add 1 more soup for free shipping' : `${formatMXN(p.amountToFreeShipping)} to go for free shipping`;
+    return oneSoup ? 'Agrega 1 sopa más y tu envío es gratis' : `Te faltan ${formatMXN(p.amountToFreeShipping)} para envío gratis`;
+  }
+  if (lang === 'en') {
+    if (bulkDone) return `You have free shipping and ${pct}% off`;
+    return toBulk ? `You have free shipping. ${toBulk} more for ${pct}% off` : 'You have free shipping';
   }
   if (bulkDone) return `Tienes envío gratis y ${pct}% menos`;
-  const shipping = p.freeShippingReason === 'box' ? 'Tu caja incluye envío gratis' : 'Ya tienes envío gratis';
-  if (!toBulk) return shipping;
-  return `${shipping}. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
+  if (!toBulk) return 'Ya tienes envío gratis';
+  return `Ya tienes envío gratis. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
+}
+
+// Línea bajo el precio de la caja: "+ envío, o gratis si agregas 1 sopa". Vacío si la caja sola ya llega.
+export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es'): string {
+  const gap = COMMERCE.freeShippingMinAmount - boxPriceCents;
+  if (gap <= 0) return '';
+  const n = Math.ceil(gap / COMMERCE.cheapestSoupPrice);
+  return lang === 'es'
+    ? `+ envío, o gratis si agregas ${n === 1 ? '1 sopa' : `${n} sopas`}`
+    : `+ shipping, or free if you add ${n === 1 ? '1 soup' : `${n} soups`}`;
 }
 
 export type CheckoutBlocker = 'slot' | 'postal' | 'outOfZone' | 'slotAndPostal' | null;

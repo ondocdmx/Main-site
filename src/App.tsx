@@ -13,6 +13,7 @@ import {
 import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
 import { formatDeliveryDate, nextDeliveryDate } from './commerce/delivery';
+import { boxShippingNote } from './commerce/cartCopy';
 import CartDrawer, { type CheckoutRequest, type CheckoutResult } from './components/CartDrawer';
 import OrderSuccess, { type OrderSummary } from './components/OrderSuccess';
 
@@ -577,7 +578,7 @@ export default function App() {
   // Aviso "te falta poco" bajo las tarjetas y en el popup de producto.
   const nudge = cartNudge(pricing);
   const nudgeText = !nudge ? '' : nudge.type === 'freeShipping'
-    ? (lang === 'es' ? `¡Añade ${nudge.count} más y tu envío es gratis!` : `Add ${nudge.count} more for free shipping!`)
+    ? (lang === 'es' ? '¡Agrega 1 sopa más y tu envío es gratis!' : 'Add 1 more soup for free shipping!')
     : (lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`);
   const handleCartCheckout = async ({ slot, postal, deliveryDate }: CheckoutRequest): Promise<CheckoutResult> => {
     const genericError = lang === 'es' ? 'No pudimos abrir el pago. Inténtalo de nuevo.' : "We couldn't open checkout. Please try again.";
@@ -889,6 +890,9 @@ export default function App() {
                           </div>
                         ) : (
                           <span className="text-ondo-green">${product.price?.toFixed(2)}</span>
+                        )}
+                        {product.isBox && boxShippingNote(toCents(product.price), lang) && (
+                          <p className="mt-1 font-semibold text-[13px] text-brand-deep">{boxShippingNote(toCents(product.price), lang)}</p>
                         )}
                       </div>
                       <div className="mt-auto" onClick={e => e.stopPropagation()}>
@@ -1426,6 +1430,9 @@ export default function App() {
                     <span className="text-ondo-green">${selectedProduct.price?.toFixed(2)}</span>
                   )}
                 </div>
+                {selectedProduct.isBox && boxShippingNote(toCents(selectedProduct.price), lang) && (
+                  <p className="-mt-3 mb-5 font-body font-semibold text-[15px] text-brand-deep">{boxShippingNote(toCents(selectedProduct.price), lang)}</p>
+                )}
 
                 {/* Description */}
                 {selectedProduct.description && (

@@ -50,12 +50,17 @@ describe('api/create-cart-checkout', () => {
     expect(p.discounts).toBeUndefined();
   });
 
-  it('7 sopas y caja sola: envío $0', async () => {
-    await call({ items: [{ id: VEG, quantity: 7 }] });
+  it('6 vegetarianas ($750): envío $0', async () => {
+    await call({ items: [{ id: VEG, quantity: 6 }] });
     expect(shippingAmount()).toBe(0);
-    expect(params().metadata.free_shipping_reason).toBe('minSoups');
-    create.mockClear();
+    expect(params().metadata.free_shipping_reason).toBe('minAmount');
+  });
+
+  it('caja sola ($600): envío $50; caja + 1 sopa ($725): $0', async () => {
     await call({ items: [{ id: BOX, quantity: 1 }] });
+    expect(shippingAmount()).toBe(5000);
+    create.mockClear();
+    await call({ items: [{ id: BOX, quantity: 1 }, { id: VEG, quantity: 1 }] });
     expect(shippingAmount()).toBe(0);
   });
 

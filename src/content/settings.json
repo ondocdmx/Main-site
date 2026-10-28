@@ -312,8 +312,7 @@
   "footerLogo": "/images/cms/footerlogo.webp",
   "instagramUrl": "https://instagram.com/ondo_cdmx",
   "showInstagram": true,
-  "freeShippingMinSoups": 7,
-  "boxShipsFree": true,
+  "freeShippingMinAmount": 725,
   "welcomeCode": "ONDOFIRST",
   "welcomePercent": 10,
   "deliveryDays": [

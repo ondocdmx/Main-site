@@ -65,10 +65,11 @@ Where things live:
   (no separate config file). Tests: `npm test` (`src/commerce/priceCart.test.ts`, `tests/`).
   The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
 * Shipping: `shippingPrice` ($50) in `settings.json`, sent to Stripe as a shipping option (no Price ID since Phase 1.2).
-  Free when the cart has `freeShippingMinSoups` (7) or more individual soups, or contains a box
-  (`boxShipsFree`). The free-shipping zone is not checked on the server yet (Phase 3).
+  Free when the cart subtotal before discounts reaches `freeShippingMinAmount` ($725, owner decision 28 Oct 2026):
+  6 veggie soups, 5 meat soups, or the box + 1 soup. The box alone pays shipping; its card and page say
+  "+ envío, o gratis si agregas 1 sopa". The free-shipping zone is not checked on the server yet (Phase 3).
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
-  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`box`, `minSoups` or empty).
+  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount` or empty).
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
   by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is no longer read.
   Items with `isBox: true` in products.json (the box) count as 1 item toward the 10
@@ -118,8 +119,9 @@ Do not assume any of this exists, and do not refactor toward it unless Omar asks
 
 Rules:
 
-* Caja de bienvenida (5-soup box): $600 MXN, ALWAYS ships free.
-* Shipping: $50 MXN. Free when the order has 7 or more individual soups, or contains a 5-soup box.
+* Caja de bienvenida (5-soup box): $600 MXN + shipping (owner, 28 Oct 2026: the box alone does NOT ship free).
+* Shipping: $50 MXN. Free when the subtotal before discounts is $725 or more (box + 1 soup, 6 veggie or
+  5 meat soups). The shop shows "free shipping" hints when one more soup would get there.
 * 10+ items: 20% off AND free shipping. The box counts as ONE item toward the 10, never as 5.
   The 20% applies to individual soups only, never to the box's price (it already has a discount
   built in). Example: 9 soups + 1 box = 10 items → 20% off the 9 soups, box at full $600.

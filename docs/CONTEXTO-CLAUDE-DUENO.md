@@ -234,8 +234,9 @@ ambos lados.
 - **Envío**: `shippingPrice` ($50) en `settings.json`, enviado a Stripe como
   opción de envío con el día y la franja ("Entrega lunes 2 de noviembre,
   9–13 h"). `shippingStripeProductId`/`shippingStripePriceId` ya no se usan.
-  Gratis con 7+ sopas (`freeShippingMinSoups`) o si hay una caja
-  (`boxShipsFree`); si no, se cobra (ONDO no hace recogida en tienda).
+  Gratis cuando el subtotal antes de descuentos llega a `freeShippingMinAmount`
+  ($725: caja + 1 sopa, 6 vegetarianas o 5 de carne); si no, se cobra (ONDO
+  no hace recogida en tienda). La caja sola paga envío.
 - **Motor de precios**: `priceCart()` en `src/commerce/priceCart.ts` calcula
   todo (subtotal, descuento, envío, total) para el carrito y para la API.
   El navegador solo manda `_id` + cantidad. Tests: `npm test`.

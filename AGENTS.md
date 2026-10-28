@@ -105,7 +105,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
   `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
 - Envío: `shippingPrice` (importe) en `settings.json`; se manda a Stripe
   como opción de envío (`shipping_options`) con el día y la franja. Gratis con
-  `freeShippingMinSoups` (7) sopas o con una caja (`boxShipsFree`); si no, se
+  subtotal ≥ `freeShippingMinAmount` ($725, antes de descuentos); si no, se
   cobra (no hay recogida en tienda). `shippingStripeProductId` y
   `shippingStripePriceId` ya no los usa el código.
 - Entrega: `deliveryDays`, `deliverySlots`, `orderCutoff` en `settings.json`;
@@ -126,7 +126,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
 - `platedImage` → foto de la sopa servida (miniatura del carrito). Al añadir una sopa, rellenarlo.
-- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe, y tiene envío gratis.
+- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Sola paga envío.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.
 
