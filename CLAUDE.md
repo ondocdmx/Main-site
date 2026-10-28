@@ -90,11 +90,13 @@ Rules:
 * Caja de bienvenida (5-soup box): $600 MXN, ALWAYS ships free.
 * Shipping: $50 MXN. Free when the order has 7 or more individual soups, or contains a 5-soup box.
 * 10+ items: 20% off AND free shipping. The box counts as ONE item toward the 10, never as 5.
-  Whether the 20% also applies to the box's own price: [POR CONFIRMAR].
+  The 20% applies to individual soups only, never to the box's price (it already has a discount
+  built in). Example: 9 soups + 1 box = 10 items → 20% off the 9 soups, box at full $600.
   (20% stays for now; the owner may lower it later to offset free shipping.)
 * Welcome offer (Phase 4): code ONDOFIRST, 10% off the customer's first order. Allowed on one-time orders
   and on subscriptions. Not allowed for a returning customer, e.g. someone who cancels a subscription
   and signs up again to reuse it. How "first order" is enforced is decided in the Phase 4 build.
+  It applies to the box too (e.g. a first order that is just one box).
   It combines with free shipping (free shipping is not a discount).
 * Only ONE discount per order. If an order qualifies for 20% (10+ items), the 20% applies and ONDOFIRST does not.
 * All free shipping applies only inside the delivery zone.
