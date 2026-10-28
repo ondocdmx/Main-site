@@ -108,11 +108,18 @@ Dueño pide un cambio en palabras normales
   → compruebas la web en vivo y le confirmas al dueño
 ```
 
-- **Decisión del dueño (27 oct 2026)**: autoriza push directo a `main`
-  (producción) para cualquier cambio, sin PR, porque no hay staging.
-  Aun así: `npm run lint` + `npm run build` deben pasar antes del push.
-- **Cambios de dinero, checkout, routing o tracking**: explícale al dueño
-  qué cambia y espera su "ok" antes del push.
+- **Decisión del dueño (27 oct 2026, reemplaza la anterior)**:
+  - **Dinero y logística → rama + aprobación**: todo lo que toque checkout,
+    precios, descuentos, Stripe, el carrito o la lógica de reparto va en
+    una rama y espera el "ok" del dueño antes del merge a `main`. Incluye
+    estos campos de los JSON: `price` y `stripePriceId` (`products.json`);
+    `cartDiscount*`, `shipping*`, `productId*` y `amount*`
+    (`settings.json`); todo `deliveryZones.json`.
+  - **Solo contenido → directo a `main`**: textos, imágenes y textos de
+    producto en los JSON pueden ir con push directo a `main`.
+  - En ambos casos `npm run lint` + `npm run build` deben pasar antes del push.
+- **Cambios de routing o tracking**: explícale al dueño qué cambia y espera
+  su "ok" antes del push.
 - Ojo: en las *previews* de Vercel el pago puede no funcionar si
   `STRIPE_SECRET_KEY` solo está configurada para *Production*. No es un bug
   del cambio; verifica el checkout en local con la clave de test o después

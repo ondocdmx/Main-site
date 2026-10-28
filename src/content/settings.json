@@ -1,7 +1,7 @@
 {
   "bannerText": {
-    "en": "save up to 55% - join our SOUP-SCRIPTION!!",
-    "es": "ahorros hasta 55% - únete a la SOUP-SCRIPTIÓN!!"
+    "en": "from $90 per soup - join our SOUP-SCRIPTION!!",
+    "es": "desde $90 por sopa - ¡únete a la SOUP-SCRIPTIÓN!"
   },
   "cartDiscount2CouponId": "C9taQCso",
   "cartDiscount2Label": "20% descuento",
@@ -140,10 +140,10 @@
   },
   "panel2Benefits": [
     {
-      "en": "Incredible discounts",
-      "es": "Increíbles descuentos",
-      "subtitleEn": "Get up to 50% off on orders",
-      "subtitleEs": "Obtén hasta 50% en pedidos"
+      "en": "Member pricing",
+      "es": "Precio de socio",
+      "subtitleEn": "From $90 per soup",
+      "subtitleEs": "Desde $90 por sopa"
     },
     {
       "en": "Beta taster",
@@ -267,8 +267,8 @@
   "amountQuincenal6": 3450,
   "introBenefits": [
     {
-      "en": "Incredible discounts - get up to 50% off on orders",
-      "es": "Increíbles descuentos - Obtén hasta 50% en pedidos"
+      "en": "Member pricing - From $90 per soup",
+      "es": "Precio de socio - Desde $90 por sopa"
     },
     {
       "en": "Beta tasters - Try hot new recipes before anyone else",
@@ -300,12 +300,6 @@
     "es": "Únete al Club de Ondo"
   },
   "ondoChoiceImage": "/images/cms/ondochoiceimage.webp",
-  "priceMensual10": "ahorros al 45%",
-  "priceMensual4": "ahorros al 29%",
-  "priceMensual6": "ahorros al 38%",
-  "priceQuincenal10": "ahorros al 53%",
-  "priceQuincenal4": "ahorros al 38%",
-  "priceQuincenal6": "ahorros al 43%",
   "productIdMensual10": "price_1TQYxd3Xzew6cmN11VB3NK66",
   "productIdMensual4": "price_1TQYwy3Xzew6cmN1nDiT6SS5",
   "productIdMensual6": "price_1TWVm63Xzew6cmN1hB7PvfxK",
