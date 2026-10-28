@@ -1358,7 +1358,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step1Image', null)) || '/images/ondo-113.JPG'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step1Image', null)) || '/images/cms/step1image.webp'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step1Title', content.step1Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step1Desc', content.step1Desc)}</p>
@@ -1366,7 +1366,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step2Image', null)) || '/images/ondo-051.JPG'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step2Image', null)) || '/images/cms/step2image.webp'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step2Title', content.step2Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step2Desc', content.step2Desc)}</p>
@@ -1374,7 +1374,7 @@ export default function App() {
 
                <div className="flex flex-col items-center text-center group cursor-default">
                  <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step3Image', null)) || '/images/ondo-070.JPG'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
+                    <img src={resolveImage(getSetting('step3Image', null)) || '/images/cms/step3image.webp'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
                  </div>
                  <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step3Title', content.step3Title)}</h3>
                  <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step3Desc', content.step3Desc)}</p>

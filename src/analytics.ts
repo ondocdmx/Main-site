@@ -1,6 +1,6 @@
 // ── Tracking ecommerce GA4 vía dataLayer (consumido por GTM) ──
-// Snippet de GTM pendiente del Container ID de la agencia; mientras tanto
-// todos los eventos quedan en window.dataLayer listos para ser leídos.
+// GTM (contenedor GTM-TBTXDQ72, gestionado por la agencia) se carga en index.html
+// y lee de window.dataLayer los eventos que se empujan aquí.
 
 declare global {
   interface Window {
