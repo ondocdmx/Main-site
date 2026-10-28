@@ -52,7 +52,7 @@ Part 3 is where we are going: it is NOT built. Never treat Part 3 as a descripti
   They show layout and intent, not exact pixels. Where a mockup and a written spec disagree, the written
   spec wins. Use the site's existing fonts, colors and components, not the mockups' stand-ins.
   bienvenida.png says "15% menos": that is outdated. The welcome offer is ONDOFIRST, 10% (owner, 28 Oct 2026).
-  carrito.png shows the box with free shipping and "Meses sin intereses": also outdated (see Part 2).
+  carrito.png shows "Meses sin intereses" (skipped for now) and a 7-soup marker (free shipping is now by amount, see Part 2).
 * WhatsApp: +52 55 8525 9797 · Email: ondocdmx@gmail.com
 
 ## 2. CURRENT STATE (verified in the code, 27 Oct 2026)
