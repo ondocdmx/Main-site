@@ -59,7 +59,9 @@ Where things live:
   $125 vegetarian/vegan, $150 meat/fish, Ondo Box (5 soups) $600.
 * Shipping: `shippingPrice` ($50, shown) + `shippingStripeProductId` (the Price ID charged) in `settings.json`.
   Charged on every home-delivery order. There is no free-shipping threshold today.
-* Pickup (Roma Norte): free, no postal-code check.
+* Pickup: does not exist. No screen offers it, so every cart order pays shipping. Leftover pickup texts
+  (`slotPickup*`, `pickupNote` in `App.tsx`) and the `isPickup` branch in `api/create-cart-checkout.ts`
+  are dead code. Owner decision 28 Oct 2026: Ondo does not do pickups.
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
   by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is not set (off).
   Items with `excludeFromVolumeDiscount: true` in products.json (the box) count as 1 item toward the 10
@@ -73,10 +75,14 @@ Where things live:
   browser before adding to cart. Outside the zone the customer can't add to cart; the address (and
   email, if they ask to be notified) becomes a lead in Google Sheets.
 * Delivery day: Monday, hard-coded in `src/App.tsx` (`getNextMonday()`). Slots 9–13, 13–17, 17–21 are
-  hard-coded in the `t` object in `App.tsx`. There is no order cutoff.
+  hard-coded in the `t` object in `App.tsx`. Orders until Sunday 23:59 → next day; on Monday → the
+  following Monday. That matches the owner's cutoff (Sunday before midnight), but it's calculated in the
+  customer's browser, once at page load, and the server never checks it. The date is not saved on the order.
 * Subscriptions (`api/create-checkout-session.ts`): six Stripe Price IDs (`productId*`) and the price shown
   for 3 months (`amount*`) in `settings.json`. Every 2 weeks = 6 deliveries in 3 months; monthly = 3.
   Price per soup: monthly 4/6/10 = $106.25 / $100 / $95; every 2 weeks 4/6/10 = $100 / $95.83 / $90.
+  Billing (owner, 28 Oct 2026): every plan renews automatically every 3 months and charges the card each
+  time. There is no one-time 3-month plan today. Recurring plans can't be paid by transfer or OXXO.
 * "Solo suscriptores" soups (`onlySubscriptions` in products.json) can't be added to the cart: the
   button opens the subscription funnel instead. Keep it that way.
 * Orders: there is no Stripe webhook and no order database. The team reads orders and their
@@ -103,7 +109,8 @@ Rules:
   It combines with free shipping (free shipping is not a discount).
 * Only ONE discount per order. If an order qualifies for 20% (10+ items), the 20% applies and ONDOFIRST does not.
 * All free shipping applies only inside the delivery zone.
-* Delivery: Mondays, three slots (9–13 h, 13–17 h, 17–21 h). Order cutoff: [DÍA Y HORA LÍMITE].
+* Delivery: Mondays, three slots (9–13 h, 13–17 h, 17–21 h). Order cutoff: Sunday 23:59 (Mexico City
+  time) for the next day's delivery. Enforced on the server, and the delivery date saved on every order.
   Delivery days must be configurable (we may add a second day later).
 
 Decisions already made:
@@ -116,7 +123,10 @@ Decisions already made:
   Subscriptions keep their Price IDs until Phase 5.
 * Business rules live in the existing `settings.json`, `products.json` and `deliveryZones.json`.
   Do not create a new config file.
-* Pickup stays: free, no postal-code check.
+* No pickup (owner, 28 Oct 2026). Remove the leftover pickup texts and code in a cleanup task.
+* Stripe webhook (approved 28 Oct 2026): record every paid order (with its delivery date) somewhere the
+  team can read, e.g. a Google Sheet, and keep a record of past buyers (needed to enforce ONDOFIRST).
+* Gift option (coming): a one-time 3-month plan, paid once, that anyone can buy, including for themselves.
 * Outside the zone: no checkout. Keep lead capture and add a WhatsApp button.
 * Subscriptions keep their Price IDs and checkout until Phase 5. ONDOFIRST may be used on them.
 * The promo-code field stays (cart without volume discount; subscription checkout always).

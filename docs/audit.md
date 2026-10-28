@@ -14,7 +14,7 @@ things; you can skip them. Line numbers are approximate ("around line …") and 
 3. Payments go through **Stripe Checkout**. Two small server functions create the payment page: one for the cart, one for subscriptions.
 4. There is **no Stripe webhook**: the site never hears back from Stripe after a payment. Orders are only visible in the Stripe Dashboard.
 5. **Delivery is always "next Monday"**, calculated in the customer's browser. The chosen time slot is saved on the order, but the **date is not**.
-6. **Pickup does not exist on the site today.** The text for it is in the code, but no screen shows it. (CLAUDE.md says otherwise; it needs correcting.)
+6. **Pickup does not exist on the site today.** The text for it is in the code, but no screen shows it. You've decided Ondo doesn't do pickups, so the leftovers can be removed.
 7. Analytics: **Google Tag Manager** (container `GTM-TBTXDQ72`, managed by the agency) plus GA4 e-commerce events. No Meta/TikTok pixel.
 8. The **colours on the site are not the brand colours** in CLAUDE.md, and the main orange buttons fail the contrast rule (2.4:1 vs. the 4.5:1 minimum).
 9. The servers **trust what the browser sends** (which price, which coupon, which postal code). Someone technical could tamper with an order.
@@ -149,7 +149,7 @@ Called from `handleCheckout` in `App.tsx` (~line 438) at the end of the funnel.
 
 | Setting | Today |
 |---|---|
-| Mode | Decided by Stripe: if the plan's price is recurring → `subscription`, otherwise `payment`. **I can't see whether your six plans renew automatically or are charged once for 3 months.** See decision D4 |
+| Mode | Decided by Stripe: if the plan's price is recurring → `subscription`, otherwise `payment`. Per you (D4), all six renew every 3 months, charging the card each time, so this is `subscription` mode. Stripe only offers payment methods that can be charged again (cards), never OXXO or transfer |
 | Line items | One: the plan's Price ID (`productId*` in `settings.json`), **sent by the browser** |
 | Locale / payment methods | Not set (same as above) |
 | Shipping | Address and phone collected. No shipping charge (delivery is included) |
@@ -179,7 +179,8 @@ for an address and postal code and checks it against the 28 codes in `src/conten
 
 **Delivery date.** Calculated in the visitor's browser by `getNextMonday()` (top of `App.tsx`):
 - Tuesday to Sunday → the coming Monday. On a Monday → the Monday after (7 days).
-- **There is no order cutoff.** An order on Sunday at 23:59 is promised for Monday morning.
+- **Cutoff:** this already matches your cutoff (Sunday before midnight → Monday). But it's only in the
+  browser: it uses the customer's clock, and the server never checks it.
 - It's calculated **once, when the page loads**. A tab left open past midnight shows yesterday's answer.
 - Monday is hard-coded. A second delivery day needs code changes.
 
@@ -193,9 +194,8 @@ The team has to work it out from the order time.
 **Pickup.** The texts exist ("Ninguna me viene bien / Recojo en tienda (Roma Norte) · Sin coste de
 envío"), and the cart server function knows what to do with `pickup` (it skips shipping). But **no
 screen offers it**, in the cart or in the funnel, and git history shows it was never shown in this
-codebase. So pickup is **not possible today**, and every cart order pays $50 shipping. CLAUDE.md
-currently says "Pickup (Roma Norte): free, no postal-code check" under *Current state*. That is wrong,
-and I propose correcting it (decision D1).
+codebase. So pickup is **not possible today**, and every cart order pays $50 shipping. **Decided
+(D1): Ondo doesn't do pickups.** CLAUDE.md is corrected; the leftover texts and code get removed in Phase 0.
 
 ---
 
@@ -245,7 +245,7 @@ not for returning customers") **can't be enforced** without some record of who h
 **🔴 R4. Delivery rules live only in the browser.**
 - The postal-code check is done once per browser and never on the server.
 - The customer can enter another address at Stripe.
-- No cutoff, no stored date, Monday hard-coded.
+- The cutoff is only in the browser, the date isn't stored, and Monday is hard-coded.
 
 Free shipping "inside the zone only" (target state) can't be enforced like this.
 
@@ -319,7 +319,7 @@ and this audit. Please share the screenshots (I can add them to `docs/mockups/`)
 if yours are different.
 
 ### Phase 0: Housekeeping (small, safe, no visual change)
-- Correct CLAUDE.md about pickup (D1).
+- Remove the leftover pickup texts and the unused pickup branch in the cart server function (D1, decided).
 - Remove template leftovers: Gemini key line, README, `metadata.json`, `KettleReference.html`, unused libraries, `server.ts` (R7, R8).
 - Move the 220 MB of original photos out of the website folder (keep them in Drive) (R9).
 - Fix the `analytics.ts` comment.
@@ -342,21 +342,23 @@ if yours are different.
 - **`price_data` checkout** (approved): prices and the 20% calculated on the server, test-mode catalog, no more coupon chore (R2, R10).
 - **Free shipping**: box always; 7+ soups; 10+ with the 20%; inside the zone only.
 - **Server-side zone check**, using the address entered on Stripe (R4).
-- **Delivery date stored on the order**, an order cutoff, configurable delivery days.
-- Pickup: build it or remove the leftover texts (D1).
+- **Delivery date stored on the order**, the Sunday 23:59 cutoff enforced on the server (Mexico City time), configurable delivery days.
+- **Webhook** (D3, approved): record each paid order with its delivery date (e.g. in a Google Sheet) and keep a list of past buyers.
 - Out-of-zone: WhatsApp button next to the lead form (already decided).
 - Subscription server: only accept your six plan Price IDs (R2).
-- *Needs: Stripe test key in this environment; decisions D2 (cutoff), D3 (webhook), D9 (OXXO).*
+- *Needs: Stripe test key in this environment; decision D9 (OXXO).*
 
 ### Phase 4: Oferta de bienvenida (ONDOFIRST 10%)
 - First-order-only code: one-time orders, subscriptions and the box; never stacked with the 20%.
 - Enforcing "first order / not for returning customers" **needs a record of past buyers**: a webhook (D3) or, at minimum, Stripe's built-in "first-time order" setting.
 - Welcome-offer screen from the mockup.
+- When you create ONDOFIRST in Stripe, set its duration to **"Once"**. Otherwise the 10% repeats on every 3-month renewal.
 
 ### Phase 5: Subscriptions
 - Move subscriptions off stored Price IDs; rework the funnel; decide prominence.
 - Per-soup pricing is already on the site.
-- *Needs D4 (are plans recurring or one-off?).*
+- **Gift option:** a one-time 3-month plan, paid once (so OXXO or transfer could work), which anyone can buy, including for themselves.
+- Make the renewal clear in the copy: today the plan screen says "3 meses · sin compromiso · cancela cuando quieras" but never says it **renews every 3 months**.
 
 **Why this order:** Phase 1 makes every later change cheaper and less risky. Home and Producto (Phase 2)
 are the most visible and least risky to money. Phase 3 changes how money is collected, so it comes once
@@ -367,10 +369,10 @@ server-side pricing and on a decision about remembering past buyers. Phase 5 is 
 
 | # | Decision | Why it matters | Blocks |
 |---|---|---|---|
-| D1 | **Pickup**: build it (free, Roma Norte) or drop it? It doesn't exist today, though CLAUDE.md says "Pickup stays" | Changes the cart flow and shipping rules | Phase 0 (doc fix), Phase 3 |
-| D2 | **Order cutoff**: day and time (e.g. Saturday 18:00) for Monday delivery | Today a Sunday-midnight order is promised for Monday morning | Phase 3 |
-| D3 | **Webhook**: add one so the site records each paid order (e.g. to a Google Sheet) and knows past buyers? | Reliable orders, accurate GA4, OXXO, enforcing ONDOFIRST | Phases 3–4 |
-| D4 | **Subscription billing**: in Stripe, do the six plans renew automatically (and how often), or are they charged once for 3 months? | The site says "3 meses · sin compromiso · cancela cuando quieras"; the code doesn't decide this, Stripe does | Phase 5, and accuracy of today's copy |
+| D1 | ~~Pickup~~ **Decided: no pickups.** Remove the leftovers | | Phase 0 |
+| D2 | ~~Order cutoff~~ **Decided: Sunday 23:59** for Monday delivery. Already how the browser behaves; Phase 3 enforces it on the server | | Phase 3 |
+| D3 | ~~Webhook~~ **Decided: yes.** Record each paid order with its delivery date (e.g. Google Sheet) and keep a list of past buyers | | Phases 3–4 |
+| D4 | ~~Subscription billing~~ **Answered: every plan renews automatically every 3 months**, charging the card each time. A one-time 3-month gift plan is coming | | Phase 5 |
 | D5 | **Palette**: confirm the CLAUDE.md colours replace the current site colours | Phase 1 visual change across the whole site | Phase 1 |
 | D6 | **Raisonne Pro licence**: do you have a web licence? | Legal; otherwise switch to Outfit (the CLAUDE.md fallback) | Phase 1 |
 | D7 | **Mockups**: share the screenshots and your Phase 1–5 list | My order may not match yours | Phase 2 onward |
