@@ -25,6 +25,7 @@
     "slug": "ondo-box",
     "soldOut": false,
     "stripePriceId": "price_1UMDDS3Xzew6cmN139rkVHrS",
+    "stripeTestProductId": "prod_VWhGU4IFpLhqf8",
     "tagline": {
       "en": "Five soups, one box, deeply Ondo. *500ml per soup",
       "es": "Cinco sopas, una caja, profundamente Ondo. *500ml c/u"
@@ -61,6 +62,7 @@
     "slug": "garbanzo-y-rabo",
     "soldOut": false,
     "stripePriceId": "price_1TQYJQ3Xzew6cmN1nWUf5wIM",
+    "stripeTestProductId": "prod_VWhGGFfb2ulDVm",
     "tagline": {
       "en": "Honor. Beauty. Bravo. | 500 ml | Toppings: labneh ",
       "es": "Honor. Belleza. Bravo | 500 ml | Toppings: yogurt "
@@ -105,6 +107,7 @@
     "slug": "estofado-ingles",
     "soldOut": false,
     "stripePriceId": "price_1TpB8o3Xzew6cmN1buozUBgG",
+    "stripeTestProductId": "prod_VWhGU7hhBQtkBU",
     "tagline": {
       "en": "From the pub to the palace",
       "es": "De la taberna al palacio"
@@ -150,6 +153,7 @@
     "slug": "betabespelta",
     "soldOut": false,
     "stripePriceId": "price_1TQYUT3Xzew6cmN1uTb0KAL5",
+    "stripeTestProductId": "prod_VWhGsbbutDKKLM",
     "tagline": {
       "en": "For the deeply rooted | 500 ml",
       "es": "Para los de raíces largas | 500 ml"
@@ -199,6 +203,7 @@
     "slug": "calabaza-de-castilla-dahl",
     "soldOut": null,
     "stripePriceId": "price_1TQYLm3Xzew6cmN1ay3gk0gr",
+    "stripeTestProductId": "prod_VWhGXhIYiCsPB8",
     "tagline": {
       "en": "Mexico via Mumbai | 500 ml",
       "es": "México vía Mumbai | 500 ml"
@@ -247,6 +252,7 @@
     "slug": "coliflor-avellanada",
     "soldOut": null,
     "stripePriceId": "price_1TQYKT3Xzew6cmN1YKhymdIA",
+    "stripeTestProductId": "prod_VWhGTE6gP2V2e3",
     "tagline": {
       "en": "Quietly luxurious | 500 ml | Toppings: hazelnuts, brown butter",
       "es": "La coliflor de lujo | 500 ml | Toppings: avellanas, mantequilla"
@@ -294,6 +300,7 @@
     "slug": "berenjena-al-fuego",
     "soldOut": false,
     "stripePriceId": "price_1TWQ4o3Xzew6cmN1SZ5X8Sqj",
+    "stripeTestProductId": "prod_VWhGex5yjP8Dx0",
     "tagline": {
       "en": "burned to perfection | 500 ml",
       "es": "quemada y perfecta | 500 ml "
@@ -342,6 +349,7 @@
     "slug": "mega-verde",
     "soldOut": null,
     "stripePriceId": "price_1TQYFh3Xzew6cmN1DvHLvB5H",
+    "stripeTestProductId": "prod_VWhGeoe0fNCAlQ",
     "tagline": {
       "en": "A green bombshell | 500 ml",
       "es": "Una bomba boscosa | 500 ml"
@@ -387,6 +395,7 @@
     "slug": "chowder-bacalao",
     "soldOut": false,
     "stripePriceId": "price_1TQYWw3Xzew6cmN1N4xx8ZH5",
+    "stripeTestProductId": "prod_VWhGU4RG7EC9WW",
     "tagline": {
       "es": "Un chowder como ningún otro | 500 ml",
       "en": "A chowder like no other | 500 ml"
@@ -437,6 +446,7 @@
     "slug": "pro-gazpacho",
     "soldOut": null,
     "stripePriceId": "price_1TW40k3Xzew6cmN1KiqeAIqn",
+    "stripeTestProductId": "prod_VWhGuYRssqcMQj",
     "tagline": {
       "en": "Gazpacho, matured. | 500 ml",
       "es": "Gazpacho, maduro. | 500 ml"
@@ -498,6 +508,7 @@
     "slug": "sopa-tlalpena",
     "soldOut": null,
     "stripePriceId": "price_1TQYQV3Xzew6cmN1adgG3PKS",
+    "stripeTestProductId": "prod_VWhGhy0NN0mjnS",
     "tagline": {
       "en": "The past in the present | 500 ml",
       "es": "El pasado en el presente | 500 ml"
@@ -559,6 +570,7 @@
     "slug": "salchispatzle",
     "soldOut": false,
     "stripePriceId": "price_1TQYSc3Xzew6cmN1Vo1vxpNj",
+    "stripeTestProductId": "prod_VWhGecC11zGsvJ",
     "tagline": {
       "en": "das german nonna's | 500 ml",
       "es": "lo de la nonna alemana | 500 ml"
@@ -620,6 +632,7 @@
     "slug": "cebolla-caramelizada",
     "soldOut": null,
     "stripePriceId": "price_1TQYPs3Xzew6cmN1mDkoEWEj",
+    "stripeTestProductId": "prod_VWhGa5mZIqg0ro",
     "tagline": {
       "en": "Oui, did it our way | 500 ml | Toppings: Ramonetti cheese, croutons ",
       "es": "Oui, pero a nuestra manera | 500 ml | Toppings: Qso Ramonetti, croutones "

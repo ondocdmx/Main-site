@@ -78,10 +78,22 @@ describe('api/create-cart-checkout', () => {
 
   it('modo test: usa stripeTestProductId y, si falta, no abre el pago', async () => {
     process.env.STRIPE_SECRET_KEY = 'sk_test_x';
-    const res = await call({ items: [{ id: VEG, quantity: 1 }] });
-    expect(res.statusCode).toBe(500);
-    expect(create).not.toHaveBeenCalled();
+    const veg = products.find(p => p._id === VEG);
+    expect(veg.stripeTestProductId).toMatch(/^prod_/);
+    await call({ items: [{ id: VEG, quantity: 1 }] });
+    expect(params().line_items[0].price_data.product).toBe(veg.stripeTestProductId);
     expect(pricesRetrieve).not.toHaveBeenCalled();
+
+    create.mockClear();
+    const testId = veg.stripeTestProductId;
+    delete veg.stripeTestProductId;
+    try {
+      const res = await call({ items: [{ id: VEG, quantity: 1 }] });
+      expect(res.statusCode).toBe(500);
+      expect(create).not.toHaveBeenCalled();
+    } finally {
+      veg.stripeTestProductId = testId;
+    }
   });
 
   it('3 sopas: envío $50 como opción de envío con día y franja, y campo de código', async () => {
