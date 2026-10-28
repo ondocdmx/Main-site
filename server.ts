@@ -7,6 +7,7 @@ import express from 'express';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import createCartCheckout from './api/create-cart-checkout';
 import createCheckoutSession from './api/create-checkout-session';
+import checkoutSummary from './api/checkout-summary';
 import submitSoupLead from './api/submit-soup-lead';
 import submitDeliveryLead from './api/submit-delivery-lead';
 
@@ -15,6 +16,7 @@ type Handler = (req: VercelRequest, res: VercelResponse) => unknown;
 const routes: Record<string, Handler> = {
   '/api/create-cart-checkout': createCartCheckout,
   '/api/create-checkout-session': createCheckoutSession,
+  '/api/checkout-summary': checkoutSummary,
   '/api/submit-soup-lead': submitSoupLead,
   '/api/submit-delivery-lead': submitDeliveryLead,
 };

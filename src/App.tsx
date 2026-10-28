@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Trash2, MapPin, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
+import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, Minus, Mail, CheckCircle, AlertTriangle, Sparkles } from 'lucide-react';
 // Contenido de la web (textos, sopas, fotos, zonas de reparto): se edita en estos JSON.
 // Exportado de Sanity en la migración (scripts/export-sanity.mjs); ver AGENTS.md.
 import settingsContent from './content/settings.json';
@@ -12,30 +12,28 @@ import {
 } from './analytics';
 import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
+import { formatDeliveryDate, nextDeliveryDate } from './commerce/delivery';
+import CartDrawer, { type CheckoutRequest, type CheckoutResult } from './components/CartDrawer';
+import OrderSuccess, { type OrderSummary } from './components/OrderSuccess';
 
-function getNextMonday(): Date {
-  const today = new Date();
-  const day = today.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const daysUntilMonday = day === 1 ? 7 : (8 - day) % 7;
-  const next = new Date(today);
-  next.setDate(today.getDate() + daysUntilMonday);
-  return next;
+// Próxima entrega (hora de Ciudad de México, corte en settings.json). El funnel la calcula al cargar la página;
+// el carrito la recalcula cada minuto.
+const nextDelivery = nextDeliveryDate();
+const nextEs = formatDeliveryDate(nextDelivery, 'es');
+const nextEn = formatDeliveryDate(nextDelivery, 'en');
+
+// Carrito guardado en el navegador (solo _id + cantidad; los precios se leen siempre de products.json).
+const CART_KEY = 'ondo_cart';
+function loadSavedCart(): { product: any; quantity: number }[] {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+    return (Array.isArray(saved) ? saved : [])
+      .map((l: any) => ({ product: (productsContent as any[]).find(p => p._id === l?.id), quantity: l?.quantity }))
+      .filter(l => l.product && !l.product.soldOut && !l.product.onlySubscriptions && Number.isInteger(l.quantity) && l.quantity > 0);
+  } catch {
+    return [];
+  }
 }
-
-function formatNextMondayEs(): string {
-  const d = getNextMonday();
-  const months = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  return `lunes ${d.getDate()} de ${months[d.getMonth()]}`;
-}
-
-function formatNextMondayEn(): string {
-  const d = getNextMonday();
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `Monday, ${months[d.getMonth()]} ${d.getDate()}`;
-}
-
-const nextEs = formatNextMondayEs();
-const nextEn = formatNextMondayEn();
 
 const t = {
   es: {
@@ -84,7 +82,6 @@ const t = {
     deliveryPhone: "Teléfono",
     deliveryEmail: "Email",
     deliveryContactNote: "Introduce al menos uno para poder avisarte.",
-    confirmAndPay: "Confirmar y pagar",
     deliverySlotRequired: "Selecciona una franja horaria para continuar.",
     deliveryContactRequired: "Introduce un teléfono o email para que podamos avisarte de la entrega.",
   },
@@ -134,7 +131,6 @@ const t = {
     deliveryPhone: "Phone",
     deliveryEmail: "Email",
     deliveryContactNote: "Enter at least one so we can reach you.",
-    confirmAndPay: "Confirm & Pay",
     deliverySlotRequired: "Please select a time slot to continue.",
     deliveryContactRequired: "Please enter a phone or email so we can notify you about your delivery.",
   }
@@ -146,7 +142,7 @@ const SOUPSCRIPTION_ROUTE = '/soupscripciones';
 export default function App() {
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const [purchaseMode, setPurchaseMode] = useState<'subscription' | 'single'>('subscription');
-  const [cart, setCart] = useState<{product: any, quantity: number}[]>([]);
+  const [cart, setCart] = useState<{product: any, quantity: number}[]>(loadSavedCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const settings: any = settingsContent;
@@ -155,16 +151,13 @@ export default function App() {
   // Productos ya ordenados por `order` (asc)
   const displayProducts: any[] = productsContent;
 
-  // Delivery modal
-  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  // Zona de reparto del funnel de suscripción (el carrito comprueba el CP en CartDrawer)
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryPostal, setDeliveryPostal] = useState('');
   const [deliveryStatus, setDeliveryStatus] = useState<'idle' | 'checking' | 'ok' | 'nok'>('idle');
   const [notifyEmail, setNotifyEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
-  const [pendingProduct, setPendingProduct] = useState<any>(null);
   const deliveryZones: any = deliveryZonesContent;
-  const hasValidatedDelivery = typeof window !== 'undefined' && localStorage.getItem('ondo_delivery_validated') === 'true';
 
 
   // Cart mixing warning
@@ -190,8 +183,6 @@ export default function App() {
   const [funnelContingencies, setFunnelContingencies] = useState('');
   const [funnelSlot, setFunnelSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [cartSlot, setCartSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
-  const [showCartSlotSelector, setShowCartSlotSelector] = useState(false);
 
   // Soup Request Popup
   const [showSoupModal, setShowSoupModal] = useState(false);
@@ -203,6 +194,11 @@ export default function App() {
   // Payment success confirmation
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [paymentSuccessType, setPaymentSuccessType] = useState<'subscription' | 'payment' | null>(null);
+  const [orderSummary, setOrderSummary] = useState<OrderSummary | null | false>(null);
+
+  useEffect(() => {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart.map(l => ({ id: l.product._id, quantity: l.quantity })))); } catch { /* noop */ }
+  }, [cart]);
 
   useEffect(() => {
     // Capturar atribución ANTES de limpiar la URL
@@ -217,8 +213,25 @@ export default function App() {
       // purchase con transaction_id único (session_id de Stripe) y guard anti-refresco
       const sessionId = params.get('session_id') || '';
       const snap = readCheckoutSnapshot();
-      if (snap && snap.type === type) {
-        firePurchaseOnce(sessionId, type, snap.items, snap.value);
+      const matchingSnap = snap && snap.type === type ? snap : null;
+      if (type === 'subscription') {
+        if (matchingSnap) firePurchaseOnce(sessionId, type, matchingSnap.items, matchingSnap.value);
+      } else {
+        // Pedido del carrito: se vacía el carrito guardado y se lee el resumen real de Stripe.
+        setCart([]);
+        fetch(`/api/checkout-summary?session_id=${encodeURIComponent(sessionId)}`)
+          .then(r => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+          .then((summary: OrderSummary) => {
+            setOrderSummary(summary);
+            // OXXO sin pagar todavía no es una venta: no se manda purchase (ver docs/TRACKING.md).
+            if (matchingSnap && summary.paymentStatus !== 'unpaid') {
+              firePurchaseOnce(sessionId, type, matchingSnap.items, (summary.amountSubtotal - summary.amountDiscount) / 100);
+            }
+          })
+          .catch(() => {
+            setOrderSummary(false);
+            if (matchingSnap) firePurchaseOnce(sessionId, type, matchingSnap.items, matchingSnap.value);
+          });
       }
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -506,12 +519,6 @@ export default function App() {
       setShowMixWarning(true);
       return;
     }
-    // First-time delivery validation
-    if (!hasValidatedDelivery) {
-      setPendingProduct(product);
-      setShowDeliveryModal(true);
-      return;
-    }
     doAddToCart(product);
   };
 
@@ -543,26 +550,6 @@ export default function App() {
     setEmailSent(true);
   };
 
-  const closeDeliveryModal = () => {
-    setShowDeliveryModal(false);
-    setDeliveryStatus('idle');
-    setDeliveryAddress('');
-    setDeliveryPostal('');
-    setNotifyEmail('');
-    setEmailSent(false);
-    if (deliveryStatus === 'ok' && pendingProduct) doAddToCart(pendingProduct);
-    setPendingProduct(null);
-  };
-
-  const confirmDeliveryAndClose = () => {
-    if (pendingProduct) doAddToCart(pendingProduct);
-    setPendingProduct(null);
-    setShowDeliveryModal(false);
-    setDeliveryStatus('idle');
-    setDeliveryAddress('');
-    setDeliveryPostal('');
-  };
-
   const toggleFilter = (slug: string) => {
     setActiveFilters(prev =>
       prev.includes(slug) ? prev.filter(f => f !== slug) : [...prev, slug]
@@ -576,9 +563,6 @@ export default function App() {
       .filter(item => item.quantity > 0));
   };
 
-  const removeItem = (productId: string) => {
-    setCart(prev => prev.filter(item => item.product._id !== productId));
-  };
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -595,50 +579,35 @@ export default function App() {
   const nudgeText = !nudge ? '' : nudge.type === 'freeShipping'
     ? (lang === 'es' ? `¡Añade ${nudge.count} más y tu envío es gratis!` : `Add ${nudge.count} more for free shipping!`)
     : (lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`);
-  const freeShippingProgress = pricing.freeShippingReason
-    ? 100
-    : Math.min((pricing.soupCount / (pricing.soupCount + pricing.soupsToFreeShipping)) * 100, 100);
-
-  const handleCartCheckout = async (slot: string) => {
-    setIsCheckingOut(true);
+  const handleCartCheckout = async ({ slot, postal, deliveryDate }: CheckoutRequest): Promise<CheckoutResult> => {
+    const genericError = lang === 'es' ? 'No pudimos abrir el pago. Inténtalo de nuevo.' : "We couldn't open checkout. Please try again.";
+    // begin_checkout + snapshot (value con descuento aplicado, sin envío)
+    const cartGA4Items = cart.map((item: { product: any; quantity: number }) => productToItem(item.product, item.quantity));
+    const cartValue = (pricing.subtotal - pricing.discountAmount) / 100;
+    pushEcommerce('begin_checkout', cartGA4Items, { value: Number(cartValue.toFixed(2)) });
+    saveCheckoutSnapshot('payment', cartGA4Items, cartValue);
     try {
-      const items = cart.map((item: { product: any; quantity: number }) => ({
-        id: item.product._id, quantity: item.quantity,
-      }));
-      const missingPrice = cart.some((item: { product: any }) => !item.product.stripePriceId);
-      if (missingPrice) {
-        alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
-        setIsCheckingOut(false);
-        return;
-      }
-      const savedAddress = localStorage.getItem('ondo_delivery_address') || '';
-      const savedPostal = localStorage.getItem('ondo_delivery_postal') || '';
       const res = await fetch('/api/create-cart-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           origin: window.location.origin,
-          items,
+          items: cart.map(item => ({ id: item.product._id, quantity: item.quantity })),
           deliverySlot: slot,
-          deliveryAddress: savedAddress,
-          deliveryPostal: savedPostal,
+          deliveryPostal: postal,
+          deliveryDate,
         }),
       });
-      // begin_checkout + snapshot (value con descuento aplicado, sin envío)
-      const cartGA4Items = cart.map((item: { product: any; quantity: number }) => productToItem(item.product, item.quantity));
-      const cartValue = (pricing.subtotal - pricing.discountAmount) / 100;
-      pushEcommerce('begin_checkout', cartGA4Items, { value: Number(cartValue.toFixed(2)) });
-      saveCheckoutSnapshot('payment', cartGA4Items, cartValue);
       const data = await res.json();
+      if (res.status === 409 && data.deliveryDate) return { deliveryDate: data.deliveryDate };
       if (data.url) {
         window.location.href = data.url;
-      } else {
-        throw new Error(data.error || 'Unknown error');
+        return {};
       }
-    } catch (err: any) {
+      return { error: data.error || genericError };
+    } catch (err) {
       console.error('Cart checkout error:', err);
-      alert(err?.message || (lang === 'es' ? 'Error al proceder al pago. Inténtalo de nuevo.' : 'Payment error. Please try again.'));
-      setIsCheckingOut(false);
+      return { error: genericError };
     }
   };
 
@@ -744,153 +713,19 @@ export default function App() {
         )}
       </nav>
 
-      {/* Cart Sidebar */}
-      {isCartOpen && (
-        <div className="fixed inset-0 bg-ondo-black/40 z-40 transition-opacity backdrop-blur-sm" onClick={() => { setIsCartOpen(false); setShowCartSlotSelector(false); }} />
-      )}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-ondo-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Header */}
-        <div className="bg-ondo-beige p-4 flex items-center justify-between border-b border-black/5">
-          <div className="flex-1" />
-          <h2 className="font-title font-bold text-xl uppercase tracking-wide">ONDO</h2>
-          <div className="flex-1 flex justify-end">
-             <button onClick={() => { setIsCartOpen(false); setShowCartSlotSelector(false); }} className="p-2 hover:bg-ondo-light-green transition-colors"><X className="w-6 h-6 text-ondo-black" /></button>
-          </div>
-        </div>
-
-        {/* Promo Bar */}
-        <div className="bg-ondo-beige/50 p-5 border-b border-gray-100">
-          <p className="font-body text-[13px] font-semibold text-ondo-black mb-2" aria-live="polite">
-            {pricing.freeShippingReason
-              ? (lang === 'es' ? '¡Tienes envío gratis!' : 'You have free shipping!')
-              : lang === 'es'
-                ? `Te ${pricing.soupsToFreeShipping === 1 ? 'falta 1 sopa' : `faltan ${pricing.soupsToFreeShipping} sopas`} para envío gratis`
-                : `${pricing.soupsToFreeShipping} more ${pricing.soupsToFreeShipping === 1 ? 'soup' : 'soups'} for free shipping`}
-          </p>
-          <div className="w-full bg-white h-3 mb-2 relative">
-             <div className="bg-ondo-orange h-3 transition-all duration-500" style={{ width: `${freeShippingProgress}%` }}></div>
-          </div>
-        </div>
-
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-          {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-               <ShoppingCart className="w-16 h-16 mb-4 opacity-20 text-ondo-green" />
-               <p className="font-title uppercase tracking-widest text-lg">{getSettingText('emptyCart', content.emptyCart)}</p>
-            </div>
-          ) : (
-            <>
-              {cart.map((item: { product: any; quantity: number }) => (
-                <div key={item.product._id} className="flex gap-4 p-4 bg-white shadow-sm border border-gray-50 items-center">
-                  <div className={`w-16 h-20 ${item.product.bgColor || 'bg-ondo-beige'} overflow-hidden shrink-0`}>
-                     <img src={resolveImage(item.product.image)} className="w-full h-full object-cover mix-blend-multiply" alt="product" />
-                  </div>
-                  <div className="flex-1 flex flex-col justify-between">
-                     <div className="flex justify-between gap-2 mb-2">
-                        <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
-                        <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
-                           {pricedLine(item.product._id)?.lineDiscount ? (
-                             <>
-                               <span className="line-through text-gray-400 text-xs">{formatMoney(pricedLine(item.product._id)!.lineSubtotal)}</span>
-                               <span className="text-ondo-orange flex items-center gap-1">
-                                 {formatMoney(pricedLine(item.product._id)!.lineTotal)}
-                                 <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
-                                   -{productDiscountPct(item.product)}%
-                                 </span>
-                               </span>
-                             </>
-                           ) : (
-                             <span>{formatMoney(pricedLine(item.product._id)?.lineSubtotal ?? 0)}</span>
-                           )}
-                        </div>
-                     </div>
-                     <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center border border-gray-100 bg-ondo-white">
-                           <button onClick={() => updateQuantity(item.product._id, -1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Minus className="w-3 h-3" /></button>
-                           <span className="font-title text-[15px] w-6 text-center">{item.quantity}</span>
-                           <button onClick={() => updateQuantity(item.product._id, 1)} className="p-1 px-3 text-ondo-black hover:bg-ondo-light-green transition-colors"><Plus className="w-3 h-3" /></button>
-                        </div>
-                        <button onClick={() => removeItem(item.product._id)} className="text-gray-300 hover:text-ondo-red transition-colors"><Trash2 className="w-5 h-5" /></button>
-                     </div>
-                  </div>
-                </div>
-              ))}
-
-            </>
-          )}
-        </div>
-
-        {/* Footer info */}
-        {cart.length > 0 && (
-          <div className="bg-white border-t border-gray-50 shadow-[0_-10px_20px_-15px_rgba(0,0,0,0.05)] shrink-0 z-10 relative">
-            {showCartSlotSelector ? (
-              <div className="p-6">
-                <button
-                  onClick={() => setShowCartSlotSelector(false)}
-                  className="text-ondo-green/50 font-body text-sm mb-5 flex items-center gap-1 hover:text-ondo-green transition-colors"
-                >
-                  ← {lang === 'es' ? 'Atrás' : 'Back'}
-                </button>
-                <p className="font-title text-[11px] uppercase tracking-[0.2em] text-ondo-green mb-2">
-                  {lang === 'es' ? 'ENTREGA' : 'DELIVERY'}
-                </p>
-                <p className="font-body text-ondo-green/70 text-[13px] mb-4">{content.deliverySlotSub}</p>
-                <div className="flex flex-col gap-2 mb-5">
-                  {(['slot_9_13', 'slot_13_17', 'slot_17_21'] as const).map((slotKey, i) => {
-                    const labels = [content.slot1, content.slot2, content.slot3];
-                    const sel = cartSlot === slotKey;
-                    return (
-                      <button
-                        key={slotKey}
-                        onClick={() => setCartSlot(slotKey)}
-                        className={`w-full text-left px-4 py-3 border-2 font-title font-bold text-[13px] uppercase tracking-wide transition-colors ${sel ? 'border-ondo-green bg-ondo-green text-white' : 'border-gray-200 hover:border-ondo-green/50 text-ondo-black'}`}
-                      >
-                        {labels[i]}
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  onClick={() => { if (cartSlot) handleCartCheckout(cartSlot); }}
-                  disabled={!cartSlot || isCheckingOut}
-                  className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {isCheckingOut ? (lang === 'es' ? 'Procesando...' : 'Processing...') : (lang === 'es' ? 'PROCEDER AL PAGO' : 'PROCEED TO PAYMENT')}
-                </button>
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-1 font-body text-[15px] text-gray-500">
-                  <span>{getSettingText('subtotal', content.subtotal)}</span>
-                  <span>{formatMoney(pricing.subtotal)}</span>
-                </div>
-                {pricing.discountAmount > 0 && (
-                  <div className="flex justify-between items-center mb-1 font-body text-[15px] text-ondo-green">
-                    <span>{lang === 'es' ? `Descuento (-${pricing.discountPercent}%)` : `Discount (-${pricing.discountPercent}%)`}</span>
-                    <span>-{formatMoney(pricing.discountAmount)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center mb-2 font-body text-[15px] text-gray-500">
-                  <span>{lang === 'es' ? 'Envío' : 'Shipping'}</span>
-                  <span>{pricing.shipping === 0 ? (lang === 'es' ? 'Gratis' : 'Free') : formatMoney(pricing.shipping)}</span>
-                </div>
-                <div className="flex justify-between items-center mb-5">
-                  <span className="font-title text-xl text-ondo-black">Total</span>
-                  <span className="font-title text-[28px] font-bold text-ondo-black">{formatMoney(pricing.total)}</span>
-                </div>
-                <button
-                  onClick={() => setShowCartSlotSelector(true)}
-                  disabled={isCheckingOut}
-                  className="w-full bg-ondo-orange hover:bg-ondo-light-green hover:text-ondo-black text-white font-title font-bold uppercase tracking-widest py-5 text-lg transition-colors shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {content.confirmAndPay}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Carrito: src/components/CartDrawer.tsx */}
+      <CartDrawer
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onBrowse={() => { setIsCartOpen(false); document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' }); }}
+        cart={cart}
+        pricing={pricing}
+        lang={lang}
+        resolveText={resolveText}
+        resolveImage={resolveImage}
+        onChangeQuantity={updateQuantity}
+        onCheckout={handleCartCheckout}
+      />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden flex items-center h-[calc(100vh-98px)] bg-ondo-beige pb-10">
@@ -1422,112 +1257,6 @@ export default function App() {
          </div>
       </footer>
 
-      {/* ── MODAL: Delivery Address ── */}
-      {showDeliveryModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-ondo-white shadow-2xl max-w-md w-full p-8 relative">
-            <button onClick={closeDeliveryModal} className="absolute top-4 right-4 p-2 hover:bg-ondo-beige transition-colors">
-              <X className="w-5 h-5 text-ondo-black" />
-            </button>
-
-            {deliveryStatus === 'idle' || deliveryStatus === 'checking' ? (
-              <>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-ondo-orange flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="font-title font-bold text-2xl uppercase text-ondo-black">
-                    {lang === 'es' ? '¿Dónde te enviamos?' : 'Where do we deliver?'}
-                  </h2>
-                </div>
-                <p className="font-body text-gray-500 text-sm mb-6 leading-relaxed">
-                  {lang === 'es'
-                    ? 'Antes de añadir al carrito, cuéntanos dónde estás para confirmar que podemos llegar hasta ti.'
-                    : 'Before adding to cart, let us know where you are so we can confirm we deliver to you.'}
-                </p>
-                <input
-                  type="text"
-                  value={deliveryPostal}
-                  onChange={e => setDeliveryPostal(e.target.value)}
-                  placeholder={lang === 'es' ? 'Código postal *' : 'Postal code *'}
-                  className="w-full border border-gray-200 px-4 py-3 font-body text-sm mb-5 focus:outline-none focus:border-ondo-orange bg-white"
-                />
-                <button
-                  onClick={checkDelivery}
-                  disabled={!deliveryPostal.trim() || deliveryStatus === 'checking'}
-                  className="w-full bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
-                >
-                  {deliveryStatus === 'checking'
-                    ? (lang === 'es' ? 'Comprobando…' : 'Checking…')
-                    : (lang === 'es' ? 'Confirmar zona' : 'Confirm zone')}
-                </button>
-              </>
-            ) : deliveryStatus === 'ok' ? (
-              <>
-                <div className="flex flex-col items-center text-center gap-4 py-4">
-                  <CheckCircle className="w-16 h-16 text-ondo-green" />
-                  <h2 className="font-title font-bold text-2xl uppercase text-ondo-black">
-                    {deliveryZones?.inZoneMessageEs && lang === 'es'
-                      ? deliveryZones.inZoneMessageEs
-                      : deliveryZones?.inZoneMessageEn || '¡Perfecto! Repartimos en tu zona 🎉'}
-                  </h2>
-                  <p className="font-body text-gray-500 text-sm">
-                    {lang === 'es' ? 'Ya puedes añadir tus productos al carrito.' : 'You can now add products to your cart.'}
-                  </p>
-                  <button
-                    onClick={confirmDeliveryAndClose}
-                    className="bg-ondo-orange text-white font-title font-bold uppercase tracking-widest py-4 px-8 text-sm mt-2"
-                  >
-                    {lang === 'es' ? 'Continuar comprando' : 'Continue shopping'}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-col items-center text-center gap-4 py-4">
-                  <AlertTriangle className="w-16 h-16 text-ondo-orange" />
-                  <h2 className="font-title font-bold text-xl uppercase text-ondo-black">
-                    {deliveryZones?.outOfZoneMessageEs && lang === 'es'
-                      ? deliveryZones.outOfZoneMessageEs
-                      : deliveryZones?.outOfZoneMessageEn || 'Pronto repartiremos en tu zona.'}
-                  </h2>
-                  {!emailSent ? (
-                    <>
-                      <p className="font-body text-gray-500 text-sm">
-                        {lang === 'es' ? 'Déjanos tu correo y te avisamos.' : 'Leave your email and we\'ll notify you.'}
-                      </p>
-                      <div className="flex w-full gap-2 mt-2">
-                        <input
-                          type="email"
-                          value={notifyEmail}
-                          onChange={e => setNotifyEmail(e.target.value)}
-                          placeholder={lang === 'es' ? 'tu@correo.com' : 'your@email.com'}
-                          className="flex-1 border border-gray-200 px-4 py-3 font-body text-sm focus:outline-none focus:border-ondo-orange bg-white"
-                        />
-                        <button
-                          onClick={submitNotifyEmail}
-                          disabled={!notifyEmail.trim()}
-                          className="bg-ondo-green text-white font-title font-bold uppercase px-4 text-xs disabled:opacity-40"
-                        >
-                          <Mail className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="font-body text-ondo-green font-bold text-sm">
-                      {lang === 'es' ? '¡Gracias! Te avisamos cuando estemos ahí 🌿' : 'Thanks! We\'ll notify you when we arrive 🌿'}
-                    </p>
-                  )}
-                  <button onClick={closeDeliveryModal} className="text-sm text-gray-400 underline mt-2 font-body">
-                    {lang === 'es' ? 'Cerrar' : 'Close'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ── MODAL: Cart Mix Warning ── */}
       {showMixWarning && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -1546,14 +1275,8 @@ export default function App() {
                 onClick={() => {
                   setCart([]);
                   if (mixPendingProduct) {
-                    if (!hasValidatedDelivery) {
-                      setPendingProduct(mixPendingProduct);
-                      setShowMixWarning(false);
-                      setShowDeliveryModal(true);
-                    } else {
-                      doAddToCart(mixPendingProduct);
-                      setShowMixWarning(false);
-                    }
+                    doAddToCart(mixPendingProduct);
+                    setShowMixWarning(false);
                   }
                   setMixPendingProduct(null);
                 }}
@@ -2561,7 +2284,12 @@ export default function App() {
       )}
 
       {/* ── PAYMENT SUCCESS POPUP ─────────────────────────────────── */}
-      {showPaymentSuccess && (
+      {showPaymentSuccess && paymentSuccessType === 'payment' && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <OrderSuccess summary={orderSummary} lang={lang} onClose={() => setShowPaymentSuccess(false)} />
+        </div>
+      )}
+      {showPaymentSuccess && paymentSuccessType === 'subscription' && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div
             className="bg-ondo-white shadow-2xl w-full max-w-md flex flex-col relative"

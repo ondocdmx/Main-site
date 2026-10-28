@@ -103,12 +103,15 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - **Suscripción** (`api/create-checkout-session.ts`): funnel quincenal/mensual
   × 4/6/10 sopas. Price IDs y montos en `settings.json` (`productId*`,
   `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
-- Envío: `shippingStripeProductId` (pese al nombre, es el **Price ID**
-  `price_…` que se cobra) + `shippingPrice` (importe mostrado) en
-  `settings.json`; gratis con `freeShippingMinSoups` (7) sopas o con una caja
-  (`boxShipsFree`); si no, se cobra (no hay recogida en
-  tienda). `shippingStripePriceId` (`prod_…`)
-  no lo usa el código.
+- Envío: `shippingPrice` (importe) en `settings.json`; se manda a Stripe
+  como opción de envío (`shipping_options`) con el día y la franja. Gratis con
+  `freeShippingMinSoups` (7) sopas o con una caja (`boxShipsFree`); si no, se
+  cobra (no hay recogida en tienda). `shippingStripeProductId` y
+  `shippingStripePriceId` ya no los usa el código.
+- Entrega: `deliveryDays`, `deliverySlots`, `orderCutoff` en `settings.json`;
+  `src/commerce/delivery.ts` calcula la fecha (hora de CDMX) para carrito,
+  funnel y servidor. Carrito: `src/components/CartDrawer.tsx`; página de
+  éxito: `src/components/OrderSuccess.tsx` + `api/checkout-summary.ts`.
 - `apiVersion` de Stripe fijada en `'2024-06-20'`.
 
 ## Campos de producto (`src/content/products.json`)
@@ -122,6 +125,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - Orden en la tienda = orden del array.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
+- `platedImage` → foto de la sopa servida (miniatura del carrito). Al añadir una sopa, rellenarlo.
 - `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe, y tiene envío gratis.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.

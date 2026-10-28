@@ -7,11 +7,11 @@ export interface DeliverySlot {
   id: string;
   start: string;
   end: string;
+  label: string;
 }
 
 export interface CommerceConfig {
   shippingFee: number;
-  shippingStripePriceId: string;
   freeShippingMinSoups: number;
   boxShipsFree: boolean;
   bulkDiscountMinItems: number;
@@ -22,15 +22,16 @@ export interface CommerceConfig {
   allowedPostalCodes: string[];
   deliveryDays: string[];
   deliverySlots: DeliverySlot[];
-  orderCutoff: { day: string; time: string; timeZone: string };
+  // Corte: `daysBefore` días antes de cada día de entrega, a la hora `time` (hora de `timeZone`).
+  orderCutoff: { daysBefore: number; time: string; timeZone: string };
+  whatsappNumber: string;
+  cartPaymentMethods: string[];
 }
 
 export const toCents = (pesos: number): number => Math.round(pesos * 100);
 
 export const COMMERCE: CommerceConfig = {
   shippingFee: toCents(settings.shippingPrice),
-  // Pese al nombre, shippingStripeProductId guarda el Price ID (price_…) del envío.
-  shippingStripePriceId: settings.shippingStripeProductId,
   freeShippingMinSoups: settings.freeShippingMinSoups,
   boxShipsFree: settings.boxShipsFree,
   // Descuento por volumen: un solo escalón (cartDiscount2*). Percent vacío/0 = desactivado.
@@ -40,8 +41,9 @@ export const COMMERCE: CommerceConfig = {
   welcomeCode: settings.welcomeCode,
   welcomePercent: settings.welcomePercent,
   allowedPostalCodes: deliveryZones.allowedPostalCodes,
-  // Aún no conectados: el día, las franjas y el corte siguen fijos en App.tsx (Fase 3).
   deliveryDays: settings.deliveryDays,
   deliverySlots: settings.deliverySlots,
   orderCutoff: settings.orderCutoff,
+  whatsappNumber: settings.whatsappNumber,
+  cartPaymentMethods: settings.cartPaymentMethods,
 };

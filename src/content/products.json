@@ -19,6 +19,7 @@
     ],
     "ingredients": null,
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/ondo-box-image.webp",
     "price": 600,
     "purchaseType": "single",
     "slug": "ondo-box",
@@ -54,6 +55,7 @@
       "es": "Garbanzos, rabo de toro, jitomate, cebolla, ajo, comino, laurel"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/garbanzo-y-rabo-hoverimage.webp",
     "price": 150,
     "purchaseType": "single",
     "slug": "garbanzo-y-rabo",
@@ -97,6 +99,7 @@
       "es": "Res de libre pastoreo (chambarete), papa, zanahoria, cebolla, col, especias. \n\n"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/estofado-ingles-hoverimage.webp",
     "price": 150,
     "purchaseType": "single",
     "slug": "estofado-ingles",
@@ -141,6 +144,7 @@
       "es": "Betabel rojo, amarillo y anaranjado, espelta, papa, zanahoria y hierbas."
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/betabespelta-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "betabespelta",
@@ -189,6 +193,7 @@
       "es": "Calabaza de Castilla, lentejas rojas, leche de coco, jengibre, cúrcuma, comino"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/calabaza-de-castilla-dahl-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "calabaza-de-castilla-dahl",
@@ -236,6 +241,7 @@
       "es": "Coliflor, avellanas tostadas, crema, ajo asado, nuez moscada, aceite de oliva"
     },
     "onlySubscriptions": null,
+    "platedImage": "/images/cms/coliflor-avellanada-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "coliflor-avellanada",
@@ -282,6 +288,7 @@
       "es": "Berenjena, lentejas, yogurt, limon eureka, aceite de oliva, cebolla, comino, paprika"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/berenjena-al-fuego-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "berenjena-al-fuego",
@@ -329,6 +336,7 @@
       "es": "Chícharo, brócoli, espinacas, quelites, kale, apio, cebolla, menta, perejil, caldo vegetal, nuez de la India"
     },
     "onlySubscriptions": null,
+    "platedImage": "/images/cms/mega-verde-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "mega-verde",
@@ -373,6 +381,7 @@
       "en": "Cod, corn"
     },
     "onlySubscriptions": true,
+    "platedImage": "/images/cms/chowder-bacalao-image.webp",
     "price": 150,
     "purchaseType": "subscription",
     "slug": "chowder-bacalao",
@@ -422,6 +431,7 @@
       "es": "Jitomate, pepino, pimiento, ajo, cebolla, aceite de oliva, vinagre"
     },
     "onlySubscriptions": null,
+    "platedImage": "/images/cms/pro-gazpacho-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "pro-gazpacho",
@@ -482,6 +492,7 @@
       "es": "Verduras mixtas, pollo, garbanzo, chipotle/morita, epazote, ejote, jitomate, panela, achiote"
     },
     "onlySubscriptions": null,
+    "platedImage": "/images/cms/sopa-tlalpena-hoverimage.webp",
     "price": 150,
     "purchaseType": "single",
     "slug": "sopa-tlalpena",
@@ -542,6 +553,7 @@
       "es": "Jitomate fresco, spätzle alemán y albóndigas de cerdo con hinojo"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/salchispatzle-hoverimage.webp",
     "price": 150,
     "purchaseType": "single",
     "slug": "salchispatzle",
@@ -602,6 +614,7 @@
       "es": "Cebolla, mantequilla, champiñones, tomillo, caldo vegetal, jeréz, pan artesanal, queso"
     },
     "onlySubscriptions": false,
+    "platedImage": "/images/cms/cebolla-caramelizada-hoverimage.webp",
     "price": 125,
     "purchaseType": "single",
     "slug": "cebolla-caramelizada",

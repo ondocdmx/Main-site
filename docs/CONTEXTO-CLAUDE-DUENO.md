@@ -231,9 +231,9 @@ ambos lados.
 - Cada sopa tiene un `stripePriceId` en `src/content/products.json`.
 - El carrito no permite mezclar productos `single` con `subscription`
   (`purchaseType`).
-- **Envío**: precio de Stripe en `shippingStripeProductId` (pese al nombre es
-  un Price ID; hoy `price_1TVdyM3Xzew6cmN1XeoTHlMC`, $50 mostrado en
-  `shippingPrice`). `shippingStripePriceId` (`prod_…`) no lo usa el código.
+- **Envío**: `shippingPrice` ($50) en `settings.json`, enviado a Stripe como
+  opción de envío con el día y la franja ("Entrega lunes 2 de noviembre,
+  9–13 h"). `shippingStripeProductId`/`shippingStripePriceId` ya no se usan.
   Gratis con 7+ sopas (`freeShippingMinSoups`) o si hay una caja
   (`boxShipsFree`); si no, se cobra (ONDO no hace recogida en tienda).
 - **Motor de precios**: `priceCart()` en `src/commerce/priceCart.ts` calcula
@@ -282,7 +282,7 @@ ambos lados.
 | "Quiero un código de descuento" | Se crea en **Stripe → Promotions** (cupón + código). No requiere código en la web. Si quiere anunciarlo, cambia el texto del banner intermedio |
 | "Quita/cambia el descuento por cantidad" | Ajusta `cartDiscount2*` en `settings.json` (`Percent` vacío o 0 = desactivado; un solo escalón). Si cambia el %, debe crear el cupón correspondiente en Stripe y actualizar el `couponId` |
 | "Cambia el precio de la suscripción" | Nuevo Price recurrente en Stripe → actualizar `productId…`, `amount…` y `price…` de esa combinación |
-| "Cambia el envío" | Nuevo Price en Stripe → `shippingStripeProductId` + `shippingPrice` |
+| "Cambia el envío" | Solo `shippingPrice` en `settings.json` (se manda a Stripe como opción de envío; no hace falta crear nada en Stripe) |
 | "Reembolsa a un cliente" | Lo hace el dueño en Stripe → Pagos → Reembolsar (o tú con el conector, solo con confirmación explícita) |
 
 ---

@@ -64,7 +64,7 @@ Where things live:
   `api/create-cart-checkout.ts` both call it. `src/commerce/config.ts` reads the rules from the JSON files
   (no separate config file). Tests: `npm test` (`src/commerce/priceCart.test.ts`, `tests/`).
   The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
-* Shipping: `shippingPrice` ($50, shown) + `shippingStripeProductId` (the Price ID charged) in `settings.json`.
+* Shipping: `shippingPrice` ($50) in `settings.json`, sent to Stripe as a shipping option (no Price ID since Phase 1.2).
   Free when the cart has `freeShippingMinSoups` (7) or more individual soups, or contains a box
   (`boxShipsFree`). The free-shipping zone is not checked on the server yet (Phase 3).
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
@@ -81,16 +81,25 @@ Where things live:
   (10%, duration "Once", so subscription renewals are not discounted). Stripe's "first-time order only"
   is ticked on the promotion code. It works wherever the code field shows (carts under 10 items,
   subscriptions) and can't stack with the 20%. `welcomeCode`/`welcomePercent` in settings.json mirror it
-  for `priceCart()`, but the cart has no code field yet: Stripe applies ONDOFIRST on its own page. The coupon has no product restriction, so it also takes
-  10% off the $50 shipping line. The site doesn't advertise it yet. Stripe's first-order check doesn't
+  for `priceCart()`, but the cart has no code field yet: Stripe applies ONDOFIRST on its own page. Since Phase 1.2
+  shipping is a Stripe shipping option, so coupons (ONDOFIRST included) no longer discount it. The site doesn't advertise it yet. Stripe's first-order check doesn't
   catch a returning customer with a new email; stricter enforcement is Phase 4.
-* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked in the
-  browser before adding to cart. Outside the zone the customer can't add to cart; the address (and
-  email, if they ask to be notified) becomes a lead in Google Sheets.
-* Delivery day: Monday, hard-coded in `src/App.tsx` (`getNextMonday()`). Slots 9–13, 13–17, 17–21 are
-  hard-coded in the `t` object in `App.tsx`. Orders until Sunday 23:59 → next day; on Monday → the
-  following Monday. That matches the owner's cutoff (Sunday before midnight), but it's calculated in the
-  customer's browser, once at page load, and the server never checks it. The date is not saved on the order.
+* Cart (Phase 1.2, `src/components/CartDrawer.tsx`): one screen with the soups, the benefits bar, the delivery
+  block (date, slot, postal code) and "Pagar $X" straight to Stripe. Cart, slot and postal code are saved in
+  localStorage (`ondo_cart`, `ondo_cart_slot`, `ondo_cart_postal`). Cart thumbnails use `platedImage` (products.json).
+* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked live in the cart
+  (no pop-up before adding to cart any more) and again on the server. Out of zone: no checkout, a WhatsApp
+  button, and an optional email; the postal code (and email) become a lead in Google Sheets. The subscription
+  funnel keeps its own postal-code step.
+* Delivery day: `deliveryDays` (['monday']), `deliverySlots` and `orderCutoff` (1 day before, 23:59, Mexico City)
+  in settings.json, computed by `src/commerce/delivery.ts` for the cart, the funnel and the server. The server
+  re-checks slot, postal code and date (409 if the cutoff passed) and saves `delivery_date`, `delivery_slot`,
+  `delivery_postal`, `discount_type` on the Checkout Session and the PaymentIntent. Stripe collects the address.
+* Cart checkout (`api/create-cart-checkout.ts`): Stripe in Spanish (`es-419`), card only (Apple/Google Pay come
+  with card if enabled in the Dashboard), shipping as a shipping option "Entrega lunes 2 de noviembre, 9–13 h".
+  OXXO, the order webhook and the manual-review email are Phase 1.2b (not built).
+* Success page: `api/checkout-summary.ts` reads the order from Stripe (no personal data) for the Spanish
+  confirmation pop-up (`src/components/OrderSuccess.tsx`).
 * Subscriptions (`api/create-checkout-session.ts`): six Stripe Price IDs (`productId*`) and the price shown
   for 3 months (`amount*`) in `settings.json`. Every 2 weeks = 6 deliveries in 3 months; monthly = 3.
   Price per soup: monthly 4/6/10 = $106.25 / $100 / $95; every 2 weeks 4/6/10 = $100 / $95.83 / $90.
