@@ -70,9 +70,12 @@ Where things live:
   price while the cart shows −20%. Coupons can't be edited: create a new one and update the ID.
 * Promo codes: when no volume discount applies, the cart checkout shows Stripe's promo-code field.
   The subscription checkout always shows it. ONDOFIRST exists in Stripe since 28 Oct 2026: customers type
-  the promotion code `ONDOFIRST`; the coupon behind it is `ggW569cH` (10%). It works wherever the code
-  field shows (carts under 10 items, subscriptions) and can't stack with the 20%. The site doesn't
-  advertise it anywhere yet. "First order only" is not enforced by the site (Phase 4).
+  the promotion code `ONDOFIRST` (`promo_1UVPzV3Xzew6cmN1P0h1dkh7`); the coupon behind it is `ggW569cH`
+  (10%, duration "Once", so subscription renewals are not discounted). Stripe's "first-time order only"
+  is ticked on the promotion code. It works wherever the code field shows (carts under 10 items,
+  subscriptions) and can't stack with the 20%. The coupon has no product restriction, so it also takes
+  10% off the $50 shipping line. The site doesn't advertise it yet. Stripe's first-order check doesn't
+  catch a returning customer with a new email; stricter enforcement is Phase 4.
 * Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked in the
   browser before adding to cart. Outside the zone the customer can't add to cart; the address (and
   email, if they ask to be notified) becomes a lead in Google Sheets.
