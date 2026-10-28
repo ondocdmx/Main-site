@@ -234,11 +234,14 @@ ambos lados.
 - **Envío**: precio de Stripe en `shippingStripeProductId` (pese al nombre es
   un Price ID; hoy `price_1TVdyM3Xzew6cmN1XeoTHlMC`, $50 mostrado en
   `shippingPrice`). `shippingStripePriceId` (`prod_…`) no lo usa el código.
-  Se cobra en todo pedido del carrito: ONDO no hace recogida en tienda.
-- **Descuentos por volumen**: dos escalones (`cartDiscount1*`,
-  `cartDiscount2*`: mínimo de sopas, porcentaje, ID de cupón de Stripe y
-  etiqueta). Si el porcentaje está vacío o en 0, el escalón desaparece de
-  toda la web. El % mostrado es escaparate; lo que se cobra es el **cupón de
+  Gratis con 7+ sopas (`freeShippingMinSoups`) o si hay una caja
+  (`boxShipsFree`); si no, se cobra (ONDO no hace recogida en tienda).
+- **Motor de precios**: `priceCart()` en `src/commerce/priceCart.ts` calcula
+  todo (subtotal, descuento, envío, total) para el carrito y para la API.
+  El navegador solo manda `_id` + cantidad. Tests: `npm test`.
+- **Descuento por volumen**: un escalón (`cartDiscount2*`: mínimo, porcentaje,
+  ID de cupón de Stripe). Si el porcentaje está vacío o en 0, desaparece de
+  toda la web. La caja (`isBox`) cuenta como 1 pero nunca recibe el 20%. El % mostrado es escaparate; lo que se cobra es el **cupón de
   Stripe** (`couponId`). Deben coincidir.
 - **Regla de Stripe**: no se puede mandar `discounts` y
   `allow_promotion_codes` a la vez. Si aplica descuento por volumen → va el
@@ -246,8 +249,8 @@ ambos lados.
   (códigos tipo `ONDOFIRST`, creados en Stripe → Promotions).
 - Los datos de entrega (franja, teléfono, email, dirección, CP) van en la
   `metadata` del pago. Stripe además pide dirección (solo MX) y teléfono.
-- Precios mostrados, popup de producto y carrito usan `activeDiscount`:
-  **al tocar descuentos revisa los tres sitios**.
+- Precios mostrados, popup de producto y carrito leen el resultado de
+  `priceCart()`: **al tocar reglas de dinero, cambia el motor y sus tests**.
 
 ### 4.3 Suscripción — `api/create-checkout-session.ts`
 
@@ -277,7 +280,7 @@ ambos lados.
 |---|---|
 | "Sube la sopa X a $160" | 1) Pide al dueño (o con el conector de Stripe, tras confirmar) crear un **nuevo Price** de $160 en el producto de Stripe de esa sopa. Los precios de Stripe no se editan, se crean nuevos. 2) Cambia `stripePriceId` y `price` de esa sopa en `src/content/products.json`. 3) PR + preview + merge. 4) Haz una compra de prueba o revisa el checkout. 5) Opcional: archivar el precio viejo en Stripe |
 | "Quiero un código de descuento" | Se crea en **Stripe → Promotions** (cupón + código). No requiere código en la web. Si quiere anunciarlo, cambia el texto del banner intermedio |
-| "Quita/cambia el descuento por cantidad" | Ajusta `cartDiscountN*` en `settings.json` (`Percent` vacío o 0 = escalón desactivado). Si cambia el %, debe crear el cupón correspondiente en Stripe y actualizar el `couponId` |
+| "Quita/cambia el descuento por cantidad" | Ajusta `cartDiscount2*` en `settings.json` (`Percent` vacío o 0 = desactivado; un solo escalón). Si cambia el %, debe crear el cupón correspondiente en Stripe y actualizar el `couponId` |
 | "Cambia el precio de la suscripción" | Nuevo Price recurrente en Stripe → actualizar `productId…`, `amount…` y `price…` de esa combinación |
 | "Cambia el envío" | Nuevo Price en Stripe → `shippingStripeProductId` + `shippingPrice` |
 | "Reembolsa a un cliente" | Lo hace el dueño en Stripe → Pagos → Reembolsar (o tú con el conector, solo con confirmación explícita) |

@@ -59,14 +59,20 @@ Where things live:
 
 * Soup prices: per product in `src/content/products.json`: `price` (shown) + `stripePriceId` (charged).
   $125 vegetarian/vegan, $150 meat/fish, Ondo Box (5 soups) $600.
+* Pricing engine (Phase 1.1, 28 Oct 2026): `priceCart()` in `src/commerce/priceCart.ts` is the ONLY place
+  that calculates the cart's subtotal, discount, shipping and total (in centavos). The cart UI and
+  `api/create-cart-checkout.ts` both call it. `src/commerce/config.ts` reads the rules from the JSON files
+  (no separate config file). Tests: `npm test` (`src/commerce/priceCart.test.ts`, `tests/`).
+  The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
 * Shipping: `shippingPrice` ($50, shown) + `shippingStripeProductId` (the Price ID charged) in `settings.json`.
-  Charged on every home-delivery order. There is no free-shipping threshold today.
+  Free when the cart has `freeShippingMinSoups` (7) or more individual soups, or contains a box
+  (`boxShipsFree`). The free-shipping zone is not checked on the server yet (Phase 3).
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
-  Every cart order pays shipping, and orders are saved with `delivery_type: home_delivery`.
+  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`box`, `minSoups` or empty).
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
-  by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is not set (off).
-  Items with `excludeFromVolumeDiscount: true` in products.json (the box) count as 1 item toward the 10
-  but never get the 20%. Stripe can't exclude products from a coupon, only include them, so the coupon
+  by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is no longer read.
+  Items with `isBox: true` in products.json (the box) count as 1 item toward the 10
+  but never get the 20%, and ship free. Stripe can't exclude products from a coupon, only include them, so the coupon
   lists every individual soup. ADDING A NEW SOUP: it must be on that coupon, or Stripe charges it at full
   price while the cart shows −20%. Coupons can't be edited: create a new one and update the ID.
 * Promo codes: when no volume discount applies, the cart checkout shows Stripe's promo-code field.
@@ -74,7 +80,8 @@ Where things live:
   the promotion code `ONDOFIRST` (`promo_1UVPzV3Xzew6cmN1P0h1dkh7`); the coupon behind it is `ggW569cH`
   (10%, duration "Once", so subscription renewals are not discounted). Stripe's "first-time order only"
   is ticked on the promotion code. It works wherever the code field shows (carts under 10 items,
-  subscriptions) and can't stack with the 20%. The coupon has no product restriction, so it also takes
+  subscriptions) and can't stack with the 20%. `welcomeCode`/`welcomePercent` in settings.json mirror it
+  for `priceCart()`, but the cart has no code field yet: Stripe applies ONDOFIRST on its own page. The coupon has no product restriction, so it also takes
   10% off the $50 shipping line. The site doesn't advertise it yet. Stripe's first-order check doesn't
   catch a returning customer with a new email; stricter enforcement is Phase 4.
 * Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked in the
