@@ -69,8 +69,10 @@ Where things live:
   lists every individual soup. ADDING A NEW SOUP: it must be on that coupon, or Stripe charges it at full
   price while the cart shows −20%. Coupons can't be edited: create a new one and update the ID.
 * Promo codes: when no volume discount applies, the cart checkout shows Stripe's promo-code field.
-  The subscription checkout always shows it. ONDOFIRST does NOT exist in Stripe yet (owner, 27 Oct 2026);
-  it only appears in a code comment and an unused default banner text.
+  The subscription checkout always shows it. ONDOFIRST exists in Stripe since 28 Oct 2026: customers type
+  the promotion code `ONDOFIRST`; the coupon behind it is `ggW569cH` (10%). It works wherever the code
+  field shows (carts under 10 items, subscriptions) and can't stack with the 20%. The site doesn't
+  advertise it anywhere yet. "First order only" is not enforced by the site (Phase 4).
 * Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked in the
   browser before adding to cart. Outside the zone the customer can't add to cart; the address (and
   email, if they ask to be notified) becomes a lead in Google Sheets.
