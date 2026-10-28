@@ -48,7 +48,9 @@ Part 3 is where we are going: it is NOT built. Never treat Part 3 as a descripti
 
 ### Reference
 
-* Design mockups (mobile): Home, Producto, Carrito, Oferta de bienvenida. Omar will share screenshots.
+* Design mockups (mobile) live in docs/mockups: home-*.png, producto.png, carrito.png, bienvenida.png.
+  They show layout and intent, not exact pixels. Where a mockup and a written spec disagree, the written
+  spec wins. Use the site's existing fonts, colors and components, not the mockups' stand-ins.
 * WhatsApp: +52 55 8525 9797 · Email: ondocdmx@gmail.com
 
 ## 2. CURRENT STATE (verified in the code, 27 Oct 2026)
