@@ -41,6 +41,7 @@ Los secretos, las cuentas a ceder y la verificación post-traspaso están en
 npm run dev        # dev server en :3000
 npm run lint       # tsc --noEmit (typecheck)
 npm run build      # build de producción
+npm run server     # funciones de api/ en local (:3001); npm run dev les reenvía /api
 ```
 
 Deploy a producción = `git push origin main` (Vercel construye solo, incluye
@@ -98,7 +99,8 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
   `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
 - Envío: `shippingStripeProductId` (pese al nombre, es el **Price ID**
   `price_…` que se cobra) + `shippingPrice` (importe mostrado) en
-  `settings.json`; no se cobra en pickup. `shippingStripePriceId` (`prod_…`)
+  `settings.json`; se cobra en todo pedido del carrito (no hay recogida en
+  tienda). `shippingStripePriceId` (`prod_…`)
   no lo usa el código.
 - `apiVersion` de Stripe fijada en `'2024-06-20'`.
 

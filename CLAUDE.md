@@ -59,9 +59,8 @@ Where things live:
   $125 vegetarian/vegan, $150 meat/fish, Ondo Box (5 soups) $600.
 * Shipping: `shippingPrice` ($50, shown) + `shippingStripeProductId` (the Price ID charged) in `settings.json`.
   Charged on every home-delivery order. There is no free-shipping threshold today.
-* Pickup: does not exist. No screen offers it, so every cart order pays shipping. Leftover pickup texts
-  (`slotPickup*`, `pickupNote` in `App.tsx`) and the `isPickup` branch in `api/create-cart-checkout.ts`
-  are dead code. Owner decision 28 Oct 2026: Ondo does not do pickups.
+* No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
+  Every cart order pays shipping, and orders are saved with `delivery_type: home_delivery`.
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
   by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is not set (off).
   Items with `excludeFromVolumeDiscount: true` in products.json (the box) count as 1 item toward the 10
@@ -128,7 +127,7 @@ Decisions already made:
   Subscriptions keep their Price IDs until Phase 5.
 * Business rules live in the existing `settings.json`, `products.json` and `deliveryZones.json`.
   Do not create a new config file.
-* No pickup (owner, 28 Oct 2026). Remove the leftover pickup texts and code in a cleanup task.
+* No pickup (owner, 28 Oct 2026). Don't add pickup back unless Omar asks.
 * Stripe webhook (approved 28 Oct 2026): record every paid order (with its delivery date) somewhere the
   team can read, e.g. a Google Sheet, and keep a record of past buyers (needed to enforce ONDOFIRST).
 * Gift option (coming): a one-time 3-month plan, paid once, that anyone can buy, including for themselves.

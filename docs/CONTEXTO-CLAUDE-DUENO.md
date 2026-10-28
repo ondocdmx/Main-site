@@ -175,7 +175,7 @@ momento; no asumas.
 | `index.html` | Snippet de GTM, meta tags, fuentes |
 | `public/images/`, `public/fonts/` | Imágenes y fuentes locales |
 | `scripts/export-sanity.mjs` | Script de la migración (una vez). Solo referencia: Sanity se da de baja |
-| `server.ts` | Servidor Express para probar `api/` en local (opcional, legado) |
+| `server.ts` | Servidor local (`npm run server`, :3001) que ejecuta las mismas funciones de `api/` que Vercel |
 | `docs/` | `TRACKING.md`, `VERIFICACION-TRACKING.md` (analítica), `TRASPASO.md` (accesos), `MANUAL-DEL-NEGOCIO.md` (para el dueño) |
 
 Basura heredada que puedes limpiar (con permiso): `README.md` (plantilla de
@@ -239,7 +239,7 @@ ambos lados.
 - **Envío**: precio de Stripe en `shippingStripeProductId` (pese al nombre es
   un Price ID; hoy `price_1TVdyM3Xzew6cmN1XeoTHlMC`, $50 mostrado en
   `shippingPrice`). `shippingStripePriceId` (`prod_…`) no lo usa el código.
-  No se cobra si el cliente elige *pickup*.
+  Se cobra en todo pedido del carrito: ONDO no hace recogida en tienda.
 - **Descuentos por volumen**: dos escalones (`cartDiscount1*`,
   `cartDiscount2*`: mínimo de sopas, porcentaje, ID de cupón de Stripe y
   etiqueta). Si el porcentaje está vacío o en 0, el escalón desaparece de
@@ -521,12 +521,11 @@ npm run lint            # typecheck
 npm run build           # build de producción
 ```
 
-Las funciones `api/` en local: `npm run dev` solo sirve el frontend. Para
-probar el checkout en local usa `vercel dev` (requiere `vercel login` con
-la cuenta del dueño) o `npm run server` (`server.ts`, puerto 3001; ojo,
-solo replica los dos endpoints de pago, no `submit-soup-lead` ni
-`submit-delivery-lead`, y puede estar desfasado respecto a `api/` —
-compáralo antes de fiarte).
+Las funciones `api/` en local: `npm run dev` solo sirve el frontend. En otra
+terminal, `npm run server` (`server.ts`, puerto 3001) ejecuta los cuatro
+archivos de `api/` tal cual (no es una copia), y `npm run dev` le reenvía
+`/api`. Usa una clave `sk_test_…` en `.env`. También vale `vercel dev`
+(requiere `vercel login` con la cuenta del dueño).
 
 ---
 

@@ -78,13 +78,10 @@ const t = {
     slot1: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 9:00 – 13:00`,
     slot2: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 13:00 – 17:00`,
     slot3: `${nextEs.charAt(0).toUpperCase() + nextEs.slice(1)} · 17:00 – 21:00`,
-    slotPickup: "Ninguna me viene bien",
-    slotPickupSub: "Recojo en tienda (Roma Norte) · Sin coste de envío",
     deliveryContactTitle: "¿Cómo te avisamos cuando vamos de camino?",
     deliveryPhone: "Teléfono",
     deliveryEmail: "Email",
     deliveryContactNote: "Introduce al menos uno para poder avisarte.",
-    pickupNote: "Te contactaremos para coordinar el horario de recogida en nuestra tienda de Roma Norte.",
     confirmAndPay: "Confirmar y pagar",
     deliverySlotRequired: "Selecciona una franja horaria para continuar.",
     deliveryContactRequired: "Introduce un teléfono o email para que podamos avisarte de la entrega.",
@@ -131,13 +128,10 @@ const t = {
     slot1: `${nextEn} · 9:00 – 13:00`,
     slot2: `${nextEn} · 13:00 – 17:00`,
     slot3: `${nextEn} · 17:00 – 21:00`,
-    slotPickup: "None of these work for me",
-    slotPickupSub: "Pick up in store (Roma Norte) · No delivery charge",
     deliveryContactTitle: "How should we notify you when we're on our way?",
     deliveryPhone: "Phone",
     deliveryEmail: "Email",
     deliveryContactNote: "Enter at least one so we can reach you.",
-    pickupNote: "We'll contact you to coordinate a pick-up time at our Roma Norte store.",
     confirmAndPay: "Confirm & Pay",
     deliverySlotRequired: "Please select a time slot to continue.",
     deliveryContactRequired: "Please enter a phone or email so we can notify you about your delivery.",
@@ -637,7 +631,6 @@ export default function App() {
         setIsCheckingOut(false);
         return;
       }
-      const isPickup = slot === 'pickup';
       const shippingProductId = getSetting('shippingStripeProductId', '');
       const shippingPrice = getSetting('shippingPrice', 0);
       const savedAddress = localStorage.getItem('ondo_delivery_address') || '';
@@ -654,7 +647,6 @@ export default function App() {
           deliveryPostal: savedPostal,
           shippingProductId,
           shippingPrice,
-          isPickup,
         }),
       });
       // begin_checkout + snapshot (value con descuento aplicado, sin envío)
