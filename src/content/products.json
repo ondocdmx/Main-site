@@ -7,6 +7,7 @@
       "es": "La forma más fácil de conocer Ondo. Cinco sopas que cubren todo lo que hacemos: Mega Verde para los días que quieres sentirte bien, Coliflor Avellanada cuando quieres lujo sin esfuerzo, Calabaza Dahl para presumir, Garbanzo y Rabo para el hambre de verdad, y Salchispätzle porque el confort no pide permiso. Llena el congelador y estás cubierto toda la semana."
     },
     "excludeFromFunnel": true,
+    "excludeFromVolumeDiscount": true,
     "hoverImage": "/images/cms/ondo-box-hoverimage-v2.webp",
     "image": "/images/cms/ondo-box-image.webp",
     "images": [

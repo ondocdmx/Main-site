@@ -605,10 +605,17 @@ export default function App() {
     }
     return null;
   })();
-  const activeDiscountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
+  // Productos con excludeFromVolumeDiscount (products.json, ej. la caja) cuentan para el mínimo
+  // de artículos pero no reciben el descuento. El cupón de Stripe debe excluirlos también.
+  const productDiscount = (product: any) => (activeDiscount && !product?.excludeFromVolumeDiscount ? activeDiscount : null);
+  const productDiscountMult = (product: any) => {
+    const d = productDiscount(product);
+    return d ? (1 - d.pct / 100) : 1;
+  };
+  const hasDiscountableItem = cart.some((item: { product: any }) => !item.product.excludeFromVolumeDiscount);
 
   const cartSubtotal = cart.reduce(
-    (a: number, b: { product: any; quantity: number }) => a + b.product.price * activeDiscountMult * b.quantity,
+    (a: number, b: { product: any; quantity: number }) => a + b.product.price * productDiscountMult(b.product) * b.quantity,
     0
   );
   const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
@@ -616,7 +623,6 @@ export default function App() {
   const handleCartCheckout = async (slot: string) => {
     setIsCheckingOut(true);
     try {
-      const discountMult = activeDiscount ? (1 - activeDiscount.pct / 100) : 1;
       const cartItems = cart.map((item: { product: any; quantity: number }) => ({
         productId: item.product.stripePriceId, quantity: item.quantity,
       }));
@@ -637,7 +643,7 @@ export default function App() {
         body: JSON.stringify({
           origin: window.location.origin,
           cartItems,
-          couponId: activeDiscount?.couponId || undefined,
+          couponId: (hasDiscountableItem && activeDiscount?.couponId) || undefined,
           deliverySlot: slot,
           deliveryAddress: savedAddress,
           deliveryPostal: savedPostal,
@@ -648,7 +654,7 @@ export default function App() {
       });
       // begin_checkout + snapshot (value con descuento aplicado, sin envío)
       const cartGA4Items = cart.map((item: { product: any; quantity: number }) => productToItem(item.product, item.quantity));
-      const cartValue = cartGA4Items.reduce((sum: number, it: any) => sum + it.price * it.quantity, 0) * discountMult;
+      const cartValue = cart.reduce((sum: number, item: { product: any; quantity: number }) => sum + item.product.price * productDiscountMult(item.product) * item.quantity, 0);
       pushEcommerce('begin_checkout', cartGA4Items, { value: Number(cartValue.toFixed(2)) });
       saveCheckoutSnapshot('payment', cartGA4Items, cartValue);
       const data = await res.json();
@@ -805,13 +811,13 @@ export default function App() {
                      <div className="flex justify-between gap-2 mb-2">
                         <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
                         <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
-                           {activeDiscount ? (
+                           {productDiscount(item.product) ? (
                              <>
                                <span className="line-through text-gray-400 text-xs">${(item.product.price * item.quantity).toFixed(2)}</span>
                                <span className="text-ondo-orange flex items-center gap-1">
-                                 ${(item.product.price * item.quantity * (1 - activeDiscount.pct / 100)).toFixed(2)}
+                                 ${(item.product.price * item.quantity * productDiscountMult(item.product)).toFixed(2)}
                                  <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
-                                   -{activeDiscount.pct}%
+                                   -{productDiscount(item.product)!.pct}%
                                  </span>
                                </span>
                              </>
@@ -1051,12 +1057,12 @@ export default function App() {
                       )}
                       <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
                       <div className="font-body font-bold mb-5 text-[16px]">
-                        {activeDiscount ? (
+                        {productDiscount(product) ? (
                           <div className="flex items-center gap-2">
                             <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">${(product.price * (1 - activeDiscount.pct / 100)).toFixed(2)}</span>
+                            <span className="text-ondo-orange">${(product.price * productDiscountMult(product)).toFixed(2)}</span>
                             <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                              -{activeDiscount.pct}%
+                              -{productDiscount(product)!.pct}%
                             </span>
                           </div>
                         ) : (
@@ -1704,12 +1710,12 @@ export default function App() {
 
                 {/* Price */}
                 <div className="font-title font-black text-[28px] mb-5">
-                  {activeDiscount ? (
+                  {productDiscount(selectedProduct) ? (
                     <div className="flex items-center gap-3">
                       <span className="line-through text-gray-400 text-[20px]">${selectedProduct.price?.toFixed(2)}</span>
-                      <span className="text-ondo-orange">${(selectedProduct.price * (1 - activeDiscount.pct / 100)).toFixed(2)}</span>
+                      <span className="text-ondo-orange">${(selectedProduct.price * productDiscountMult(selectedProduct)).toFixed(2)}</span>
                       <span className="bg-ondo-orange text-white text-[12px] px-2 py-1 rounded-sm uppercase tracking-wide self-center mb-1">
-                        -{activeDiscount.pct}%
+                        -{productDiscount(selectedProduct)!.pct}%
                       </span>
                     </div>
                   ) : (
