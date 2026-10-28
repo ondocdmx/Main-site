@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const {
     origin, cartItems, couponId,
     deliverySlot, deliveryPhone, deliveryEmail, deliveryAddress, deliveryPostal,
-    shippingProductId, isPickup,
+    shippingProductId,
   } = req.body;
 
   if (!Array.isArray(cartItems) || cartItems.length === 0) {
@@ -29,7 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     quantity: item.quantity,
   }));
 
-  if (!isPickup && shippingProductId) {
+  // Ondo no hace recogida en tienda: todo pedido del carrito lleva envío.
+  if (shippingProductId) {
     line_items.push({
       price: shippingProductId,
       quantity: 1,
@@ -47,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     payment_intent_data: {
       receipt_email: deliveryEmail || undefined,
       metadata: {
-        delivery_type: isPickup ? 'pickup' : 'home_delivery',
+        delivery_type: 'home_delivery',
         delivery_slot: deliverySlot || '',
         delivery_phone: deliveryPhone || '',
         delivery_email: deliveryEmail || '',

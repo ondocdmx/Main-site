@@ -80,8 +80,8 @@ descuento automático 10%, con 10+ el 20% — visible en el carrito).
 
 ## Sobre la compra de prueba
 
-- Es un **pago real**. Recomendado: la sopa más barata + opción pickup
-  ("recojo en tienda") para no sumar envío.
+- Es un **pago real**. Recomendado: la sopa más barata (se suma el envío de
+  $50: no hay recogida en tienda).
 - El **reembolso** lo ejecuta el negocio desde el dashboard de Stripe
   (no afecta al evento ya enviado a GA4).
 
