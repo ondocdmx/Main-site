@@ -309,7 +309,7 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
                 {isPaying ? (es ? 'Abriendo el pago…' : 'Opening checkout…') : `${es ? 'Pagar' : 'Pay'} ${formatMXN(pricing.total)}`}
               </button>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                {COMMERCE.cartPaymentMethods.map(m => (
+                {[...COMMERCE.cartPaymentMethods, ...(COMMERCE.oxxoEnabled ? ['OXXO'] : [])].map(m => (
                   <span key={m} className="px-2.5 py-1 rounded-lg border border-brand-ink/20 font-body text-[13px] font-semibold">{m}</span>
                 ))}
               </div>

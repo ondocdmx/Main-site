@@ -17,7 +17,6 @@ export interface CommerceConfig {
   cheapestSoupPrice: number; // sopa individual más barata a la venta (para "agrega 1 sopa más")
   bulkDiscountMinItems: number;
   bulkDiscountPercent: number;
-  bulkDiscountCouponId: string;
   welcomeCode: string;
   welcomePercent: number;
   allowedPostalCodes: string[];
@@ -27,6 +26,10 @@ export interface CommerceConfig {
   orderCutoff: { daysBefore: number; time: string; timeZone: string };
   whatsappNumber: string;
   cartPaymentMethods: string[];
+  // OXXO: encenderlo solo con OXXO activo en Stripe y el webhook funcionando (docs/checkout.md).
+  oxxoEnabled: boolean;
+  oxxoExpiresAfterDays: number;
+  reviewEmail: string;
 }
 
 export const toCents = (pesos: number): number => Math.round(pesos * 100);
@@ -38,9 +41,9 @@ export const COMMERCE: CommerceConfig = {
     .filter(p => !(p as any).isBox && !p.soldOut && !p.onlySubscriptions)
     .map(p => toCents(p.price))),
   // Descuento por volumen: un solo escalón (cartDiscount2*). Percent vacío/0 = desactivado.
+  // El cupón de Stripe lo crea el servidor (api/_lib/catalog.ts).
   bulkDiscountMinItems: settings.cartDiscount2Min,
   bulkDiscountPercent: Number(settings.cartDiscount2Percent) || 0,
-  bulkDiscountCouponId: settings.cartDiscount2CouponId,
   welcomeCode: settings.welcomeCode,
   welcomePercent: settings.welcomePercent,
   allowedPostalCodes: deliveryZones.allowedPostalCodes,
@@ -49,4 +52,7 @@ export const COMMERCE: CommerceConfig = {
   orderCutoff: settings.orderCutoff,
   whatsappNumber: settings.whatsappNumber,
   cartPaymentMethods: settings.cartPaymentMethods,
+  oxxoEnabled: settings.oxxoEnabled,
+  oxxoExpiresAfterDays: settings.oxxoExpiresAfterDays,
+  reviewEmail: settings.reviewEmail,
 };

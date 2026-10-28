@@ -240,10 +240,13 @@ ambos lados.
 - **Motor de precios**: `priceCart()` en `src/commerce/priceCart.ts` calcula
   todo (subtotal, descuento, envío, total) para el carrito y para la API.
   El navegador solo manda `_id` + cantidad. Tests: `npm test`.
-- **Descuento por volumen**: un escalón (`cartDiscount2*`: mínimo, porcentaje,
-  ID de cupón de Stripe). Si el porcentaje está vacío o en 0, desaparece de
-  toda la web. La caja (`isBox`) cuenta como 1 pero nunca recibe el 20%. El % mostrado es escaparate; lo que se cobra es el **cupón de
-  Stripe** (`couponId`). Deben coincidir.
+- **Descuento por volumen**: un escalón (`cartDiscount2*`: mínimo y porcentaje).
+  Si el porcentaje está vacío o en 0, desaparece de toda la web. La caja
+  (`isBox`) cuenta como 1 pero nunca recibe el 20%. El cupón de Stripe lo crea
+  el servidor solo (`api/_lib/catalog.ts`): no hay que tocar cupones a mano.
+- **Cobro**: cada sopa se cobra al `price` de `products.json` (`price_data`);
+  `stripePriceId` solo sirve para encontrar el Product de Stripe de la sopa.
+  Pedidos, webhook, OXXO y pruebas en modo test: `docs/checkout.md`.
 - **Regla de Stripe**: no se puede mandar `discounts` y
   `allow_promotion_codes` a la vez. Si aplica descuento por volumen → va el
   cupón y NO aparece el campo de código promo. Si no → aparece el campo
@@ -281,7 +284,7 @@ ambos lados.
 |---|---|
 | "Sube la sopa X a $160" | 1) Pide al dueño (o con el conector de Stripe, tras confirmar) crear un **nuevo Price** de $160 en el producto de Stripe de esa sopa. Los precios de Stripe no se editan, se crean nuevos. 2) Cambia `stripePriceId` y `price` de esa sopa en `src/content/products.json`. 3) PR + preview + merge. 4) Haz una compra de prueba o revisa el checkout. 5) Opcional: archivar el precio viejo en Stripe |
 | "Quiero un código de descuento" | Se crea en **Stripe → Promotions** (cupón + código). No requiere código en la web. Si quiere anunciarlo, cambia el texto del banner intermedio |
-| "Quita/cambia el descuento por cantidad" | Ajusta `cartDiscount2*` en `settings.json` (`Percent` vacío o 0 = desactivado; un solo escalón). Si cambia el %, debe crear el cupón correspondiente en Stripe y actualizar el `couponId` |
+| "Quita/cambia el descuento por cantidad" | Ajusta `cartDiscount2*` en `settings.json` (`Percent` vacío o 0 = desactivado; un solo escalón). El servidor crea el cupón nuevo solo |
 | "Cambia el precio de la suscripción" | Nuevo Price recurrente en Stripe → actualizar `productId…`, `amount…` y `price…` de esa combinación |
 | "Cambia el envío" | Solo `shippingPrice` en `settings.json` (se manda a Stripe como opción de envío; no hace falta crear nada en Stripe) |
 | "Reembolsa a un cliente" | Lo hace el dueño en Stripe → Pagos → Reembolsar (o tú con el conector, solo con confirmación explícita) |

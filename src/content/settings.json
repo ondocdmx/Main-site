@@ -3,7 +3,6 @@
     "en": "from $90 per soup - join our SOUP-SCRIPTION!!",
     "es": "desde $90 por sopa - ¡únete a la SOUP-SCRIPTIÓN!"
   },
-  "cartDiscount2CouponId": "AJPfSuZo",
   "cartDiscount2Label": "20% descuento",
   "cartDiscount2Min": 10,
   "cartDiscount2Percent": 20,
@@ -346,5 +345,8 @@
   "whatsappNumber": "525585259797",
   "cartPaymentMethods": [
     "Tarjeta"
-  ]
+  ],
+  "oxxoEnabled": false,
+  "oxxoExpiresAfterDays": 1,
+  "reviewEmail": "ondocdmx@gmail.com"
 }

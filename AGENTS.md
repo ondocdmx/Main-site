@@ -119,7 +119,9 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - `_id` → identificador interno estable (carrito y funnel). Único, no cambiarlo.
 - `slug` → URL `/sopas/<slug>` e `item_id` de GA4. No cambiarlo en sopas existentes.
 - `title`, `tagline`, `description`, `ingredients` → `{es, en}`.
-- `price` (mostrado) + `stripePriceId` (cobrado): deben coincidir.
+- `price` → lo que se muestra y se cobra (el carrito manda `price_data`). `stripePriceId` (live) sirve para
+  encontrar el Product de Stripe de la sopa; `stripeTestProductId` es su copia en modo test
+  (`scripts/stripe-test-catalog.mjs`). Las suscripciones siguen con Price IDs.
 - `image`, `hoverImage`, `images[]` (galería de la ficha), `bgColor`, `tags[]`
   (copias de objetos de `tags.json`: `_id`, `name`, `slug`, `icon`, `color`).
 - Orden en la tienda = orden del array.
@@ -133,7 +135,9 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 ## Variables de entorno
 
 Ver `.env.example`. En local usa `.env`; en Vercel deben estar configuradas:
-`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `ORDERS_WEBHOOK_URL` y
+`ORDERS_WEBHOOK_TOKEN` (pedidos, ver `docs/checkout.md`), `FRONTEND_URL`,
+`GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
 que recibe el formulario de sopas y los leads de zona de reparto) y,
 opcional, `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (hoja aparte para los leads
 de zona). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.
