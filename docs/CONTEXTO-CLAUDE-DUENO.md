@@ -178,11 +178,6 @@ momento; no asumas.
 | `server.ts` | Servidor Express para probar `api/` en local (opcional, legado) |
 | `docs/` | `TRACKING.md`, `VERIFICACION-TRACKING.md` (analítica), `TRASPASO.md` (accesos), `MANUAL-DEL-NEGOCIO.md` (para el dueño) |
 
-Basura heredada que puedes limpiar (con permiso): `README.md` (plantilla de
-Google AI Studio, no describe el proyecto), `metadata.json`,
-`KettleReference.html`, dependencia `@google/genai` y `GEMINI_API_KEY`
-(no se usan).
-
 ### 3.3 Routing (sin react-router)
 
 La app lee `window.location.pathname`:

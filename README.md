@@ -1,20 +1,16 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# ONDO — ondoclub.com
 
-# Run and deploy your AI Studio app
+Tienda online de ONDO, sopas de temporada congeladas a domicilio en Ciudad de México.
 
-This contains everything you need to run your app locally.
+- Web: React + TypeScript + Vite + Tailwind, hospedada en Vercel (cada push a `main` publica).
+- Pagos: Stripe Checkout, desde las funciones de `api/`.
+- Contenido (textos, sopas, precios mostrados, códigos postales): `src/content/*.json`.
 
-View your app in AI Studio: https://ai.studio/apps/52411f0a-c6a2-44ef-ba90-3ea26f1aa51c
+```bash
+npm install
+cp .env.example .env   # rellenar valores
+npm run dev            # http://localhost:3000
+```
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Antes de cambiar nada, lee **`AGENTS.md`** (mapa técnico) y **`CLAUDE.md`** (reglas de trabajo y de
+negocio). Accesos y secretos: `docs/TRASPASO.md`. Auditoría del sitio: `docs/audit.md`.
