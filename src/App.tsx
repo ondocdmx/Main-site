@@ -344,7 +344,12 @@ export default function App() {
   const funnelCanProceed = funnelTotal === funnelQuantity;
   const funnelPlanAmount = getSetting(`amount${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, null) as number | null;
   const funnelPlanPrice = funnelPlanAmount ? `$${funnelPlanAmount}` : '';
-  const funnelPlanSavings = getSetting(`price${funnelFrequency.charAt(0).toUpperCase() + funnelFrequency.slice(1)}${funnelQuantity}`, '') as string;
+  // Precio por sopa del plan = monto de los 3 meses / sopas totales (quincenal 6 entregas, mensual 3).
+  // Se muestra en vez de un % de ahorro: es exacto sin importar qué sopas elija el cliente.
+  const funnelPlanDeliveries = funnelFrequency === 'quincenal' ? 6 : 3;
+  const funnelPerSoup = funnelPlanAmount ? funnelPlanAmount / ((funnelQuantity as number) * funnelPlanDeliveries) : 0;
+  const funnelPerSoupText = funnelPerSoup ? `$${Number.isInteger(funnelPerSoup) ? funnelPerSoup : funnelPerSoup.toFixed(2)}` : '';
+  const funnelPlanSavings = funnelPerSoupText ? (lang === 'es' ? `${funnelPerSoupText} por sopa` : `${funnelPerSoupText} per soup`) : '';
 
   const openFunnel = () => {
     setFunnelStep('intro');
@@ -1826,7 +1831,7 @@ export default function App() {
                     {/* Beneficios con guión */}
                     <ul className="mb-10 space-y-2">
                       {(getSetting('introBenefits') || [
-                        { es: '20% de descuento en cada pedido', en: '20% off every order' },
+                        { es: 'Precio de socio - Desde $90 por sopa', en: 'Member pricing - From $90 per soup' },
                         { es: 'Entrega a domicilio incluida', en: 'Free home delivery included' },
                         { es: 'Cancela cuando quieras', en: 'Cancel anytime' },
                         { es: 'Acceso anticipado a recetas exclusivas', en: 'Early access to exclusive recipes' },
@@ -1980,7 +1985,6 @@ export default function App() {
             {funnelStep === 'plan' && (() => {
               const deliveries = funnelFrequency === 'quincenal' ? 6 : 3;
               const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-              const planPrice = getSetting(`price${cap(funnelFrequency)}${funnelQuantity}`, '') as string;
               return (
                 <div className="p-8 md:p-10 bg-ondo-white">
                   <button
@@ -2436,7 +2440,7 @@ export default function App() {
                         {lang === 'es' ? '3 meses' : '3 months'}
                       </span>
                       {funnelPlanSavings && (
-                        <>, <span className="font-title font-black text-ondo-green">{lang === 'es' ? 'con ' : 'with '}{funnelPlanSavings}</span></>
+                        <>, <span className="font-title font-black text-ondo-green">{lang === 'es' ? 'a ' : 'at '}{funnelPlanSavings}</span></>
                       )}
                     </p>
                   </div>
