@@ -311,5 +311,34 @@
   "copyrightText": "© 2026 ONDO. All rights reserved.",
   "footerLogo": "/images/cms/footerlogo.webp",
   "instagramUrl": "https://instagram.com/ondo_cdmx",
-  "showInstagram": true
+  "showInstagram": true,
+  "freeShippingMinSoups": 7,
+  "boxShipsFree": true,
+  "welcomeCode": "ONDOFIRST",
+  "welcomePercent": 10,
+  "deliveryDays": [
+    "monday"
+  ],
+  "deliverySlots": [
+    {
+      "id": "slot_9_13",
+      "start": "09:00",
+      "end": "13:00"
+    },
+    {
+      "id": "slot_13_17",
+      "start": "13:00",
+      "end": "17:00"
+    },
+    {
+      "id": "slot_17_21",
+      "start": "17:00",
+      "end": "21:00"
+    }
+  ],
+  "orderCutoff": {
+    "day": "sunday",
+    "time": "23:59",
+    "timeZone": "America/Mexico_City"
+  }
 }

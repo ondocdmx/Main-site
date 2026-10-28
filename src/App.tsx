@@ -10,6 +10,8 @@ import {
   pushEvent, pushEcommerce, productToItem, planItem,
   captureAttribution, saveCheckoutSnapshot, readCheckoutSnapshot, firePurchaseOnce,
 } from './analytics';
+import { priceCart, discountPercentFor, applyPercent } from './commerce/priceCart';
+import { COMMERCE, toCents } from './commerce/config';
 
 function getNextMonday(): Date {
   const today = new Date();
@@ -580,59 +582,30 @@ export default function App() {
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Descuentos por volumen — desde src/content/settings.json (cartDiscount1/2*).
-  // Un escalón con porcentaje vacío/0 está DESACTIVADO: no se muestra en
-  // precios, carrito ni avisos (así se elimina un escalón).
-  const makeDiscountTier = (n: 1 | 2) => {
-    const pct = getSetting(`cartDiscount${n}Percent`, null) as number | null;
-    if (!pct || pct <= 0) return null;
-    return {
-      min: getSetting(`cartDiscount${n}Min`, n === 1 ? 5 : 10) as number,
-      pct,
-      couponId: getSetting(`cartDiscount${n}CouponId`, '') as string,
-    };
-  };
-  const discount1 = makeDiscountTier(1);
-  const discount2 = makeDiscountTier(2);
-
-  const activeDiscount = (() => {
-    if (discount2 && cartItemCount >= discount2.min) {
-      return { pct: discount2.pct, couponId: discount2.couponId };
-    }
-    if (discount1 && cartItemCount >= discount1.min) {
-      return { pct: discount1.pct, couponId: discount1.couponId };
-    }
-    return null;
-  })();
-  // Productos con excludeFromVolumeDiscount (products.json, ej. la caja) cuentan para el mínimo
-  // de artículos pero no reciben el descuento. El cupón de Stripe debe excluirlos también.
-  const productDiscount = (product: any) => (activeDiscount && !product?.excludeFromVolumeDiscount ? activeDiscount : null);
-  const productDiscountMult = (product: any) => {
-    const d = productDiscount(product);
-    return d ? (1 - d.pct / 100) : 1;
-  };
-  const hasDiscountableItem = cart.some((item: { product: any }) => !item.product.excludeFromVolumeDiscount);
-
-  const cartSubtotal = cart.reduce(
-    (a: number, b: { product: any; quantity: number }) => a + b.product.price * productDiscountMult(b.product) * b.quantity,
-    0
-  );
-  const progressPercent = Math.min((cartSubtotal / 120) * 100, 100);
+  // Precios, descuento y envío del carrito: siempre desde el motor (src/commerce/priceCart.ts),
+  // el mismo que usa el servidor al crear el pago. Aquí no se hacen cuentas de dinero.
+  const pricing = priceCart(cart);
+  const formatMoney = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  // % que recibe el producto con el carrito actual (0 = sin descuento). La caja nunca recibe el 20%.
+  const productDiscountPct = (product: any) => discountPercentFor(product, pricing);
+  const productUnitPrice = (product: any) => applyPercent(toCents(product.price), productDiscountPct(product));
+  const pricedLine = (productId: string) => pricing.lines.find(l => l.productId === productId);
+  const freeShippingProgress = pricing.freeShippingReason
+    ? 100
+    : Math.min((pricing.soupCount / (pricing.soupCount + pricing.soupsToFreeShipping)) * 100, 100);
 
   const handleCartCheckout = async (slot: string) => {
     setIsCheckingOut(true);
     try {
-      const cartItems = cart.map((item: { product: any; quantity: number }) => ({
-        productId: item.product.stripePriceId, quantity: item.quantity,
+      const items = cart.map((item: { product: any; quantity: number }) => ({
+        id: item.product._id, quantity: item.quantity,
       }));
-      const missingPrice = cartItems.some((i: { productId: string; price: number; quantity: number }) => !i.productId);
+      const missingPrice = cart.some((item: { product: any }) => !item.product.stripePriceId);
       if (missingPrice) {
         alert(lang === 'es' ? 'Algunos productos no tienen precio configurado. Contacta al administrador.' : 'Some products have no price configured. Contact admin.');
         setIsCheckingOut(false);
         return;
       }
-      const shippingProductId = getSetting('shippingStripeProductId', '');
-      const shippingPrice = getSetting('shippingPrice', 0);
       const savedAddress = localStorage.getItem('ondo_delivery_address') || '';
       const savedPostal = localStorage.getItem('ondo_delivery_postal') || '';
       const res = await fetch('/api/create-cart-checkout', {
@@ -640,18 +613,15 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           origin: window.location.origin,
-          cartItems,
-          couponId: (hasDiscountableItem && activeDiscount?.couponId) || undefined,
+          items,
           deliverySlot: slot,
           deliveryAddress: savedAddress,
           deliveryPostal: savedPostal,
-          shippingProductId,
-          shippingPrice,
         }),
       });
       // begin_checkout + snapshot (value con descuento aplicado, sin envío)
       const cartGA4Items = cart.map((item: { product: any; quantity: number }) => productToItem(item.product, item.quantity));
-      const cartValue = cart.reduce((sum: number, item: { product: any; quantity: number }) => sum + item.product.price * productDiscountMult(item.product) * item.quantity, 0);
+      const cartValue = (pricing.subtotal - pricing.discountAmount) / 100;
       pushEcommerce('begin_checkout', cartGA4Items, { value: Number(cartValue.toFixed(2)) });
       saveCheckoutSnapshot('payment', cartGA4Items, cartValue);
       const data = await res.json();
@@ -785,8 +755,15 @@ export default function App() {
 
         {/* Promo Bar */}
         <div className="bg-ondo-beige/50 p-5 border-b border-gray-100">
+          <p className="font-body text-[13px] font-semibold text-ondo-black mb-2" aria-live="polite">
+            {pricing.freeShippingReason
+              ? (lang === 'es' ? '¡Tienes envío gratis!' : 'You have free shipping!')
+              : lang === 'es'
+                ? `Te ${pricing.soupsToFreeShipping === 1 ? 'falta 1 sopa' : `faltan ${pricing.soupsToFreeShipping} sopas`} para envío gratis`
+                : `${pricing.soupsToFreeShipping} more ${pricing.soupsToFreeShipping === 1 ? 'soup' : 'soups'} for free shipping`}
+          </p>
           <div className="w-full bg-white h-3 mb-2 relative">
-             <div className="bg-ondo-orange h-3 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+             <div className="bg-ondo-orange h-3 transition-all duration-500" style={{ width: `${freeShippingProgress}%` }}></div>
           </div>
         </div>
 
@@ -808,18 +785,18 @@ export default function App() {
                      <div className="flex justify-between gap-2 mb-2">
                         <h4 className="font-title font-bold text-[15px] leading-tight text-ondo-black pr-2">{resolveText(item.product.title)}</h4>
                         <div className="font-body font-semibold text-sm whitespace-nowrap text-right flex flex-col items-end">
-                           {productDiscount(item.product) ? (
+                           {pricedLine(item.product._id)?.lineDiscount ? (
                              <>
-                               <span className="line-through text-gray-400 text-xs">${(item.product.price * item.quantity).toFixed(2)}</span>
+                               <span className="line-through text-gray-400 text-xs">{formatMoney(pricedLine(item.product._id)!.lineSubtotal)}</span>
                                <span className="text-ondo-orange flex items-center gap-1">
-                                 ${(item.product.price * item.quantity * productDiscountMult(item.product)).toFixed(2)}
+                                 {formatMoney(pricedLine(item.product._id)!.lineTotal)}
                                  <span className="bg-ondo-orange text-white text-[9px] px-1 py-0.5 rounded-sm uppercase tracking-wide">
-                                   -{productDiscount(item.product)!.pct}%
+                                   -{productDiscountPct(item.product)}%
                                  </span>
                                </span>
                              </>
                            ) : (
-                             <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                             <span>{formatMoney(pricedLine(item.product._id)?.lineSubtotal ?? 0)}</span>
                            )}
                         </div>
                      </div>
@@ -879,16 +856,24 @@ export default function App() {
               </div>
             ) : (
               <div className="p-6">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-title text-xl text-gray-500">{getSettingText('subtotal', content.subtotal)}</span>
-                  <span className="font-title text-[28px] font-bold text-ondo-black">${cartSubtotal.toFixed(2)}</span>
+                <div className="flex justify-between items-center mb-1 font-body text-[15px] text-gray-500">
+                  <span>{getSettingText('subtotal', content.subtotal)}</span>
+                  <span>{formatMoney(pricing.subtotal)}</span>
                 </div>
-                {activeDiscount && (
-                  <div className="flex justify-between items-center mb-5">
-                    <span className="font-title text-sm text-ondo-green uppercase tracking-wide">-{activeDiscount.pct}% descuento</span>
+                {pricing.discountAmount > 0 && (
+                  <div className="flex justify-between items-center mb-1 font-body text-[15px] text-ondo-green">
+                    <span>{lang === 'es' ? `Descuento (-${pricing.discountPercent}%)` : `Discount (-${pricing.discountPercent}%)`}</span>
+                    <span>-{formatMoney(pricing.discountAmount)}</span>
                   </div>
                 )}
-                {!activeDiscount && <div className="mb-5" />}
+                <div className="flex justify-between items-center mb-2 font-body text-[15px] text-gray-500">
+                  <span>{lang === 'es' ? 'Envío' : 'Shipping'}</span>
+                  <span>{pricing.shipping === 0 ? (lang === 'es' ? 'Gratis' : 'Free') : formatMoney(pricing.shipping)}</span>
+                </div>
+                <div className="flex justify-between items-center mb-5">
+                  <span className="font-title text-xl text-ondo-black">Total</span>
+                  <span className="font-title text-[28px] font-bold text-ondo-black">{formatMoney(pricing.total)}</span>
+                </div>
                 <button
                   onClick={() => setShowCartSlotSelector(true)}
                   disabled={isCheckingOut}
@@ -1054,12 +1039,12 @@ export default function App() {
                       )}
                       <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
                       <div className="font-body font-bold mb-5 text-[16px]">
-                        {productDiscount(product) ? (
+                        {productDiscountPct(product) ? (
                           <div className="flex items-center gap-2">
                             <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">${(product.price * productDiscountMult(product)).toFixed(2)}</span>
+                            <span className="text-ondo-orange">{formatMoney(productUnitPrice(product))}</span>
                             <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                              -{productDiscount(product)!.pct}%
+                              -{productDiscountPct(product)}%
                             </span>
                           </div>
                         ) : (
@@ -1097,16 +1082,10 @@ export default function App() {
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
-                         {discount1 && cartItemCount === discount1.min - 1 && (
+                         {pricing.soupsToBulkDiscount === 1 && (
                            <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
                              <Sparkles className="w-3.5 h-3.5" />
-                             <span>¡Añade 1 más para -{discount1.pct}%!</span>
-                           </div>
-                         )}
-                         {discount2 && cartItemCount === discount2.min - 1 && (
-                           <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                             <Sparkles className="w-3.5 h-3.5" />
-                             <span>¡Añade 1 más para -{discount2.pct}%!</span>
+                             <span>{lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`}</span>
                            </div>
                          )}
                       </div>
@@ -1707,12 +1686,12 @@ export default function App() {
 
                 {/* Price */}
                 <div className="font-title font-black text-[28px] mb-5">
-                  {productDiscount(selectedProduct) ? (
+                  {productDiscountPct(selectedProduct) ? (
                     <div className="flex items-center gap-3">
                       <span className="line-through text-gray-400 text-[20px]">${selectedProduct.price?.toFixed(2)}</span>
-                      <span className="text-ondo-orange">${(selectedProduct.price * productDiscountMult(selectedProduct)).toFixed(2)}</span>
+                      <span className="text-ondo-orange">{formatMoney(productUnitPrice(selectedProduct))}</span>
                       <span className="bg-ondo-orange text-white text-[12px] px-2 py-1 rounded-sm uppercase tracking-wide self-center mb-1">
-                        -{productDiscount(selectedProduct)!.pct}%
+                        -{productDiscountPct(selectedProduct)}%
                       </span>
                     </div>
                   ) : (

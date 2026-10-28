@@ -40,6 +40,7 @@ Los secretos, las cuentas a ceder y la verificación post-traspaso están en
 # Web
 npm run dev        # dev server en :3000
 npm run lint       # tsc --noEmit (typecheck)
+npm test           # tests del motor de precios y de la API del carrito
 npm run build      # build de producción
 npm run server     # funciones de api/ en local (:3001); npm run dev les reenvía /api
 ```
@@ -88,9 +89,14 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - Cada producto de `products.json` guarda un **Price ID de Stripe**
   (`stripePriceId`). Cambiar un precio = crear el Price nuevo en Stripe y
   poner el ID (y el `price` mostrado) en el JSON.
-- **Carrito** (`api/create-cart-checkout.ts`): compras únicas. Descuentos por
-  volumen en `settings.json` (`cartDiscount1/2`: `Min`, `Percent`, `CouponId`; `Percent` vacío/0 = escalón desactivado) —
-  el frontend los lee dinámicos y la API aplica el cupón con `discounts`.
+- **Motor de precios** (`src/commerce/priceCart.ts`): `priceCart()` es el
+  ÚNICO sitio que calcula subtotal, descuento, envío y total (centavos). Lo
+  usan el carrito (`App.tsx`) y la API. Reglas en `settings.json` vía
+  `src/commerce/config.ts`. Tests: `npm test`.
+- **Carrito** (`api/create-cart-checkout.ts`): compras únicas. El navegador
+  manda solo `_id` + cantidad; la API recalcula con `priceCart()` y decide el
+  cupón y el envío. Un solo escalón de volumen: `cartDiscount2*` (`Min`,
+  `Percent`, `CouponId`; `Percent` vacío/0 = desactivado).
   **Stripe no permite `discounts` + `allow_promotion_codes` juntos**: si no
   hay descuento por volumen se habilita `allow_promotion_codes` (códigos
   tipo ONDOFIRST); si lo hay, el cupón automático va solo.
@@ -99,7 +105,8 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
   `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
 - Envío: `shippingStripeProductId` (pese al nombre, es el **Price ID**
   `price_…` que se cobra) + `shippingPrice` (importe mostrado) en
-  `settings.json`; se cobra en todo pedido del carrito (no hay recogida en
+  `settings.json`; gratis con `freeShippingMinSoups` (7) sopas o con una caja
+  (`boxShipsFree`); si no, se cobra (no hay recogida en
   tienda). `shippingStripePriceId` (`prod_…`)
   no lo usa el código.
 - `apiVersion` de Stripe fijada en `'2024-06-20'`.
@@ -115,6 +122,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - Orden en la tienda = orden del array.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
+- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe, y tiene envío gratis.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.
 
@@ -145,5 +153,5 @@ nunca al repo (es público) ni a logs.
   una línea describiendo el cambio.
 - Al tocar textos, cambiar siempre `es` y `en`.
 - Al tocar routing, actualizar también `vercel.json` (rewrites).
-- Al tocar precios/descuentos, verificar los tres puntos donde se pintan:
-  grid de productos, popup de producto y carrito (todos usan `activeDiscount`).
+- Al tocar precios/descuentos/envío: cambiar `priceCart()` y sus tests
+  (`npm test`); grid, popup y carrito leen su resultado.
