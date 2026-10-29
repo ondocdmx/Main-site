@@ -79,13 +79,15 @@ export default function ProductPage({ product, products, lang, resolveText, heat
   const es = lang === 'es';
   const name = resolveText(product.title);
   const imgs = imagesFor(product.slug);
-  // Fotos: servida, bolsa, ingredientes (placeholder si falta), y luego la galería.
-  const photos: { image: WebImage | null; label: string }[] = [
+  // Fotos: servida, bolsa, ingredientes (opcional) y la galería. Solo las que existen.
+  const photos = [
     { image: imgs.plated, label: es ? 'Sopa servida' : 'Plated soup' },
-    { image: imgs.pack, label: es ? 'Foto del empaque' : 'Pouch photo' },
-    { image: imgs.ingredients, label: es ? '[FOTO DE INGREDIENTES]' : '[INGREDIENTS PHOTO]' },
-    ...imgs.gallery.map((image, i) => ({ image, label: `${es ? 'Foto' : 'Photo'} ${i + 4}` })),
-  ].filter(p => p.image || !product.isBox);
+    { image: imgs.pack, label: es ? 'Empaque' : 'Pouch' },
+    { image: imgs.ingredients, label: es ? 'Ingredientes' : 'Ingredients' },
+    ...imgs.gallery.map(image => ({ image, label: es ? 'Foto' : 'Photo' })),
+  ]
+    .filter((p): p is { image: WebImage; label: string } => !!p.image)
+    .map((p, i) => ({ ...p, label: `${p.label} (${i + 1})` }));
   const [photo, setPhoto] = useState(0);
   const [qty, setQty] = useState(1);
   useEffect(() => { setPhoto(0); setQty(1); window.scrollTo(0, 0); }, [product._id]);

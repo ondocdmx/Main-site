@@ -122,13 +122,13 @@
   {
     "_id": "8c2ee7fc-c28e-4ee1-b22f-dbe13d0025aa",
     "allergens": {
-      "es": "[ALÉRGENOS]",
-      "en": "[ALLERGENS]"
+      "es": "Lácteos (crema de rábano picante), gluten (dumplings de suet)",
+      "en": "Dairy (horseradish cream), gluten (suet dumplings)"
     },
     "bgColor": null,
     "description": {
-      "en": "Free-range beef shank braised in red wine, potato, carrot, onion, kohlrabi, and a bouquet of rosemary, thyme, and bay leaf. With suet dumplings and parsley. A stew born humble, welcome at every table — from the pub to the palace. Topped with horseradish cream.\n\nOndo's own brit knows a thing or two.",
-      "es": "Chambarete de res de libre pastoreo braseado en vino tinto, papa, zanahoria, cebolla, colinabi y un bouquet de romero, tomillo y hoja de laurel. Con bolitas de suet y perejil. Un estofado que nació humilde y conquistó todas las mesas — de la taberna al palacio. Coronado con crema de rábano picante.\n\nLa brit de Ondo sabe lo que hace."
+      "en": "Free-range beef shank braised in red wine, potato, carrot, onion, cabbage, and a bouquet of rosemary, thyme, and bay leaf. With suet dumplings and parsley. A stew born humble, welcome at every table — from the pub to the palace. Topped with horseradish cream.\n\nOndo's own brit knows a thing or two.",
+      "es": "Chambarete de res de libre pastoreo braseado en vino tinto, papa, zanahoria, cebolla, col y un bouquet de romero, tomillo y hoja de laurel. Con bolitas de suet y perejil. Un estofado que nació humilde y conquistó todas las mesas — de la taberna al palacio. Coronado con crema de rábano picante.\n\nLa inglesa de Ondo sabe lo que hace."
     },
     "descriptor": {
       "es": "humilde · clásica · abundante",
@@ -140,7 +140,8 @@
     "image": "/images/cms/estofado-ingles-image.webp",
     "images": null,
     "ingredients": {
-      "es": "Res de libre pastoreo (chambarete), papa, zanahoria, cebolla, col, especias. \n\n"
+      "en": "Free-range beef shank (braised in red wine), potato, carrot, onion, kohlrabi cabbage, rosemary, thyme, bay leaf, suet dumplings with parsley. Topping: horseradish cream",
+      "es": "Chambarete de res de libre pastoreo (braseado en vino tinto), papa, zanahoria, cebolla, colinabo, romero, tomillo, hoja de laurel, dumplings de suet con perejil. Topping: crema de rábano picante"
     },
     "onlySubscriptions": false,
     "platedImage": "/images/cms/estofado-ingles-hoverimage.webp",

@@ -6,7 +6,7 @@ Sube aquí las fotos con este nombre exacto (minúsculas, sin espacios):
 |---|---|
 | Sopa servida (foto principal) | `<slug>-plated.jpg` |
 | Bolsa / empaque | `<slug>-pack.jpg` |
-| Ingredientes | `<slug>-ingredients.jpg` |
+| Ingredientes (opcional; hoy no hay) | `<slug>-ingredients.jpg` |
 | Más fotos para la ficha (opcional, en este orden) | `<slug>-gallery-1.jpg`, `<slug>-gallery-2.jpg`… |
 
 `<slug>` es el de la sopa:
@@ -29,7 +29,9 @@ cebolla-caramelizada
 
 Ejemplo: `mega-verde-plated.jpg`.
 
-- Formato JPG (o PNG/WebP). Lado largo de unos 2000 px y menos de 3 MB por foto.
+- Formato JPG (o PNG/WebP). GitHub acepta hasta 25 MB por foto, pero todo lo que se sube se queda en el
+  repositorio para siempre y hace más lento cada deploy. Antes de subir, reduce todas de una vez
+  a ~2000 px de lado largo (en Mac: Vista Previa → seleccionar todas → Herramientas → Ajustar tamaño).
 - Se recortan en cuadrado al centro: deja la sopa centrada.
 - No hace falta optimizarlas: `scripts/build-images.mjs` crea las versiones ligeras
   (carpeta `web/`, no la toques) en cada build de Vercel.
