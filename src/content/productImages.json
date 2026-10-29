@@ -1,0 +1,394 @@
+{
+  "ondo-box": {
+    "plated": {
+      "src": "/images/soups/web/ondo-box-plated-800.webp",
+      "srcset": "/images/soups/web/ondo-box-plated-400.webp 400w, /images/soups/web/ondo-box-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/ondo-box-pack-800.webp",
+      "srcset": "/images/soups/web/ondo-box-pack-400.webp 400w, /images/soups/web/ondo-box-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/ondo-box-gallery-1-800.webp",
+        "srcset": "/images/soups/web/ondo-box-gallery-1-400.webp 400w, /images/soups/web/ondo-box-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/ondo-box-gallery-2-800.webp",
+        "srcset": "/images/soups/web/ondo-box-gallery-2-400.webp 400w, /images/soups/web/ondo-box-gallery-2-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/ondo-box-gallery-3-800.webp",
+        "srcset": "/images/soups/web/ondo-box-gallery-3-400.webp 400w, /images/soups/web/ondo-box-gallery-3-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/ondo-box-gallery-4-800.webp",
+        "srcset": "/images/soups/web/ondo-box-gallery-4-400.webp 400w, /images/soups/web/ondo-box-gallery-4-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/ondo-box-gallery-5-800.webp",
+        "srcset": "/images/soups/web/ondo-box-gallery-5-400.webp 400w, /images/soups/web/ondo-box-gallery-5-800.webp 800w",
+        "width": 800,
+        "height": 800
+      }
+    ]
+  },
+  "garbanzo-y-rabo": {
+    "plated": {
+      "src": "/images/soups/web/garbanzo-y-rabo-plated-400.webp",
+      "srcset": "/images/soups/web/garbanzo-y-rabo-plated-400.webp 400w",
+      "width": 400,
+      "height": 400
+    },
+    "pack": {
+      "src": "/images/soups/web/garbanzo-y-rabo-pack-800.webp",
+      "srcset": "/images/soups/web/garbanzo-y-rabo-pack-400.webp 400w, /images/soups/web/garbanzo-y-rabo-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/garbanzo-y-rabo-gallery-1-800.webp",
+        "srcset": "/images/soups/web/garbanzo-y-rabo-gallery-1-400.webp 400w, /images/soups/web/garbanzo-y-rabo-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/garbanzo-y-rabo-gallery-2-400.webp",
+        "srcset": "/images/soups/web/garbanzo-y-rabo-gallery-2-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/garbanzo-y-rabo-gallery-3-400.webp",
+        "srcset": "/images/soups/web/garbanzo-y-rabo-gallery-3-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  },
+  "estofado-ingles": {
+    "plated": {
+      "src": "/images/soups/web/estofado-ingles-plated-800.webp",
+      "srcset": "/images/soups/web/estofado-ingles-plated-400.webp 400w, /images/soups/web/estofado-ingles-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/estofado-ingles-pack-800.webp",
+      "srcset": "/images/soups/web/estofado-ingles-pack-400.webp 400w, /images/soups/web/estofado-ingles-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": []
+  },
+  "betabespelta": {
+    "plated": {
+      "src": "/images/soups/web/betabespelta-plated-400.webp",
+      "srcset": "/images/soups/web/betabespelta-plated-400.webp 400w",
+      "width": 400,
+      "height": 400
+    },
+    "pack": {
+      "src": "/images/soups/web/betabespelta-pack-800.webp",
+      "srcset": "/images/soups/web/betabespelta-pack-400.webp 400w, /images/soups/web/betabespelta-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": []
+  },
+  "calabaza-de-castilla-dahl": {
+    "plated": {
+      "src": "/images/soups/web/calabaza-de-castilla-dahl-plated-800.webp",
+      "srcset": "/images/soups/web/calabaza-de-castilla-dahl-plated-400.webp 400w, /images/soups/web/calabaza-de-castilla-dahl-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/calabaza-de-castilla-dahl-pack-800.webp",
+      "srcset": "/images/soups/web/calabaza-de-castilla-dahl-pack-400.webp 400w, /images/soups/web/calabaza-de-castilla-dahl-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/calabaza-de-castilla-dahl-gallery-1-400.webp",
+        "srcset": "/images/soups/web/calabaza-de-castilla-dahl-gallery-1-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/calabaza-de-castilla-dahl-gallery-2-800.webp",
+        "srcset": "/images/soups/web/calabaza-de-castilla-dahl-gallery-2-400.webp 400w, /images/soups/web/calabaza-de-castilla-dahl-gallery-2-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/calabaza-de-castilla-dahl-gallery-3-400.webp",
+        "srcset": "/images/soups/web/calabaza-de-castilla-dahl-gallery-3-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  },
+  "coliflor-avellanada": {
+    "plated": {
+      "src": "/images/soups/web/coliflor-avellanada-plated-400.webp",
+      "srcset": "/images/soups/web/coliflor-avellanada-plated-400.webp 400w",
+      "width": 400,
+      "height": 400
+    },
+    "pack": {
+      "src": "/images/soups/web/coliflor-avellanada-pack-800.webp",
+      "srcset": "/images/soups/web/coliflor-avellanada-pack-400.webp 400w, /images/soups/web/coliflor-avellanada-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/coliflor-avellanada-gallery-1-800.webp",
+        "srcset": "/images/soups/web/coliflor-avellanada-gallery-1-400.webp 400w, /images/soups/web/coliflor-avellanada-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/coliflor-avellanada-gallery-2-400.webp",
+        "srcset": "/images/soups/web/coliflor-avellanada-gallery-2-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  },
+  "berenjena-al-fuego": {
+    "plated": {
+      "src": "/images/soups/web/berenjena-al-fuego-plated-800.webp",
+      "srcset": "/images/soups/web/berenjena-al-fuego-plated-400.webp 400w, /images/soups/web/berenjena-al-fuego-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/berenjena-al-fuego-pack-800.webp",
+      "srcset": "/images/soups/web/berenjena-al-fuego-pack-400.webp 400w, /images/soups/web/berenjena-al-fuego-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/berenjena-al-fuego-gallery-1-800.webp",
+        "srcset": "/images/soups/web/berenjena-al-fuego-gallery-1-400.webp 400w, /images/soups/web/berenjena-al-fuego-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      }
+    ]
+  },
+  "mega-verde": {
+    "plated": {
+      "src": "/images/soups/web/mega-verde-plated-400.webp",
+      "srcset": "/images/soups/web/mega-verde-plated-400.webp 400w",
+      "width": 400,
+      "height": 400
+    },
+    "pack": {
+      "src": "/images/soups/web/mega-verde-pack-800.webp",
+      "srcset": "/images/soups/web/mega-verde-pack-400.webp 400w, /images/soups/web/mega-verde-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/mega-verde-gallery-1-800.webp",
+        "srcset": "/images/soups/web/mega-verde-gallery-1-400.webp 400w, /images/soups/web/mega-verde-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/mega-verde-gallery-2-800.webp",
+        "srcset": "/images/soups/web/mega-verde-gallery-2-400.webp 400w, /images/soups/web/mega-verde-gallery-2-800.webp 800w",
+        "width": 800,
+        "height": 800
+      }
+    ]
+  },
+  "chowder-bacalao": {
+    "plated": {
+      "src": "/images/soups/web/chowder-bacalao-plated-800.webp",
+      "srcset": "/images/soups/web/chowder-bacalao-plated-400.webp 400w, /images/soups/web/chowder-bacalao-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/chowder-bacalao-pack-800.webp",
+      "srcset": "/images/soups/web/chowder-bacalao-pack-400.webp 400w, /images/soups/web/chowder-bacalao-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": []
+  },
+  "pro-gazpacho": {
+    "plated": {
+      "src": "/images/soups/web/pro-gazpacho-plated-400.webp",
+      "srcset": "/images/soups/web/pro-gazpacho-plated-400.webp 400w",
+      "width": 400,
+      "height": 400
+    },
+    "pack": {
+      "src": "/images/soups/web/pro-gazpacho-pack-800.webp",
+      "srcset": "/images/soups/web/pro-gazpacho-pack-400.webp 400w, /images/soups/web/pro-gazpacho-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/pro-gazpacho-gallery-1-800.webp",
+        "srcset": "/images/soups/web/pro-gazpacho-gallery-1-400.webp 400w, /images/soups/web/pro-gazpacho-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/pro-gazpacho-gallery-2-800.webp",
+        "srcset": "/images/soups/web/pro-gazpacho-gallery-2-400.webp 400w, /images/soups/web/pro-gazpacho-gallery-2-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/pro-gazpacho-gallery-3-800.webp",
+        "srcset": "/images/soups/web/pro-gazpacho-gallery-3-400.webp 400w, /images/soups/web/pro-gazpacho-gallery-3-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/pro-gazpacho-gallery-4-800.webp",
+        "srcset": "/images/soups/web/pro-gazpacho-gallery-4-400.webp 400w, /images/soups/web/pro-gazpacho-gallery-4-800.webp 800w",
+        "width": 800,
+        "height": 800
+      }
+    ]
+  },
+  "sopa-tlalpena": {
+    "plated": {
+      "src": "/images/soups/web/sopa-tlalpena-plated-800.webp",
+      "srcset": "/images/soups/web/sopa-tlalpena-plated-400.webp 400w, /images/soups/web/sopa-tlalpena-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/sopa-tlalpena-pack-800.webp",
+      "srcset": "/images/soups/web/sopa-tlalpena-pack-400.webp 400w, /images/soups/web/sopa-tlalpena-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/sopa-tlalpena-gallery-1-400.webp",
+        "srcset": "/images/soups/web/sopa-tlalpena-gallery-1-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/sopa-tlalpena-gallery-2-400.webp",
+        "srcset": "/images/soups/web/sopa-tlalpena-gallery-2-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/sopa-tlalpena-gallery-3-400.webp",
+        "srcset": "/images/soups/web/sopa-tlalpena-gallery-3-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  },
+  "salchispatzle": {
+    "plated": {
+      "src": "/images/soups/web/salchispatzle-plated-800.webp",
+      "srcset": "/images/soups/web/salchispatzle-plated-400.webp 400w, /images/soups/web/salchispatzle-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/salchispatzle-pack-800.webp",
+      "srcset": "/images/soups/web/salchispatzle-pack-400.webp 400w, /images/soups/web/salchispatzle-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/salchispatzle-gallery-1-800.webp",
+        "srcset": "/images/soups/web/salchispatzle-gallery-1-400.webp 400w, /images/soups/web/salchispatzle-gallery-1-800.webp 800w",
+        "width": 800,
+        "height": 800
+      },
+      {
+        "src": "/images/soups/web/salchispatzle-gallery-2-400.webp",
+        "srcset": "/images/soups/web/salchispatzle-gallery-2-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/salchispatzle-gallery-3-400.webp",
+        "srcset": "/images/soups/web/salchispatzle-gallery-3-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  },
+  "cebolla-caramelizada": {
+    "plated": {
+      "src": "/images/soups/web/cebolla-caramelizada-plated-800.webp",
+      "srcset": "/images/soups/web/cebolla-caramelizada-plated-400.webp 400w, /images/soups/web/cebolla-caramelizada-plated-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "pack": {
+      "src": "/images/soups/web/cebolla-caramelizada-pack-800.webp",
+      "srcset": "/images/soups/web/cebolla-caramelizada-pack-400.webp 400w, /images/soups/web/cebolla-caramelizada-pack-800.webp 800w",
+      "width": 800,
+      "height": 800
+    },
+    "ingredients": null,
+    "gallery": [
+      {
+        "src": "/images/soups/web/cebolla-caramelizada-gallery-1-400.webp",
+        "srcset": "/images/soups/web/cebolla-caramelizada-gallery-1-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/cebolla-caramelizada-gallery-2-400.webp",
+        "srcset": "/images/soups/web/cebolla-caramelizada-gallery-2-400.webp 400w",
+        "width": 400,
+        "height": 400
+      },
+      {
+        "src": "/images/soups/web/cebolla-caramelizada-gallery-3-400.webp",
+        "srcset": "/images/soups/web/cebolla-caramelizada-gallery-3-400.webp 400w",
+        "width": 400,
+        "height": 400
+      }
+    ]
+  }
+}
