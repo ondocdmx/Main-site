@@ -55,7 +55,14 @@ claves de test.
 | `ORDERS_WEBHOOK_TOKEN` | la clave que pusiste en el script (§4) | igual |
 | `FRONTEND_URL` | `https://www.ondoclub.com` | (vacío está bien) |
 
-Tras cambiar variables hay que volver a desplegar (Deployments → ⋯ → Redeploy).
+Tras cambiar variables hay que volver a desplegar (Deployments → ⋯ → Redeploy). Al redesplegar una
+Preview, el entorno debe decir **Preview**: un redeploy o "Promote" a Production usa la clave live.
+
+**Probar = Preview, nunca Production.** Las tarjetas de prueba (`4242…`) siempre se rechazan en
+Production ("La solicitud se hizo en modo activo, pero con una tarjeta de prueba conocida"): es lo
+correcto. La dirección `main-site-git-<rama>-…vercel.app` apunta al deployment **más nuevo** de la rama;
+si ese es uno de Production, la Preview y su webhook de test dejan de funcionar hasta el siguiente push.
+Una Preview con clave live se niega a abrir el pago (mensaje "Esta Preview usa la clave live de Stripe").
 
 ## 3. Qué activar en el Dashboard de Stripe
 
