@@ -15,7 +15,7 @@ export interface CartItem {
 }
 
 export type DiscountType = 'bulk' | 'welcome' | null;
-export type FreeShippingReason = 'box' | 'minSoups' | null;
+export type FreeShippingReason = 'minAmount' | null;
 
 export interface PricedLine {
   productId: string;
@@ -37,7 +37,7 @@ export interface CartPricing {
   shipping: number;
   total: number;
   freeShippingReason: FreeShippingReason;
-  soupsToFreeShipping: number;
+  amountToFreeShipping: number; // centavos que faltan (subtotal antes de descuentos)
   soupsToBulkDiscount: number;
 }
 
@@ -86,10 +86,8 @@ export function priceCart(
   const subtotal = lines.reduce((n, l) => n + l.lineSubtotal, 0);
   const discountAmount = lines.reduce((n, l) => n + l.lineDiscount, 0);
 
-  const freeShippingReason: FreeShippingReason =
-    config.boxShipsFree && boxCount > 0 ? 'box'
-    : soupCount >= config.freeShippingMinSoups ? 'minSoups'
-    : null;
+  // Envío gratis por monto, contado ANTES de descuentos: usar ONDOFIRST no quita el envío gratis.
+  const freeShippingReason: FreeShippingReason = itemCount > 0 && subtotal >= config.freeShippingMinAmount ? 'minAmount' : null;
   const shipping = itemCount === 0 || freeShippingReason ? 0 : config.shippingFee;
 
   return {
@@ -103,18 +101,18 @@ export function priceCart(
     shipping,
     total: subtotal - discountAmount + shipping,
     freeShippingReason,
-    soupsToFreeShipping: freeShippingReason ? 0 : config.freeShippingMinSoups - soupCount,
+    amountToFreeShipping: Math.max(0, config.freeShippingMinAmount - subtotal),
     soupsToBulkDiscount: bulkOn ? Math.max(0, config.bulkDiscountMinItems - itemCount) : 0,
   };
 }
 
 export type CartNudge = { type: 'freeShipping' | 'bulk'; count: number } | null;
 
-// Aviso en la tienda cuando falta poco para un beneficio: envío gratis desde
-// `shippingWithin` sopas de distancia; el 20% cuando falta 1 artículo.
-export function cartNudge(pricing: CartPricing, shippingWithin = 2): CartNudge {
-  if (pricing.soupsToFreeShipping > 0 && pricing.soupsToFreeShipping <= shippingWithin) {
-    return { type: 'freeShipping', count: pricing.soupsToFreeShipping };
+// Aviso en la tienda cuando falta poco para un beneficio: envío gratis cuando cualquier sopa
+// cierra la diferencia (1 sopa de distancia); el 20% cuando falta 1 artículo.
+export function cartNudge(pricing: CartPricing, config: CommerceConfig = COMMERCE): CartNudge {
+  if (pricing.itemCount > 0 && pricing.amountToFreeShipping > 0 && pricing.amountToFreeShipping <= config.cheapestSoupPrice) {
+    return { type: 'freeShipping', count: 1 };
   }
   if (pricing.soupsToBulkDiscount === 1) return { type: 'bulk', count: 1 };
   return null;

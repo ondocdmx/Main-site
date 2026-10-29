@@ -7,6 +7,8 @@ import express from 'express';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import createCartCheckout from './api/create-cart-checkout';
 import createCheckoutSession from './api/create-checkout-session';
+import checkoutSummary from './api/checkout-summary';
+import stripeWebhook from './api/stripe-webhook';
 import submitSoupLead from './api/submit-soup-lead';
 import submitDeliveryLead from './api/submit-delivery-lead';
 
@@ -15,11 +17,15 @@ type Handler = (req: VercelRequest, res: VercelResponse) => unknown;
 const routes: Record<string, Handler> = {
   '/api/create-cart-checkout': createCartCheckout,
   '/api/create-checkout-session': createCheckoutSession,
+  '/api/checkout-summary': checkoutSummary,
   '/api/submit-soup-lead': submitSoupLead,
   '/api/submit-delivery-lead': submitDeliveryLead,
 };
 
 const app = express();
+// El webhook de Stripe necesita el cuerpo sin tocar para validar la firma: va antes de express.json().
+app.post('/api/stripe-webhook', express.raw({ type: '*/*' }), (req, res) =>
+  stripeWebhook(req as unknown as VercelRequest, res as unknown as VercelResponse));
 app.use(express.json());
 
 for (const [path, handler] of Object.entries(routes)) {

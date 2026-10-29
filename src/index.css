@@ -84,6 +84,14 @@
   --color-ondo-white: #F8F7F4;
   --color-ondo-red: #DE2B2B;
 
+  /* Paleta de marca (CLAUDE.md). De momento solo la usa el carrito; el resto del sitio migra en la Fase 1. */
+  --color-brand-cream: #EEEDD9;
+  --color-brand-card: #FFFDF6;
+  --color-brand-ink: #1F2E14;
+  --color-brand-deep: #2E4419;
+  --color-brand-mid: #3E5A22;
+  --color-brand-cta: #C2531A;
+
   --animate-marquee: marquee 25s linear infinite;
 }
 

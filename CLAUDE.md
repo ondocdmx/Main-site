@@ -51,46 +51,61 @@ Part 3 is where we are going: it is NOT built. Never treat Part 3 as a descripti
 * Design mockups (mobile) live in docs/mockups: home-*.png, producto.png, carrito.png, bienvenida.png.
   They show layout and intent, not exact pixels. Where a mockup and a written spec disagree, the written
   spec wins. Use the site's existing fonts, colors and components, not the mockups' stand-ins.
+  bienvenida.png says "15% menos": that is outdated. The welcome offer is ONDOFIRST, 10% (owner, 28 Oct 2026).
+  carrito.png shows "Meses sin intereses" (skipped for now) and a 7-soup marker (free shipping is now by amount, see Part 2).
 * WhatsApp: +52 55 8525 9797 · Email: ondocdmx@gmail.com
 
 ## 2. CURRENT STATE (verified in the code, 27 Oct 2026)
 
 Where things live:
 
-* Soup prices: per product in `src/content/products.json`: `price` (shown) + `stripePriceId` (charged).
+* Soup prices: per product in `src/content/products.json`: `price` is what the cart shows AND charges (sent
+  as `price_data` since Phase 1.3). `stripePriceId` (live) is only used to find the soup's Stripe Product, so
+  sales roll up per soup; `stripeTestProductId` is the test-mode Product (`scripts/stripe-test-catalog.mjs`).
   $125 vegetarian/vegan, $150 meat/fish, Ondo Box (5 soups) $600.
 * Pricing engine (Phase 1.1, 28 Oct 2026): `priceCart()` in `src/commerce/priceCart.ts` is the ONLY place
   that calculates the cart's subtotal, discount, shipping and total (in centavos). The cart UI and
   `api/create-cart-checkout.ts` both call it. `src/commerce/config.ts` reads the rules from the JSON files
   (no separate config file). Tests: `npm test` (`src/commerce/priceCart.test.ts`, `tests/`).
   The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
-* Shipping: `shippingPrice` ($50, shown) + `shippingStripeProductId` (the Price ID charged) in `settings.json`.
-  Free when the cart has `freeShippingMinSoups` (7) or more individual soups, or contains a box
-  (`boxShipsFree`). The free-shipping zone is not checked on the server yet (Phase 3).
+* Shipping: `shippingPrice` ($50) in `settings.json`, sent to Stripe as a shipping option (no Price ID since Phase 1.2).
+  Free when the cart subtotal before discounts reaches `freeShippingMinAmount` ($725, owner decision 28 Oct 2026):
+  6 veggie soups, 5 meat soups, or the box + 1 soup. The box alone pays shipping; its card and page say
+  "+ envío, o gratis si agregas 1 sopa". The free-shipping zone is not checked on the server yet (Phase 3).
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
-  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`box`, `minSoups` or empty).
-* Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%, applied
-  by the API as the Stripe coupon in `cartDiscount2CouponId`. `cartDiscount1` is no longer read.
-  Items with `isBox: true` in products.json (the box) count as 1 item toward the 10
-  but never get the 20%, and ship free. Stripe can't exclude products from a coupon, only include them, so the coupon
-  lists every individual soup. ADDING A NEW SOUP: it must be on that coupon, or Stripe charges it at full
-  price while the cart shows −20%. Coupons can't be edited: create a new one and update the ID.
+  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount` or empty).
+* Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%. The server
+  creates the Stripe coupon itself (`api/_lib/catalog.ts`, id `ondo_bulk_20_<hash>`) for every individual
+  soup, never the box (shipping is never discounted: it's a shipping option). A new soup or a new % gives a
+  new coupon automatically; nothing to do by hand. `cartDiscount1` is no longer read. Items with `isBox: true`
+  count as 1 item toward the 10 but never get the 20%. ADDING A NEW SOUP: give it a `stripePriceId` (live) and
+  run `scripts/stripe-test-catalog.mjs` for test mode.
 * Promo codes: when no volume discount applies, the cart checkout shows Stripe's promo-code field.
   The subscription checkout always shows it. ONDOFIRST exists in Stripe since 28 Oct 2026: customers type
   the promotion code `ONDOFIRST` (`promo_1UVPzV3Xzew6cmN1P0h1dkh7`); the coupon behind it is `ggW569cH`
   (10%, duration "Once", so subscription renewals are not discounted). Stripe's "first-time order only"
   is ticked on the promotion code. It works wherever the code field shows (carts under 10 items,
   subscriptions) and can't stack with the 20%. `welcomeCode`/`welcomePercent` in settings.json mirror it
-  for `priceCart()`, but the cart has no code field yet: Stripe applies ONDOFIRST on its own page. The coupon has no product restriction, so it also takes
-  10% off the $50 shipping line. The site doesn't advertise it yet. Stripe's first-order check doesn't
+  for `priceCart()`, but the cart has no code field yet: Stripe applies ONDOFIRST on its own page. Since Phase 1.2
+  shipping is a Stripe shipping option, so coupons (ONDOFIRST included) no longer discount it. The site doesn't advertise it yet. Stripe's first-order check doesn't
   catch a returning customer with a new email; stricter enforcement is Phase 4.
-* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked in the
-  browser before adding to cart. Outside the zone the customer can't add to cart; the address (and
-  email, if they ask to be notified) becomes a lead in Google Sheets.
-* Delivery day: Monday, hard-coded in `src/App.tsx` (`getNextMonday()`). Slots 9–13, 13–17, 17–21 are
-  hard-coded in the `t` object in `App.tsx`. Orders until Sunday 23:59 → next day; on Monday → the
-  following Monday. That matches the owner's cutoff (Sunday before midnight), but it's calculated in the
-  customer's browser, once at page load, and the server never checks it. The date is not saved on the order.
+* Cart (Phase 1.2, `src/components/CartDrawer.tsx`): one screen with the soups, the benefits bar, the delivery
+  block (date, slot, postal code) and "Pagar $X" straight to Stripe. Cart, slot and postal code are saved in
+  localStorage (`ondo_cart`, `ondo_cart_slot`, `ondo_cart_postal`). Cart thumbnails use `platedImage` (products.json).
+* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked live in the cart
+  (no pop-up before adding to cart any more) and again on the server. Out of zone: no checkout, a WhatsApp
+  button, and an optional email; the postal code (and email) become a lead in Google Sheets. The subscription
+  funnel keeps its own postal-code step.
+* Delivery day: `deliveryDays` (['monday']), `deliverySlots` and `orderCutoff` (1 day before, 23:59, Mexico City)
+  in settings.json, computed by `src/commerce/delivery.ts` for the cart, the funnel and the server. The server
+  re-checks slot, postal code and date (409 if the cutoff passed) and saves `delivery_date`, `delivery_slot`,
+  `delivery_postal`, `discount_type` on the Checkout Session and the PaymentIntent. Stripe collects the address.
+* Cart checkout (`api/create-cart-checkout.ts`): Stripe in Spanish (`es-419`), card only (Apple/Google Pay come
+  with card if enabled in the Dashboard), shipping as a shipping option "Entrega lunes 2 de noviembre, 9–13 h".
+  `price_data` lines (Phase 1.3). OXXO (1-day voucher) is built but off: `oxxoEnabled` in settings.json; turn it
+  on only after the checklist in `docs/checkout.md` §7. Setup and test-mode testing: `docs/checkout.md`.
+* Success page: `api/checkout-summary.ts` reads the order from Stripe (no personal data) for the Spanish
+  confirmation pop-up (`src/components/OrderSuccess.tsx`).
 * Subscriptions (`api/create-checkout-session.ts`): six Stripe Price IDs (`productId*`) and the price shown
   for 3 months (`amount*`) in `settings.json`. Every 2 weeks = 6 deliveries in 3 months; monthly = 3.
   Price per soup: monthly 4/6/10 = $106.25 / $100 / $95; every 2 weeks 4/6/10 = $100 / $95.83 / $90.
@@ -98,8 +113,12 @@ Where things live:
   time. There is no one-time 3-month plan today. Recurring plans can't be paid by transfer or OXXO.
 * "Solo suscriptores" soups (`onlySubscriptions` in products.json) can't be added to the cart: the
   button opens the subscription funnel instead. Keep it that way.
-* Orders: there is no Stripe webhook and no order database. The team reads orders and their
-  `delivery_*` metadata in the Stripe Dashboard.
+* Orders (Phase 1.3): `api/stripe-webhook.ts` records each cart order in the "Pedidos" Google Sheet via the Apps
+  Script in `docs/apps-script/pedidos.gs` (env `ORDERS_WEBHOOK_URL`, `ORDERS_WEBHOOK_TOKEN`, `STRIPE_WEBHOOK_SECRET`).
+  Card → `pagado`; OXXO → `pendiente_oxxo`, then `pagado` or `oxxo_no_pagado`. Only `pagado` rows are delivered.
+  Manual review (one email to `reviewEmail`, ondocdmx@gmail.com) when Stripe's postal code differs from the
+  cart's, is out of zone, or OXXO is confirmed after the cutoff. Idempotent (PaymentIntent metadata
+  `ondo_order_status` + one row per session). Subscriptions are still read in the Stripe Dashboard.
 
 Do not change how prominent subscriptions are on the site until Omar asks in a specific Phase 5 task.
 
@@ -109,8 +128,9 @@ Do not assume any of this exists, and do not refactor toward it unless Omar asks
 
 Rules:
 
-* Caja de bienvenida (5-soup box): $600 MXN, ALWAYS ships free.
-* Shipping: $50 MXN. Free when the order has 7 or more individual soups, or contains a 5-soup box.
+* Caja de bienvenida (5-soup box): $600 MXN + shipping (owner, 28 Oct 2026: the box alone does NOT ship free).
+* Shipping: $50 MXN. Free when the subtotal before discounts is $725 or more (box + 1 soup, 6 veggie or
+  5 meat soups). The shop shows "free shipping" hints when one more soup would get there.
 * 10+ items: 20% off AND free shipping. The box counts as ONE item toward the 10, never as 5.
   The 20% applies to individual soups only, never to the box's price (it already has a discount
   built in). Example: 9 soups + 1 box = 10 items → 20% off the 9 soups, box at full $600.

@@ -1,0 +1,79 @@
+// Textos del carrito que dependen del resultado de priceCart(). Puros, para poder probarlos.
+import type { CartPricing } from './priceCart.js';
+import { COMMERCE } from './config.js';
+
+type Lang = 'es' | 'en';
+
+// "$1,060" sin centavos; "$387.50" solo cuando hay centavos.
+export function formatMXN(cents: number): string {
+  const pesos = cents / 100;
+  const decimals = cents % 100 === 0 ? 0 : 2;
+  return `$${pesos.toLocaleString('es-MX', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+// "Tu carrito · 3 sopas" / "Tu carrito · 1 caja y 2 sopas"
+export function cartTitle(p: Pick<CartPricing, 'soupCount' | 'itemCount'>, lang: Lang = 'es'): string {
+  const boxes = p.itemCount - p.soupCount;
+  const parts = lang === 'es'
+    ? [boxes ? plural(boxes, 'caja', 'cajas') : '', p.soupCount || !boxes ? plural(p.soupCount, 'sopa', 'sopas') : '']
+    : [boxes ? plural(boxes, 'box', 'boxes') : '', p.soupCount || !boxes ? plural(p.soupCount, 'soup', 'soups') : ''];
+  return `${lang === 'es' ? 'Tu carrito' : 'Your cart'} · ${parts.filter(Boolean).join(lang === 'es' ? ' y ' : ' and ')}`;
+}
+
+// Mensaje sobre la barra de progreso: primero el envío gratis (por monto), luego el 20% (por artículos).
+export function progressMessage(p: CartPricing, lang: Lang = 'es'): string {
+  const pct = COMMERCE.bulkDiscountPercent;
+  const bulkDone = pct > 0 && p.discountType === 'bulk';
+  const toBulk = pct > 0 && !bulkDone ? p.soupsToBulkDiscount : 0;
+  if (!p.freeShippingReason) {
+    const oneSoup = p.itemCount > 0 && p.amountToFreeShipping <= COMMERCE.cheapestSoupPrice;
+    if (lang === 'en') return oneSoup ? 'Add 1 more soup for free shipping' : `${formatMXN(p.amountToFreeShipping)} to go for free shipping`;
+    return oneSoup ? 'Agrega 1 sopa más y tu envío es gratis' : `Te faltan ${formatMXN(p.amountToFreeShipping)} para envío gratis`;
+  }
+  if (lang === 'en') {
+    if (bulkDone) return `You have free shipping and ${pct}% off`;
+    return toBulk ? `You have free shipping. ${toBulk} more for ${pct}% off` : 'You have free shipping';
+  }
+  if (bulkDone) return `Tienes envío gratis y ${pct}% menos`;
+  if (!toBulk) return 'Ya tienes envío gratis';
+  return `Ya tienes envío gratis. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
+}
+
+// Línea bajo el precio de la caja: "+ envío, o gratis si agregas 1 sopa". Vacío si la caja sola ya llega.
+export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es'): string {
+  const gap = COMMERCE.freeShippingMinAmount - boxPriceCents;
+  if (gap <= 0) return '';
+  const n = Math.ceil(gap / COMMERCE.cheapestSoupPrice);
+  return lang === 'es'
+    ? `+ envío, o gratis si agregas ${n === 1 ? '1 sopa' : `${n} sopas`}`
+    : `+ shipping, or free if you add ${n === 1 ? '1 soup' : `${n} soups`}`;
+}
+
+export type CheckoutBlocker = 'slot' | 'postal' | 'outOfZone' | 'slotAndPostal' | null;
+
+// Por qué el botón de pagar está desactivado (null = se puede pagar).
+export function checkoutBlocker(state: { slot: string | null; postalValid: boolean; postalInZone: boolean }): CheckoutBlocker {
+  if (state.postalValid && !state.postalInZone) return 'outOfZone';
+  if (!state.slot && !state.postalValid) return 'slotAndPostal';
+  if (!state.slot) return 'slot';
+  if (!state.postalValid) return 'postal';
+  return null;
+}
+
+export function blockerMessage(b: CheckoutBlocker, lang: Lang = 'es'): string {
+  const es = {
+    slot: 'Elige una franja de entrega para continuar',
+    postal: 'Escribe tu código postal para continuar',
+    slotAndPostal: 'Elige una franja y escribe tu código postal para continuar',
+    outOfZone: 'Aún no llegamos a tu código postal',
+  };
+  const en = {
+    slot: 'Choose a delivery slot to continue',
+    postal: 'Enter your postal code to continue',
+    slotAndPostal: 'Choose a slot and enter your postal code to continue',
+    outOfZone: "We don't deliver to your postal code yet",
+  };
+  return b ? (lang === 'es' ? es : en)[b] : '';
+}

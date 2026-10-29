@@ -103,12 +103,15 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - **Suscripción** (`api/create-checkout-session.ts`): funnel quincenal/mensual
   × 4/6/10 sopas. Price IDs y montos en `settings.json` (`productId*`,
   `amount*`, `price*`). Siempre con `allow_promotion_codes: true`.
-- Envío: `shippingStripeProductId` (pese al nombre, es el **Price ID**
-  `price_…` que se cobra) + `shippingPrice` (importe mostrado) en
-  `settings.json`; gratis con `freeShippingMinSoups` (7) sopas o con una caja
-  (`boxShipsFree`); si no, se cobra (no hay recogida en
-  tienda). `shippingStripePriceId` (`prod_…`)
-  no lo usa el código.
+- Envío: `shippingPrice` (importe) en `settings.json`; se manda a Stripe
+  como opción de envío (`shipping_options`) con el día y la franja. Gratis con
+  subtotal ≥ `freeShippingMinAmount` ($725, antes de descuentos); si no, se
+  cobra (no hay recogida en tienda). `shippingStripeProductId` y
+  `shippingStripePriceId` ya no los usa el código.
+- Entrega: `deliveryDays`, `deliverySlots`, `orderCutoff` en `settings.json`;
+  `src/commerce/delivery.ts` calcula la fecha (hora de CDMX) para carrito,
+  funnel y servidor. Carrito: `src/components/CartDrawer.tsx`; página de
+  éxito: `src/components/OrderSuccess.tsx` + `api/checkout-summary.ts`.
 - `apiVersion` de Stripe fijada en `'2024-06-20'`.
 
 ## Campos de producto (`src/content/products.json`)
@@ -116,20 +119,25 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - `_id` → identificador interno estable (carrito y funnel). Único, no cambiarlo.
 - `slug` → URL `/sopas/<slug>` e `item_id` de GA4. No cambiarlo en sopas existentes.
 - `title`, `tagline`, `description`, `ingredients` → `{es, en}`.
-- `price` (mostrado) + `stripePriceId` (cobrado): deben coincidir.
+- `price` → lo que se muestra y se cobra (el carrito manda `price_data`). `stripePriceId` (live) sirve para
+  encontrar el Product de Stripe de la sopa; `stripeTestProductId` es su copia en modo test
+  (`scripts/stripe-test-catalog.mjs`). Las suscripciones siguen con Price IDs.
 - `image`, `hoverImage`, `images[]` (galería de la ficha), `bgColor`, `tags[]`
   (copias de objetos de `tags.json`: `_id`, `name`, `slug`, `icon`, `color`).
 - Orden en la tienda = orden del array.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
-- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe, y tiene envío gratis.
+- `platedImage` → foto de la sopa servida (miniatura del carrito). Al añadir una sopa, rellenarlo.
+- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Sola paga envío.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.
 
 ## Variables de entorno
 
 Ver `.env.example`. En local usa `.env`; en Vercel deben estar configuradas:
-`STRIPE_SECRET_KEY`, `FRONTEND_URL`, `GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
+`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `ORDERS_WEBHOOK_URL` y
+`ORDERS_WEBHOOK_TOKEN` (pedidos, ver `docs/checkout.md`), `FRONTEND_URL`,
+`GOOGLE_SHEETS_WEBHOOK_URL` (Apps Script
 que recibe el formulario de sopas y los leads de zona de reparto) y,
 opcional, `GOOGLE_SHEETS_DELIVERY_WEBHOOK_URL` (hoja aparte para los leads
 de zona). Ninguna `VITE_*` es necesaria; nunca pongas secretos en `VITE_*`.

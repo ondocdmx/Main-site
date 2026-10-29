@@ -38,7 +38,7 @@ Ejemplos de mensajes que funcionan bien:
 | Marcar una sopa como AGOTADA | "Marca la sopa tlalpeña como agotada" |
 | Reordenar las sopas de la tienda | "Pon el Box de 5 sopas primero y la tlalpeña segunda" |
 | Que una sopa no aparezca en los planes de suscripción | "Saca el box del selector de la suscripción" |
-| Cambiar el descuento por cantidad (hoy 20% desde 10) o el envío gratis (hoy desde 7 sopas o con caja) | "Quiero el 15% a partir de 10 sopas" (antes crea el cupón en Stripe) |
+| Cambiar el descuento por cantidad (hoy 20% desde 10) o el envío gratis (hoy desde $725 de compra) | "Quiero el 25% a partir de 12 sopas" (antes crea el cupón en Stripe) o "Envío gratis desde $800" |
 | Cambiar zonas de reparto por código postal | "Añade el CP 06700 a las zonas de reparto" |
 
 Tu Claude te enseña una **vista previa** antes de publicar; cuando dices
