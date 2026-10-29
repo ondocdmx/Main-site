@@ -34,7 +34,7 @@ const uploaded = (slug, role) => {
 };
 const fromJson = (src) => (src ? path.join(PUBLIC, src.replace(/^\//, '')) : null);
 
-// Devuelve { src, srcset, width, height } o null si no hay fuente.
+// Devuelve { src, srcset, width, height, og? } o null si no hay fuente.
 const build = async (source, name) => {
   if (!source || !(await exists(source))) return null;
   const data = await readFile(source);
@@ -54,11 +54,22 @@ const build = async (source, name) => {
     files.push({ w, url: `/images/soups/web/${file}` });
   }
   const largest = files[files.length - 1];
+  // Foto para compartir (og:image): JPG 1200×630, el formato que mejor leen WhatsApp y Facebook.
+  let og;
+  if (name.endsWith('-plated')) {
+    const file = `${name}-og.jpg`;
+    if (cache[file] !== hash || !(await exists(path.join(OUT_DIR, file)))) {
+      await sharp(data).rotate().resize(1200, 630, { fit: 'cover', position: 'centre' }).jpeg({ quality: 78, mozjpeg: true }).toFile(path.join(OUT_DIR, file));
+      cache[file] = hash;
+    }
+    og = `/images/soups/web/${file}`;
+  }
   return {
     src: (files.find(f => f.w === 800) || largest).url,
     srcset: files.map(f => `${f.url} ${f.w}w`).join(', '),
     width: largest.w,
     height: largest.w,
+    ...(og ? { og } : {}),
   };
 };
 

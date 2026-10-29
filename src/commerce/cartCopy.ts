@@ -1,6 +1,7 @@
 // Textos del carrito que dependen del resultado de priceCart(). Puros, para poder probarlos.
 import type { CartPricing } from './priceCart.js';
 import { COMMERCE } from './config.js';
+import { cutoffFor, formatDeliveryDate } from './delivery.js';
 
 type Lang = 'es' | 'en';
 
@@ -81,4 +82,22 @@ export function blockerMessage(b: CheckoutBlocker, lang: Lang = 'es'): string {
     outOfZone: "We don't deliver to your postal code yet",
   };
   return b ? (lang === 'es' ? es : en)[b] : '';
+}
+
+// Ficha de producto: "Pide antes del domingo 23:59 y llega el lunes 2 de noviembre"
+export function deliveryPromise(iso: string, lang: Lang = 'es'): string {
+  const { day, time } = cutoffFor(iso, lang);
+  return lang === 'es'
+    ? `Pide antes del ${day} ${time} y llega el ${formatDeliveryDate(iso, 'es')}`
+    : `Order by ${day} ${time} and it arrives ${formatDeliveryDate(iso, 'en')}`;
+}
+
+// Ficha de producto: "Envío gratis desde $725 · 20% menos desde 10 sopas" (de settings.json)
+export function offerLine(lang: Lang = 'es'): string {
+  const ship = formatMXN(COMMERCE.freeShippingMinAmount);
+  const { bulkDiscountPercent: pct, bulkDiscountMinItems: min } = COMMERCE;
+  const es = lang === 'es';
+  const parts = [es ? `Envío gratis desde ${ship}` : `Free shipping from ${ship}`];
+  if (pct) parts.push(es ? `${pct}% menos desde ${min} sopas` : `${pct}% off from ${min} soups`);
+  return parts.join(' · ');
 }

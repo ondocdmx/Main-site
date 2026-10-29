@@ -4,7 +4,7 @@ import productImages from '../../content/productImages.json';
 import tagsContent from '../../content/tags.json';
 
 type Lang = 'es' | 'en';
-export type WebImage = { src: string; srcset: string; width: number; height: number };
+export type WebImage = { src: string; srcset: string; width: number; height: number; og?: string };
 type ProductImages = { plated: WebImage | null; pack: WebImage | null; ingredients: WebImage | null; gallery: WebImage[] };
 
 const IMAGES = productImages as Record<string, ProductImages>;

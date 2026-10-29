@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockerMessage, boxShippingNote, cartCountLabel, cartTitle, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
+import { blockerMessage, boxShippingNote, cartCountLabel, cartTitle, deliveryPromise, offerLine, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
 import { priceCart, type PricedProduct } from './priceCart.js';
 
 const veg: PricedProduct = { _id: 'veg', price: 125 };
@@ -68,5 +68,16 @@ describe('checkoutBlocker', () => {
     expect(checkoutBlocker({ slot: 'slot_9_13', postalValid: true, postalInZone: false })).toBe('outOfZone');
     expect(checkoutBlocker({ slot: 'slot_9_13', postalValid: true, postalInZone: true })).toBeNull();
     expect(blockerMessage('slot')).toBe('Elige una franja de entrega para continuar');
+  });
+});
+
+describe('ficha de producto', () => {
+  it('corte y fecha de entrega', () => {
+    expect(deliveryPromise('2026-11-02')).toBe('Pide antes del domingo 23:59 y llega el lunes 2 de noviembre');
+    expect(deliveryPromise('2026-11-02', 'en')).toBe('Order by Sunday 23:59 and it arrives Monday, November 2');
+  });
+  it('línea de ofertas desde settings.json', () => {
+    expect(offerLine()).toBe('Envío gratis desde $725 · 20% menos desde 10 sopas');
+    expect(offerLine('en')).toBe('Free shipping from $725 · 20% off from 10 soups');
   });
 });

@@ -52,7 +52,9 @@ las funciones de `api/`).
 
 - Es una SPA con **routing por pathname** (sin react-router). Ver constante
   `SOUPSCRIPTION_ROUTE = '/soupscripciones'`:
-  - `/sopas/:slug` → ficha de producto (modal)
+  - `/sopas/:slug` → ficha de producto (página propia, `src/components/shop/ProductPage.tsx`; la flecha
+    vuelve a la tienda en el mismo scroll). El build escribe `dist/sopas/<slug>/index.html` con título,
+    descripción y og:image de la sopa (`src/seo.ts`, plugin en `vite.config.ts`) para Google y WhatsApp.
   - `/sopas` → redirige a `/#shop` y hace scroll a la tienda (espera a que
     termine `isLoading`; la pantalla de carga dura mínimo 1s por diseño)
   - `/soupscripciones` → abre el funnel de suscripción sobre la home
@@ -62,6 +64,7 @@ las funciones de `api/`).
   `getSettingText(...)`; si una clave no existe se usa el default (muchos
   textos tienen default en el objeto `t` de `App.tsx`).
 - Textos bilingües: objetos `{es, en}`; resolver con `resolveText()`.
+- Tienda y ficha: `src/components/shop/` (tarjetas, filtros, caja, barra del carrito, ficha).
 - Imágenes: rutas en texto (`/images/cms/x.webp`), resueltas con
   `resolveImage()`.
 - Pantalla de carga de ~1 s a propósito (diseño); el scroll de `/sopas`

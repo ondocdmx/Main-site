@@ -30,7 +30,7 @@ export default function ShopSection({ products, filters, lang, resolveText, titl
   const offset = box ? 1 : 0;
 
   return (
-    <section className="py-12 md:py-20 px-4 md:px-6 bg-brand-cream" id="shop" aria-labelledby="shop-title">
+    <section className="py-12 md:py-20 px-4 md:px-6 bg-brand-cream scroll-mt-16 md:scroll-mt-28" id="shop" aria-labelledby="shop-title">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between gap-4 mb-4">
           <h2 id="shop-title" className="font-title font-bold text-[32px] md:text-[44px] leading-none text-brand-ink whitespace-nowrap">{title}</h2>
