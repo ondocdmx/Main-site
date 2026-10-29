@@ -36,10 +36,10 @@ export function SoupImage({ image, alt, sizes, eager = false, className = '' }: 
 type Tag = { slug: { current: string }; name: { es: string; en: string }; tone?: string };
 const TAGS = new Map((tagsContent as Tag[]).map(t => [t.slug.current, t]));
 const TONE_CLASS: Record<string, string> = {
-  leaf: 'bg-chip-leaf', butter: 'bg-chip-butter', clay: 'bg-chip-clay', sky: 'bg-chip-sky', spice: 'bg-chip-spice',
+  leaf: 'bg-chip-leaf', butter: 'bg-chip-butter', clay: 'bg-chip-clay', sky: 'bg-chip-sky', spice: 'bg-chip-spice', plum: 'bg-chip-plum',
 };
-// Orden en la tarjeta: dieta primero, picante al final.
-const TAG_ORDER = ['vegano', 'vegetariano', 'carne', 'pescado', 'picante'];
+// Orden en la tarjeta: dieta primero, luego picante (chile) y especiada (jengibre, especias: no es para niños chicos).
+const TAG_ORDER = ['vegano', 'vegetariano', 'carne', 'pescado', 'picante', 'especiada'];
 
 export const productTagSlugs = (product: any): string[] =>
   (product?.tags || []).map((t: any) => t?.slug?.current).filter(Boolean);

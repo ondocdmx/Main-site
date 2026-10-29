@@ -7,6 +7,7 @@ Sube aquí las fotos con este nombre exacto (minúsculas, sin espacios):
 | Sopa servida (foto principal) | `<slug>-plated.jpg` |
 | Bolsa / empaque | `<slug>-pack.jpg` |
 | Ingredientes | `<slug>-ingredients.jpg` |
+| Más fotos para la ficha (opcional, en este orden) | `<slug>-gallery-1.jpg`, `<slug>-gallery-2.jpg`… |
 
 `<slug>` es el de la sopa:
 
@@ -32,4 +33,6 @@ Ejemplo: `mega-verde-plated.jpg`.
 - Se recortan en cuadrado al centro: deja la sopa centrada.
 - No hace falta optimizarlas: `scripts/build-images.mjs` crea las versiones ligeras
   (carpeta `web/`, no la toques) en cada build de Vercel.
-- Si falta una foto, la web usa la que ya tenía la sopa.
+- Si falta una foto, la web usa la que ya tenía la sopa. Si subes alguna `gallery-N` de una sopa,
+  sustituye a toda su galería anterior.
+- No hay foto "hover": la tienda nueva solo muestra la sopa servida (`plated`).

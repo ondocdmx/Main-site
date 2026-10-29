@@ -131,7 +131,7 @@
       "es": "Chambarete de res de libre pastoreo braseado en vino tinto, papa, zanahoria, cebolla, colinabi y un bouquet de romero, tomillo y hoja de laurel. Con bolitas de suet y perejil. Un estofado que nació humilde y conquistó todas las mesas — de la taberna al palacio. Coronado con crema de rábano picante.\n\nLa brit de Ondo sabe lo que hace."
     },
     "descriptor": {
-      "es": "humilde · clásico · abundante",
+      "es": "humilde · clásica · abundante",
       "en": "humble · classic · hearty"
     },
     "excludeFromFunnel": null,
@@ -194,7 +194,7 @@
       "es": "All you need is love. Y buenos betabeles. Betabel, zanahoria, papa y espelta — caldoso, dulce, herbal. Porque las raíces son profundas y merecen ser celebradas. \n\nDe donde seas, aquí te vas a encontrar.\n\n—— * contiene: gluten (espelta)"
     },
     "descriptor": {
-      "es": "caldoso · restaurativo · herbal",
+      "es": "caldosa · restaurativa · herbal",
       "en": "brothy · restorative · herbal"
     },
     "excludeFromFunnel": null,
@@ -258,7 +258,7 @@
       "es": "Tomamos la calabaza de castilla (una de las más nutritivas que existen) y la mandamos directo a la India. Rostizamos la pulpa, florecemos especias en aceite de coco y cerramos con leche de coco y lentejas rojas.\n\nNamaste, banda."
     },
     "descriptor": {
-      "es": "especiado · envigorante · sedoso",
+      "es": "especiada · vigorizante · sedosa",
       "en": "spiced · invigorating · silky"
     },
     "excludeFromFunnel": null,
@@ -307,6 +307,19 @@
           "current": "vegano"
         },
         "tone": "leaf"
+      },
+      {
+        "_id": "ondo-tag-especiada",
+        "color": "bg-ondo-orange",
+        "icon": "",
+        "name": {
+          "en": "Spiced",
+          "es": "Especiada"
+        },
+        "slug": {
+          "current": "especiada"
+        },
+        "tone": "plum"
       }
     ],
     "title": {
@@ -393,7 +406,7 @@
       "es": "Hay algo con meter una berenjena directamente al fuego. Sin sartén, sin horno, sin intermediarios... se siente primitivo y honesto. La cáscara se quema. La pulpa se rinde. Lo que sale es ahumado, suave, transformado en algo que no se puede replicar de otra manera.\n\nDe ahí viene todo. Las lentejas, el yogurt, el limón, el comino, el pimentón y el aceite de hierbas no hacen más que acompañar algo que ya llegó completo.\nTan simple como eso. Tan imposible como eso. —— * contiene: leche"
     },
     "descriptor": {
-      "es": "smokey · herboso · sabio",
+      "es": "smokey · herbosa · sabia",
       "en": "smoky · herby · wise"
     },
     "excludeFromFunnel": null,
@@ -459,7 +472,7 @@
       "es": "Verde, herboso, honesto. Chícharo, brócoli, quelites, espinacas, acelga, menta y capuchinas. El tipo de sopa que te hace sentir que hiciste algo bien hoy. \n\n——*Contiene: nuez de la india."
     },
     "descriptor": {
-      "es": "vitamínico · inesperado · ganador",
+      "es": "vitamínica · inesperada · ganadora",
       "en": "vitamin-packed · unexpected · winning"
     },
     "excludeFromFunnel": null,
@@ -526,7 +539,7 @@
       "en": "A chowder invented to outdo all the others."
     },
     "descriptor": {
-      "es": "comfort · wow! · innovador",
+      "es": "comfort · wow! · innovadora",
       "en": "comfort · wow! · innovative"
     },
     "excludeFromFunnel": false,
@@ -590,7 +603,7 @@
       "es": "Frío, brillante, vivo. La mitad de los jitomates están fermentados, lo que lo convierte en un gazpacho probiótico y le da una profundidad que el original simplemente no tiene. La otra mitad, fresca. Juntos, algo mejor que la suma de sus partes.\n\nMimos españoles nos han dicho que es de los mejores que han probado. Nosotros no vamos a discutir.  ——* contiene: gluten"
     },
     "descriptor": {
-      "es": "intenso · probiótico · refrescante",
+      "es": "intensa · probiótica · refrescante",
       "en": "intense · probiotic · refreshing"
     },
     "excludeFromFunnel": null,
@@ -642,17 +655,17 @@
         "tone": "leaf"
       },
       {
-        "_id": "HKnJcdg5mBoLDonMNgZ9Q4",
+        "_id": "ondo-tag-especiada",
         "color": "bg-ondo-orange",
-        "icon": "🌶️",
+        "icon": "",
         "name": {
-          "en": "Spicy",
-          "es": "Picante"
+          "en": "Spiced",
+          "es": "Especiada"
         },
         "slug": {
-          "current": "picante"
+          "current": "especiada"
         },
-        "tone": "spice"
+        "tone": "plum"
       }
     ],
     "title": {
@@ -672,7 +685,7 @@
       "es": "Profundamente mexicana. Inconfundiblemente nueva. Chipotle, verduras, epazote, garbanzo y caldo de hueso de pollo cocido a fuego lento. Los mismos de siempre, encontrados de otra manera. Pollo, queso panela, ejotes.. se quedan enteros, porque algunos momentos no se tocan.\n\nEsa memoria, en cada bocado.\n\n—— * contiene: leche"
     },
     "descriptor": {
-      "es": "tradicional · picosito · nutritivo",
+      "es": "tradicional · picosita · nutritiva",
       "en": "traditional · a little spicy · nourishing"
     },
     "excludeFromFunnel": null,
@@ -744,8 +757,8 @@
   {
     "_id": "1eebd433-6c27-45cc-a4d8-30bce40bfb3f",
     "allergens": {
-      "es": "Gluten (spätzle), cerdo [CONFIRMAR HUEVO en el spätzle]",
-      "en": "Gluten (spätzle), pork [CONFIRM EGG in the spätzle]"
+      "es": "Gluten y huevo (spätzle), cerdo",
+      "en": "Gluten and egg (spätzle), pork"
     },
     "bgColor": null,
     "description": {
@@ -753,7 +766,7 @@
       "es": "Jitomate fresco, spätzle alemán y albóndigas de cerdo con hinojo. Sí, leíste bien. Le decimos 'lo de la nonna alemana' — suena casi italiano, funciona completamente, y no le debe explicación a nadie. Comfort food sin fronteras.\n\nCome primero. Preguntas después.\n\n—— * contiene: gluten, huevo"
     },
     "descriptor": {
-      "es": "confortante · picosito · llenador",
+      "es": "confortante · picosita · llenadora",
       "en": "comforting · a little spicy · filling"
     },
     "excludeFromFunnel": null,
@@ -825,8 +838,8 @@
   {
     "_id": "mxAS2Q3l09qdFj5vZIYDRc",
     "allergens": {
-      "es": "Lácteos (queso Ramonetti) [CONFIRMAR GLUTEN: ¿lleva croutones?]",
-      "en": "Dairy (Ramonetti cheese) [CONFIRM GLUTEN: croutons?]"
+      "es": "Lácteos (queso Ramonetti), gluten (croutones)",
+      "en": "Dairy (Ramonetti cheese), gluten (croutons)"
     },
     "bgColor": "bg-orange-50",
     "description": {

@@ -131,13 +131,14 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
 - `platedImage` → foto de la sopa servida (miniatura del carrito). Al añadir una sopa, rellenarlo.
-- `descriptor` (3 palabras, "especiado · envigorante · sedoso"), `size` ("500 ml"), `servings`
+- `descriptor` (3 palabras en femenino, "especiada · vigorizante · sedosa"), `size` ("500 ml"), `servings`
   ("1–2 porciones"), `allergens` → `{es, en}`. `ingredients` y `allergens` salen del catálogo de sopas
   del dueño (docx, oct 2026); si falta un dato, placeholder visible `[ALÉRGENOS]`.
 - `featuredRank` → orden "Destacadas" de la tienda (0 = primero).
 - Tags: `tags.json` tiene la etiqueta (`name`) y el tono del chip (`tone`); los filtros de la tienda
   están en `settings.json` → `shopFilters` (cada filtro = lista de tags). Nuevo filtro = nueva entrada.
-- Fotos: el dueño sube `public/images/soups/<slug>-plated|pack|ingredients.jpg` (ver README ahí).
+- Fotos: el dueño sube `public/images/soups/<slug>-plated|pack|ingredients|gallery-N.jpg` (ver README ahí).
+- Tags de sabor: `picante` = chile (filtro Picante); `especiada` = jengibre/especias, no apta para niños chicos (solo chip).
   `npm run images` (corre solo antes de dev/build) genera las versiones webp cuadradas y
   `src/content/productImages.json`, que es lo que leen tienda y ficha. No editar ese JSON a mano.
 - Textos comunes de la ficha en `settings.json`: `productHeating`, `productStorage`, `boxBadge`.

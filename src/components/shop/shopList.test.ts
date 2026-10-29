@@ -32,6 +32,10 @@ describe('shopList', () => {
     expect(slugs(r)).not.toContain('mega-verde');
   });
 
+  it('Picante = solo las de chile (dahl y gazpacho son "especiadas", no picantes)', () => {
+    expect(slugs(shopList(all, filter('picante'), 'featured')).sort()).toEqual(['salchispatzle', 'sopa-tlalpena']);
+  });
+
   it('ordenar por precio respeta "solo suscriptores al final"', () => {
     const asc = shopList(all, filter('todas'), 'priceAsc').items;
     const sellable = asc.filter(p => !p.onlySubscriptions).map(p => p.price);

@@ -4,7 +4,8 @@
 // Fuente de cada foto, en este orden:
 //   1. public/images/soups/<slug>-<foto>.jpg|jpeg|png|webp  (las que sube el dueño; ver README de esa carpeta)
 //   2. la foto que ya tiene la sopa en products.json (platedImage, image, images[])
-// <foto> = plated (sopa servida), pack (bolsa), ingredients (ingredientes).
+// <foto> = plated (sopa servida), pack (bolsa), ingredients (ingredientes), gallery-1, gallery-2… (más fotos de la ficha).
+// Si la sopa tiene alguna gallery-N subida, esas sustituyen a images[] de products.json.
 //
 // Corre solo antes de `npm run dev` y `npm run build` (también en Vercel). Solo rehace las fotos cuya fuente cambió.
 import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
@@ -81,8 +82,14 @@ for (const p of products) {
     ingredients: await build(uploaded(p.slug, 'ingredients'), `${p.slug}-ingredients`),
     gallery: [],
   };
-  for (const [i, src] of (p.images || []).entries()) {
-    const img = await build(fromJson(src), `${p.slug}-gallery-${i + 1}`);
+  const galleryUploads = [...uploads]
+    .map(f => f.match(new RegExp(`^${p.slug}-gallery-(\\d+)\\.(${EXTS.join('|')})$`)))
+    .filter(Boolean)
+    .sort((a, b) => Number(a[1]) - Number(b[1]))
+    .map(m => path.join(UPLOADS, m[0]));
+  const gallerySources = galleryUploads.length ? galleryUploads : (p.images || []).map(fromJson);
+  for (const [i, src] of gallerySources.entries()) {
+    const img = await build(src, `${p.slug}-gallery-${i + 1}`);
     if (img) entry.gallery.push(img);
   }
   manifest[p.slug] = entry;

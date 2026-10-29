@@ -68,5 +68,19 @@
       "current": "vegano"
     },
     "tone": "leaf"
+  },
+  {
+    "_id": "ondo-tag-especiada",
+    "color": "bg-ondo-orange",
+    "icon": "",
+    "name": {
+      "en": "Spiced",
+      "es": "Especiada"
+    },
+    "order": 5,
+    "slug": {
+      "current": "especiada"
+    },
+    "tone": "plum"
   }
 ]
