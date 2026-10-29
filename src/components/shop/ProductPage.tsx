@@ -104,9 +104,15 @@ export default function ProductPage({ product, products, lang, resolveText, heat
   return (
     <main className="bg-brand-cream text-brand-ink pb-28 md:pb-16">
       <div className="max-w-6xl mx-auto md:px-6 md:pt-6">
-        <button type="button" onClick={onBack} className="min-h-[44px] flex items-center gap-1 px-3 md:px-0 font-body font-semibold text-[15px]">
+        {/* Móvil: flecha (mockup producto.png). Escritorio: migas "Tienda / Sopa" (mockup desktop). */}
+        <button type="button" onClick={onBack} className="md:hidden min-h-[44px] flex items-center gap-1 px-3 font-body font-semibold text-[15px]">
           <ChevronLeft className="w-5 h-5" aria-hidden="true" /> {es ? 'Volver a las sopas' : 'Back to the soups'}
         </button>
+        <nav aria-label={es ? 'Migas de pan' : 'Breadcrumb'} className="hidden md:flex items-center gap-1 min-h-[44px] mb-2 font-body text-[15px]">
+          <a href="/#shop" onClick={e => { e.preventDefault(); onBack(); }} className="underline underline-offset-2">{es ? 'Tienda' : 'Shop'}</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page" className="font-semibold first-letter:uppercase">{name}</span>
+        </nav>
 
         <div className="md:grid md:grid-cols-2 md:gap-10">
           {/* Fotos */}
