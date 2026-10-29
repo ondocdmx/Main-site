@@ -38,6 +38,7 @@
     },
     "slug": "ondo-box",
     "soldOut": false,
+    "soupsInBox": 5,
     "stripePriceId": "price_1UMDDS3Xzew6cmN139rkVHrS",
     "stripeTestProductId": "prod_VWhGU4IFpLhqf8",
     "tagline": {

@@ -13,13 +13,18 @@ export function formatMXN(cents: number): string {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-// "Tu carrito · 3 sopas" / "Tu carrito · 1 caja y 2 sopas"
-export function cartTitle(p: Pick<CartPricing, 'soupCount' | 'itemCount'>, lang: Lang = 'es'): string {
+// "3 sopas" / "1 caja y 2 sopas" (barra del carrito y título del carrito)
+export function cartCountLabel(p: Pick<CartPricing, 'soupCount' | 'itemCount'>, lang: Lang = 'es'): string {
   const boxes = p.itemCount - p.soupCount;
   const parts = lang === 'es'
     ? [boxes ? plural(boxes, 'caja', 'cajas') : '', p.soupCount || !boxes ? plural(p.soupCount, 'sopa', 'sopas') : '']
     : [boxes ? plural(boxes, 'box', 'boxes') : '', p.soupCount || !boxes ? plural(p.soupCount, 'soup', 'soups') : ''];
-  return `${lang === 'es' ? 'Tu carrito' : 'Your cart'} · ${parts.filter(Boolean).join(lang === 'es' ? ' y ' : ' and ')}`;
+  return parts.filter(Boolean).join(lang === 'es' ? ' y ' : ' and ');
+}
+
+// "Tu carrito · 3 sopas" / "Tu carrito · 1 caja y 2 sopas"
+export function cartTitle(p: Pick<CartPricing, 'soupCount' | 'itemCount'>, lang: Lang = 'es'): string {
+  return `${lang === 'es' ? 'Tu carrito' : 'Your cart'} · ${cartCountLabel(p, lang)}`;
 }
 
 // Mensaje sobre la barra de progreso: primero el envío gratis (por monto), luego el 20% (por artículos).

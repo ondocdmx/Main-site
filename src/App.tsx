@@ -4,7 +4,6 @@ import { ShoppingCart, Search, User, X, ChevronRight, ChevronLeft, Menu, Plus, M
 // Exportado de Sanity en la migración (scripts/export-sanity.mjs); ver AGENTS.md.
 import settingsContent from './content/settings.json';
 import productsContent from './content/products.json';
-import tagsContent from './content/tags.json';
 import deliveryZonesContent from './content/deliveryZones.json';
 import {
   pushEvent, pushEcommerce, productToItem, planItem,
@@ -13,9 +12,15 @@ import {
 import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
 import { formatDeliveryDate, nextDeliveryDate } from './commerce/delivery';
-import { boxShippingNote } from './commerce/cartCopy';
+import { boxShippingNote, formatMXN } from './commerce/cartCopy';
 import CartDrawer, { type CheckoutRequest, type CheckoutResult } from './components/CartDrawer';
 import OrderSuccess, { type OrderSummary } from './components/OrderSuccess';
+import ShopSection from './components/shop/ShopSection';
+import { StickyCartBar, AddedToast } from './components/shop/CartBar';
+import type { ShopFilter } from './components/shop/shopList';
+
+// Dónde se agregó al carrito (add_to_cart → add_location en GA4; ver docs/TRACKING.md).
+export type AddLocation = 'grid' | 'product_page' | 'completa_tu_caja';
 
 // Próxima entrega (hora de Ciudad de México, corte en settings.json). El funnel la calcula al cargar la página;
 // el carrito la recalcula cada minuto.
@@ -163,16 +168,17 @@ export default function App() {
 
   // Cart mixing warning
   const [showMixWarning, setShowMixWarning] = useState(false);
-  const [mixPendingProduct, setMixPendingProduct] = useState<any>(null);
+  const [mixPendingProduct, setMixPendingProduct] = useState<{ product: any; location: AddLocation } | null>(null);
+  // Aviso "Agregada · Ver carrito": cambia en cada agregado (0 = cerrado)
+  const [toastStamp, setToastStamp] = useState(0);
 
   // Product detail popup
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [popupImageIndex, setPopupImageIndex] = useState(0);
   const popupTouchStartX = useRef<number | null>(null);
 
-  // Tags / filtering
-  const tags: any[] = tagsContent;
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  // Filtros de la tienda (settings.json → shopFilters)
+  const shopFilters = (settingsContent as any).shopFilters as ShopFilter[];
 
   // Subscription Popup / Funnel
   const [showPopupModal, setShowPopupModal] = useState(false);
@@ -338,14 +344,6 @@ export default function App() {
   // Helper: ruta de imagen (texto, ej. /images/cms/foto.webp) o '' si no hay
   const resolveImage = (img: any): string => (typeof img === 'string' ? img : '');
 
-  const filteredProducts = activeFilters.length === 0
-    ? products
-    : products.filter((p: any) =>
-        p.tags && activeFilters.every((slug: string) =>
-          p.tags.some((tag: any) => tag?.slug?.current === slug)
-        )
-      );
-
   const ONDO_CHOICE_ID = '__ondo_choice__';
   // Funnel: todos los productos salvo los excluidos (campo excludeFromFunnel en products.json — ej. el box de 5 sopas)
   const subscriptionProds = displayProducts.filter((p: any) => !p.excludeFromFunnel);
@@ -422,6 +420,14 @@ export default function App() {
   };
 
   // Abrir ficha de producto con URL propia (/sopas/:slug)
+  // Toque en una tarjeta de la tienda: select_item (con su posición) y luego la ficha.
+  const selectProduct = (product: any, index: number) => {
+    pushEcommerce('select_item', [{ ...productToItem(product), index, item_list_id: 'tienda', item_list_name: 'tienda' }], {
+      item_list_id: 'tienda', item_list_name: 'tienda',
+    });
+    openProduct(product);
+  };
+
   const openProduct = (product: any) => {
     if (!product?.slug) return;
     setPopupImageIndex(0);
@@ -500,7 +506,7 @@ export default function App() {
     }
   };
 
-  const doAddToCart = (product: any) => {
+  const doAddToCart = (product: any, location: AddLocation) => {
     setCart(prev => {
       const exists = prev.find(item => item.product._id === product._id);
       if (exists) {
@@ -508,19 +514,20 @@ export default function App() {
       }
       return [...prev, { product, quantity: 1 }];
     });
-    pushEcommerce('add_to_cart', [productToItem(product)]);
+    pushEcommerce('add_to_cart', [productToItem(product)], { add_location: location });
+    setToastStamp(Date.now());
   };
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: any, location: AddLocation) => {
     // Check purchase type mixing
     const cartType = cart.length > 0 ? (cart[0].product as any).purchaseType : null;
     const productType = (product as any).purchaseType || purchaseMode;
     if (cartType && cartType !== productType) {
-      setMixPendingProduct(product);
+      setMixPendingProduct({ product, location });
       setShowMixWarning(true);
       return;
     }
-    doAddToCart(product);
+    doAddToCart(product, location);
   };
 
   const saveDeliveryLead = (lead: { address: string; postalCode: string; isServiceable: boolean; email?: string }) => {
@@ -551,12 +558,6 @@ export default function App() {
     setEmailSent(true);
   };
 
-  const toggleFilter = (slug: string) => {
-    setActiveFilters(prev =>
-      prev.includes(slug) ? prev.filter(f => f !== slug) : [...prev, slug]
-    );
-  };
-
   const updateQuantity = (productId: string, delta: number) => {
     // Bajar a 0 (desde la tienda o el carrito) quita la sopa del carrito.
     setCart(prev => prev
@@ -566,6 +567,10 @@ export default function App() {
 
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const openCart = () => {
+    setIsCartOpen(true);
+    if (cart.length > 0) pushEcommerce('view_cart', cart.map((item: any) => productToItem(item.product, item.quantity)));
+  };
 
   // Precios, descuento y envío del carrito: siempre desde el motor (src/commerce/priceCart.ts),
   // el mismo que usa el servidor al crear el pago. Aquí no se hacen cuentas de dinero.
@@ -691,14 +696,14 @@ export default function App() {
               </button>
            </div>
 
-           <div className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={() => { setIsCartOpen(true); if (cart.length > 0) pushEcommerce('view_cart', cart.map((item: any) => productToItem(item.product, item.quantity))); }}>
+           <button type="button" aria-label={lang === 'es' ? `Ver carrito (${cartItemCount})` : `View cart (${cartItemCount})`} className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={openCart}>
              <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8" />
              {cartItemCount > 0 && (
                <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-ondo-red text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors rounded-full">
                  {cartItemCount}
                </span>
              )}
-           </div>
+           </button>
         </div>
         </div>
         {/* Mobile Menu natively embedded inside sticky header */}
@@ -726,6 +731,16 @@ export default function App() {
         resolveImage={resolveImage}
         onChangeQuantity={updateQuantity}
         onCheckout={handleCartCheckout}
+      />
+
+      {/* Barra del carrito (móvil) y aviso al agregar: src/components/shop/CartBar.tsx */}
+      {!isCartOpen && <StickyCartBar pricing={pricing} lang={lang} onOpenCart={openCart} />}
+      <AddedToast
+        stamp={isCartOpen ? 0 : toastStamp}
+        lang={lang}
+        raised={pricing.itemCount > 0}
+        onOpenCart={() => { setToastStamp(0); openCart(); }}
+        onDone={() => setToastStamp(0)}
       />
 
       {/* Hero Section */}
@@ -763,202 +778,46 @@ export default function App() {
         </div>
       </section>
 
-      {/* Products Section */}
-      <section className="py-20 px-6 bg-ondo-beige" id="shop">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-10">
-            {/* Sidebar Filters — tags de src/content/tags.json */}
-             <div className="w-full md:w-1/4 xl:w-1/5 shrink-0 flex flex-col gap-4">
-               <h3 className="font-title font-bold text-xl mb-2 text-ondo-black uppercase flex items-center justify-between">
-                 {getSettingText('filtersTitle', content.filtersTitle)}
-                 {activeFilters.length > 0 && (
-                   <button onClick={() => setActiveFilters([])} className="text-xs text-ondo-green font-bold tracking-wide normal-case underline underline-offset-2">
-                     {lang === 'es' ? 'Borrar' : 'Clear'}
-                   </button>
-                 )}
-               </h3>
-
-               {tags.length === 0 ? (
-                 <>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-green flex items-center justify-center shrink-0"><span className="text-white text-[10px]">🥦</span></div>
-                     {getSettingText('filterBundle', content.filterBundle)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white px-5 py-3 border border-gray-100 font-title hover:border-ondo-green group shadow-sm text-sm uppercase font-bold tracking-wide transition-colors w-full text-left">
-                     <div className="w-5 h-5 bg-sky-400 flex items-center justify-center text-white shrink-0"><span className="text-[10px]">❄️</span></div>
-                     {getSettingText('filterNew', content.filterNew)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
-                     <div className="w-5 h-5 bg-red-500 flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🔥</span></div>
-                     {getSettingText('filterBestseller', content.filterBestseller)}
-                   </button>
-                   <button className="flex items-center gap-3 bg-white text-ondo-black px-5 py-3 border border-gray-100 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-colors hover:border-ondo-green group w-full text-left">
-                     <div className="w-5 h-5 bg-ondo-light-green flex items-center justify-center text-white shrink-0"><span className="text-[12px]">🌿</span></div>
-                     {getSettingText('filterVegan', content.filterVegan)}
-                   </button>
-                 </>
-               ) : (
-                 tags.map((tag: any) => {
-                   const slug = tag?.slug?.current || tag._id;
-                   const isActive = activeFilters.includes(slug);
-                   return (
-                     <button
-                       key={tag._id}
-                       onClick={() => toggleFilter(slug)}
-                       className={`flex items-center gap-3 px-5 py-3 font-title shadow-sm text-sm uppercase font-bold tracking-wide transition-all w-full text-left border ${
-                         isActive
-                           ? 'bg-ondo-green text-white border-ondo-green scale-[1.02]'
-                           : 'bg-white text-ondo-black border-gray-100 hover:border-ondo-green'
-                       }`}
-                     >
-                       <div className={`w-5 h-5 ${tag.color || 'bg-ondo-green'} flex items-center justify-center shrink-0`}>
-                         <span className="text-[12px]">{tag.icon || '•'}</span>
-                       </div>
-                       {tag.name?.[lang] || tag.name?.es || tag.name?.en || slug}
-                     </button>
-                   );
-                 })
-               )}
-
-               <div className="mt-4 flex items-center gap-2 bg-white px-6 py-3 border border-gray-100 font-title font-bold shadow-sm text-sm uppercase tracking-wide cursor-pointer hover:border-ondo-green hover:text-ondo-green transition-colors w-full justify-between">
-                 {getSettingText('sortBy', content.sortBy)} <ChevronRight className="w-4 h-4 rotate-90" />
-               </div>
-            </div>
-
-            {/* Products Grid Area */}
-            <div className="flex-1 flex flex-col">
-              
-              {/* Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {filteredProducts.map((product: any) => (
-                  <div key={product._id} className="bg-white overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-ondo-green flex flex-col group transition-all duration-300 hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] hover:-translate-y-1 p-4 cursor-pointer" onClick={() => openProduct(product)}>
-
-                    {/* Hover Image Area */}
-                    <div
-                      className={`w-full aspect-[4/3] ${product.bgColor || 'bg-ondo-beige'} mb-5 relative overflow-hidden flex items-center justify-center p-6`}
-                    >
-                      <img
-                        src={resolveImage(product.image)}
-                        alt={resolveText(product.title)}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0"
-                      />
-                      <img
-                        src={resolveImage(product.hoverImage) || resolveImage(product.image)}
-                        alt={`${resolveText(product.title)} hover`}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full h-full object-cover mix-blend-multiply drop-shadow-md absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 scale-105 group-hover:scale-100"
-                      />
-                      {product.soldOut && (
-                        <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
-                          <span className="font-title text-white font-bold uppercase tracking-widest text-[13px] bg-gray-800/60 px-4 py-2">
-                            {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
-                          </span>
-                        </div>
-                      )}
-                      {!product.soldOut && product.onlySubscriptions && (
-                        <div className="absolute top-2 left-2 bg-ondo-orange flex items-center z-10 gap-1.5 px-2.5 py-1.5 shadow-md">
-                          <Sparkles className="w-3.5 h-3.5 text-white" />
-                          <span className="font-title text-white font-bold uppercase tracking-widest text-[10px] leading-tight">
-                            {lang === 'es' ? 'SOLO SUSCRIPTORES' : 'SUBSCRIBERS ONLY'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col flex-1 px-2">
-                      {/* Tags badges */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {product.tags.map((tag: any) => (
-                            <span key={tag._id} className={`${tag.color || 'bg-ondo-light-green'} text-white text-[9px] font-title font-bold uppercase tracking-wide px-2 py-0.5`}>
-                              {tag.icon} {resolveText(tag.name)}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <h3 className="font-title text-[20px] font-bold mb-2 leading-[1.15] text-ondo-black line-clamp-2 uppercase">{resolveText(product.title)}</h3>
-                      <div className="font-body font-bold mb-5 text-[16px]">
-                        {productDiscountPct(product) ? (
-                          <div className="flex items-center gap-2">
-                            <span className="line-through text-gray-400 text-[14px]">${product.price?.toFixed(2)}</span>
-                            <span className="text-ondo-orange">{formatMoney(productUnitPrice(product))}</span>
-                            <span className="bg-ondo-orange text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
-                              -{productDiscountPct(product)}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-ondo-green">${product.price?.toFixed(2)}</span>
-                        )}
-                        {product.isBox && boxShippingNote(toCents(product.price), lang) && (
-                          <p className="mt-1 font-semibold text-[13px] text-brand-deep">{boxShippingNote(toCents(product.price), lang)}</p>
-                        )}
-                      </div>
-                      <div className="mt-auto" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-between w-full overflow-hidden shadow-sm">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const productInCart = cart.find(item => item.product._id === product._id);
-                              if (productInCart && productInCart.quantity > 0) {
-                                updateQuantity(product._id, -1);
-                              }
-                            }}
-                            className={`p-3.5 w-1/3 flex justify-center bg-ondo-green text-white ${cart.find(item => item.product._id === product._id)?.quantity ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'}`}
-                          >
-                            <Minus className="w-4 h-4" />
-                          </button>
-
-                          <span className="font-title text-[15px] font-bold w-1/3 text-center bg-ondo-white py-3.5">
-                            {cart.find(item => item.product._id === product._id)?.quantity || 0}
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (product.onlySubscriptions) { openFunnel(); }
-                              else if (!product.soldOut) { addToCart(product); }
-                            }}
-                            disabled={product.soldOut}
-                            className={`p-3.5 w-1/3 flex justify-center text-white ${product.soldOut ? 'bg-gray-400 opacity-40 cursor-not-allowed' : product.onlySubscriptions ? 'cursor-pointer bg-ondo-orange' : 'cursor-pointer bg-ondo-green'}`}
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                         {nudge && !product.soldOut && !product.onlySubscriptions && (
-                           <div className="mt-3 text-ondo-orange flex items-center justify-center gap-1.5 text-[11px] font-body font-semibold opacity-90 animate-pulse">
-                             <Sparkles className="w-3.5 h-3.5" />
-                             <span>{nudgeText}</span>
-                           </div>
-                         )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Soup-scription Banner — below products */}
-              <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
-                <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
-                  {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
-                  <button
-                    onClick={openFunnel}
-                    className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
-                  >
-                    {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
-                  </button>
-                </p>
-                <button
-                  onClick={() => handleCTA(getSetting('clubBannerCTALink'), openFunnel)}
-                  className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
-                >
-                  {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
-                </button>
-              </div>
-            </div>
-         </div>
-      </section>
+      {/* Tienda: src/components/shop/ */}
+      <ShopSection
+        products={products}
+        filters={shopFilters}
+        lang={lang}
+        resolveText={resolveText}
+        title={getSettingText('shopTitle', { es: 'El menú', en: 'The menu' })}
+        boxBadge={getSettingText('boxBadge', '')}
+        nudgeText={nudgeText}
+        priceOf={(product: any) => {
+          const pct = productDiscountPct(product);
+          return pct
+            ? { now: formatMXN(productUnitPrice(product)), before: formatMXN(toCents(product.price)), percent: pct }
+            : { now: formatMXN(toCents(product.price)) };
+        }}
+        quantityOf={(id: string) => cart.find(item => item.product._id === id)?.quantity || 0}
+        onAdd={(product: any) => addToCart(product, 'grid')}
+        onRemove={(product: any) => updateQuantity(product._id, -1)}
+        onOpen={selectProduct}
+        onOpenFunnel={openFunnel}
+      >
+          {/* Soup-scription Banner — below products */}
+          <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
+              {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
+              <button
+                onClick={openFunnel}
+                className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
+              >
+                {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
+              </button>
+            </p>
+            <button
+              onClick={() => handleCTA(getSetting('clubBannerCTALink'), openFunnel)}
+              className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
+            >
+              {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
+            </button>
+          </div>
+      </ShopSection>
 
       {/* Mid Banner — before products */}
       {getSetting('showMidBanner', true) !== false && (
@@ -1279,7 +1138,7 @@ export default function App() {
                 onClick={() => {
                   setCart([]);
                   if (mixPendingProduct) {
-                    doAddToCart(mixPendingProduct);
+                    doAddToCart(mixPendingProduct.product, mixPendingProduct.location);
                     setShowMixWarning(false);
                   }
                   setMixPendingProduct(null);
@@ -1470,7 +1329,7 @@ export default function App() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => { addToCart(selectedProduct); closeProductModal(); }}
+                  onClick={() => { addToCart(selectedProduct, 'product_page'); closeProductModal(); }}
                   className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start"
                 >
                   {lang === 'es' ? 'AÑADIR AL CARRITO' : 'ADD TO CART'} &rarr;
@@ -1491,7 +1350,7 @@ export default function App() {
       {getSetting('enabled', true) !== false && (
         <button
           onClick={openSoupModal}
-          className="flex fixed bottom-5 right-5 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest p-3.5 md:px-6 md:py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-all items-center gap-3 border-2 border-transparent hover:border-ondo-black rounded-full md:rounded-none"
+          className={`flex fixed ${pricing.itemCount > 0 ? 'bottom-24 md:bottom-5' : 'bottom-5'} right-5 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest p-3.5 md:px-6 md:py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-all items-center gap-3 border-2 border-transparent hover:border-ondo-black rounded-full md:rounded-none`}
         >
           <Mail className="w-5 h-5 shrink-0" />
           <span className="hidden md:flex flex-col text-left leading-tight">

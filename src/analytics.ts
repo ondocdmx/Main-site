@@ -52,7 +52,8 @@ export const planItem = (priceId: string, frequency: string, soups: number, amou
   quantity: 1,
 });
 
-type GA4Item = ReturnType<typeof productToItem>;
+// index / item_list_*: posición y lista de la tienda (select_item).
+type GA4Item = ReturnType<typeof productToItem> & { index?: number; item_list_id?: string; item_list_name?: string };
 
 // Evento ecommerce estándar. `extra` puede sobrescribir value (p.ej. con descuento).
 export const pushEcommerce = (

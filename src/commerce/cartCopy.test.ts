@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockerMessage, boxShippingNote, cartTitle, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
+import { blockerMessage, boxShippingNote, cartCountLabel, cartTitle, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
 import { priceCart, type PricedProduct } from './priceCart.js';
 
 const veg: PricedProduct = { _id: 'veg', price: 125 };
@@ -24,6 +24,10 @@ describe('cartTitle', () => {
     expect(cartTitle(cart(0, 1))).toBe('Tu carrito · 1 caja');
     expect(cartTitle(cart(2, 1))).toBe('Tu carrito · 1 caja y 2 sopas');
     expect(cartTitle(cart(0))).toBe('Tu carrito · 0 sopas');
+  });
+  it('barra del carrito: sin "Tu carrito", también en inglés', () => {
+    expect(cartCountLabel(cart(2, 1))).toBe('1 caja y 2 sopas');
+    expect(cartCountLabel(cart(1), 'en')).toBe('1 soup');
   });
 });
 
