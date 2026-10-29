@@ -96,6 +96,26 @@ describe('api/create-cart-checkout', () => {
     }
   });
 
+  it('Preview de Vercel con clave live: no abre el pago; con sk_test_ o en producción, sí', async () => {
+    process.env.VERCEL_ENV = 'preview';
+    try {
+      process.env.STRIPE_SECRET_KEY = 'sk_live_x';
+      const res = await call({ items: [{ id: VEG, quantity: 1 }] });
+      expect(res.statusCode).toBe(500);
+      expect(res.body.error).toMatch(/clave live/);
+      expect(create).not.toHaveBeenCalled();
+
+      process.env.STRIPE_SECRET_KEY = 'sk_test_x';
+      expect((await call({ items: [{ id: VEG, quantity: 1 }] })).statusCode).toBe(200);
+
+      process.env.VERCEL_ENV = 'production';
+      process.env.STRIPE_SECRET_KEY = 'sk_live_x';
+      expect((await call({ items: [{ id: VEG, quantity: 1 }] })).statusCode).toBe(200);
+    } finally {
+      delete process.env.VERCEL_ENV;
+    }
+  });
+
   it('3 sopas: envío $50 como opción de envío con día y franja, y campo de código', async () => {
     const res = await call({ items: [{ id: VEG, quantity: 3 }] });
     expect(res.statusCode).toBe(200);

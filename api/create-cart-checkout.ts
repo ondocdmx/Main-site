@@ -4,7 +4,7 @@ import productsContent from '../src/content/products.json' with { type: 'json' }
 import { priceCart } from '../src/commerce/priceCart.js';
 import { COMMERCE } from '../src/commerce/config.js';
 import { deliveryLabel, findSlot, isPostalInZone, nextDeliveryDate } from '../src/commerce/delivery.js';
-import { bulkCouponId, stripeProductId } from './_lib/catalog.js';
+import { PREVIEW_LIVE_KEY_ERROR, bulkCouponId, isLiveKeyOnPreview, stripeProductId } from './_lib/catalog.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-06-20' as any,
@@ -17,6 +17,10 @@ const soupsForCoupon = productsContent.filter(p => !(p as any).isBox && !p.onlyS
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  if (isLiveKeyOnPreview()) {
+    res.status(500).json({ error: PREVIEW_LIVE_KEY_ERROR });
     return;
   }
 

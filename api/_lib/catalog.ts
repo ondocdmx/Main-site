@@ -13,6 +13,10 @@ export interface CatalogProduct {
 
 export const isTestMode = (key = process.env.STRIPE_SECRET_KEY || '') => /^(sk|rk)_test_/.test(key);
 
+// Una Preview de Vercel nunca cobra de verdad: con clave live, el checkout se niega.
+export const PREVIEW_LIVE_KEY_ERROR = 'Esta Preview usa la clave live de Stripe. Pon la sk_test_ en Vercel (Preview) y vuelve a desplegar.';
+export const isLiveKeyOnPreview = () => process.env.VERCEL_ENV === 'preview' && !isTestMode();
+
 const productCache = new Map<string, Promise<string>>();
 
 // Live: el Product sale del Price ID que ya está en products.json (las ventas siguen sumando por sopa).

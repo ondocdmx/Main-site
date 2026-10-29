@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { PREVIEW_LIVE_KEY_ERROR, isLiveKeyOnPreview } from './_lib/catalog.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-06-20' as any,
@@ -8,6 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+  if (isLiveKeyOnPreview()) {
+    res.status(500).json({ error: PREVIEW_LIVE_KEY_ERROR });
     return;
   }
 
