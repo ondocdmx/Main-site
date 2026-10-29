@@ -49,6 +49,8 @@ Part 3 is where we are going: it is NOT built. Never treat Part 3 as a descripti
 ### Reference
 
 * Design mockups (mobile) live in docs/mockups: home-*.png, producto.png, carrito.png, bienvenida.png.
+  Desktop mockups (home, producto, carrito, bienvenida): docs/mockups/desktop/ondo-mockups-desktop.pdf,
+  with the same caveat: some copy and rules in them are outdated (e.g. "Envío gratis desde 7 sopas", "Más pedida").
   They show layout and intent, not exact pixels. Where a mockup and a written spec disagree, the written
   spec wins. Use the site's existing fonts, colors and components, not the mockups' stand-ins.
   bienvenida.png says "15% menos": that is outdated. The welcome offer is ONDOFIRST, 10% (owner, 28 Oct 2026).
