@@ -15,7 +15,7 @@ export interface CartItem {
 }
 
 export type DiscountType = 'bulk' | 'welcome' | null;
-export type FreeShippingReason = 'minAmount' | null;
+export type FreeShippingReason = 'minAmount' | 'box' | null;
 
 export interface PricedLine {
   productId: string;
@@ -87,7 +87,11 @@ export function priceCart(
   const discountAmount = lines.reduce((n, l) => n + l.lineDiscount, 0);
 
   // Envío gratis por monto, contado ANTES de descuentos: usar ONDOFIRST no quita el envío gratis.
-  const freeShippingReason: FreeShippingReason = itemCount > 0 && subtotal >= config.freeShippingMinAmount ? 'minAmount' : null;
+  // Con boxShipsFree, cualquier pedido con caja tampoco paga envío.
+  const freeShippingReason: FreeShippingReason =
+    itemCount > 0 && subtotal >= config.freeShippingMinAmount ? 'minAmount'
+    : boxCount > 0 && config.boxShipsFree ? 'box'
+    : null;
   const shipping = itemCount === 0 || freeShippingReason ? 0 : config.shippingFee;
 
   return {
@@ -101,7 +105,7 @@ export function priceCart(
     shipping,
     total: subtotal - discountAmount + shipping,
     freeShippingReason,
-    amountToFreeShipping: Math.max(0, config.freeShippingMinAmount - subtotal),
+    amountToFreeShipping: freeShippingReason ? 0 : Math.max(0, config.freeShippingMinAmount - subtotal),
     soupsToBulkDiscount: bulkOn ? Math.max(0, config.bulkDiscountMinItems - itemCount) : 0,
   };
 }

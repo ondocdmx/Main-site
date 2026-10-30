@@ -14,6 +14,7 @@ export interface DeliverySlot {
 export interface CommerceConfig {
   shippingFee: number;
   freeShippingMinAmount: number; // subtotal antes de descuentos
+  boxShipsFree?: boolean; // un pedido con caja no paga envío (decisión del dueño, 30 oct 2026)
   cheapestSoupPrice: number; // sopa individual más barata a la venta (para "agrega 1 sopa más")
   bulkDiscountMinItems: number;
   bulkDiscountPercent: number;
@@ -37,6 +38,7 @@ export const toCents = (pesos: number): number => Math.round(pesos * 100);
 export const COMMERCE: CommerceConfig = {
   shippingFee: toCents(settings.shippingPrice),
   freeShippingMinAmount: toCents(settings.freeShippingMinAmount),
+  boxShipsFree: settings.boxShipsFree === true,
   cheapestSoupPrice: Math.min(...products
     .filter(p => !(p as any).isBox && !p.soldOut && !p.onlySubscriptions)
     .map(p => toCents(p.price))),

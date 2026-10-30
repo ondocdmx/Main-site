@@ -1,4 +1,4 @@
-// La caja: primera, verde oscuro, ocupa toda la fila. Su envío sale de boxShippingNote (la caja sola paga envío).
+// La caja: primera, verde oscuro, ocupa toda la fila. Su envío sale de boxShippingNote (boxShipsFree en settings.json).
 import React from 'react';
 import QuantityStepper from './QuantityStepper';
 import { SoupImage, imagesFor } from './media';

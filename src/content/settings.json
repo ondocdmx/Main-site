@@ -312,6 +312,7 @@
   "instagramUrl": "https://instagram.com/ondo_cdmx",
   "showInstagram": true,
   "freeShippingMinAmount": 725,
+  "boxShipsFree": true,
   "welcomeCode": "ONDOFIRST",
   "welcomePercent": 10,
   "deliveryDays": [
@@ -350,8 +351,8 @@
   "oxxoExpiresAfterDays": 1,
   "reviewEmail": "ondocdmx@gmail.com",
   "boxBadge": {
-    "en": "Founder picks",
-    "es": "Founder picks"
+    "es": "Más pedida",
+    "en": "Most ordered"
   },
   "productHeating": {
     "es": "En olla (recomendado): 4–5 minutos desde congelada, revolviendo constantemente. También en microondas, pero nunca en la bolsa: pásala antes a un recipiente apto.",

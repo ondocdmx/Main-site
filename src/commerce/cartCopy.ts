@@ -47,11 +47,12 @@ export function progressMessage(p: CartPricing, lang: Lang = 'es'): string {
   return `Ya tienes envío gratis. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
 }
 
-// Línea bajo el precio de la caja: "+ envío, o gratis si agregas 1 sopa". Vacío si la caja sola ya llega.
-export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es'): string {
-  const gap = COMMERCE.freeShippingMinAmount - boxPriceCents;
-  if (gap <= 0) return '';
-  const n = Math.ceil(gap / COMMERCE.cheapestSoupPrice);
+// Etiqueta junto al precio de la caja: "Envío gratis" (boxShipsFree o si la caja sola llega al mínimo);
+// si no, "+ envío, o gratis si agregas 1 sopa".
+export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es', config = COMMERCE): string {
+  const gap = config.freeShippingMinAmount - boxPriceCents;
+  if (config.boxShipsFree || gap <= 0) return lang === 'es' ? 'Envío gratis' : 'Free shipping';
+  const n = Math.ceil(gap / config.cheapestSoupPrice);
   return lang === 'es'
     ? `+ envío, o gratis si agregas ${n === 1 ? '1 sopa' : `${n} sopas`}`
     : `+ shipping, or free if you add ${n === 1 ? '1 soup' : `${n} soups`}`;
