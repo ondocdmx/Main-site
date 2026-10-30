@@ -111,7 +111,7 @@ export default function ProductPage({ product, products, lang, resolveText, heat
           <ChevronLeft className="w-5 h-5" aria-hidden="true" /> {es ? 'Volver a las sopas' : 'Back to the soups'}
         </button>
         <nav aria-label={es ? 'Migas de pan' : 'Breadcrumb'} className="hidden md:flex items-center gap-1 min-h-[44px] mb-2 font-body text-[15px]">
-          <a href="/#shop" onClick={e => { e.preventDefault(); onBack(); }} className="underline underline-offset-2">{es ? 'Tienda' : 'Shop'}</a>
+          <a href="/tienda" onClick={e => { e.preventDefault(); onBack(); }} className="underline underline-offset-2">{es ? 'Tienda' : 'Shop'}</a>
           <span aria-hidden="true">/</span>
           <span aria-current="page" className="font-semibold first-letter:uppercase">{name}</span>
         </nav>

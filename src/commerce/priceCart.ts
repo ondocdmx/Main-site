@@ -109,11 +109,12 @@ export function priceCart(
 export type CartNudge = { type: 'freeShipping' | 'bulk'; count: number } | null;
 
 // Aviso en la tienda cuando falta poco para un beneficio: envío gratis cuando cualquier sopa
-// cierra la diferencia (1 sopa de distancia); el 20% cuando falta 1 artículo.
+// cierra la diferencia (1 sopa de distancia); el 20% cuando faltan 1 o 2 artículos.
 export function cartNudge(pricing: CartPricing, config: CommerceConfig = COMMERCE): CartNudge {
   if (pricing.itemCount > 0 && pricing.amountToFreeShipping > 0 && pricing.amountToFreeShipping <= config.cheapestSoupPrice) {
     return { type: 'freeShipping', count: 1 };
   }
-  if (pricing.soupsToBulkDiscount === 1) return { type: 'bulk', count: 1 };
+  const toBulk = pricing.soupsToBulkDiscount;
+  if (pricing.itemCount > 0 && toBulk >= 1 && toBulk <= 2) return { type: 'bulk', count: toBulk };
   return null;
 }

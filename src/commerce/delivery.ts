@@ -38,12 +38,21 @@ export function nextDeliveryDate(now: Date = new Date(), config: CommerceConfig 
   throw new Error('Sin días de reparto configurados');
 }
 
-// "lunes 2 de noviembre" / "Monday, November 2"
-export function formatDeliveryDate(iso: string, lang: 'es' | 'en' = 'es'): string {
+// "lunes 2 de noviembre" / "Monday, November 2"; corto: "lunes 2 de nov" / "Monday, Nov 2"
+export function formatDeliveryDate(iso: string, lang: 'es' | 'en' = 'es', short = false): string {
   const d = fromIso(iso);
+  const month = (lang === 'es' ? MONTHS_ES : MONTHS_EN)[d.getUTCMonth()];
+  const m = short ? month.slice(0, 3) : month;
   return lang === 'es'
-    ? `${DAYS_ES[d.getUTCDay()]} ${d.getUTCDate()} de ${MONTHS_ES[d.getUTCMonth()]}`
-    : `${DAYS_EN[d.getUTCDay()]}, ${MONTHS_EN[d.getUTCMonth()]} ${d.getUTCDate()}`;
+    ? `${DAYS_ES[d.getUTCDay()]} ${d.getUTCDate()} de ${m}`
+    : `${DAYS_EN[d.getUTCDay()]}, ${m} ${d.getUTCDate()}`;
+}
+
+// Días de reparto en texto: "lunes" / "lunes y jueves" (settings.json → deliveryDays)
+export function deliveryWeekdays(lang: 'es' | 'en' = 'es', config: CommerceConfig = COMMERCE): string {
+  const names = config.deliveryDays.map(d => (lang === 'es' ? DAYS_ES : DAYS_EN)[WEEKDAYS.indexOf(d)]).filter(Boolean);
+  if (names.length <= 1) return names[0] || '';
+  return `${names.slice(0, -1).join(', ')} ${lang === 'es' ? 'y' : 'and'} ${names[names.length - 1]}`;
 }
 
 export function findSlot(id: string | null | undefined, config: CommerceConfig = COMMERCE): DeliverySlot | undefined {

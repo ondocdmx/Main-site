@@ -1,5 +1,5 @@
 // Textos del carrito que dependen del resultado de priceCart(). Puros, para poder probarlos.
-import type { CartPricing } from './priceCart.js';
+import type { CartNudge, CartPricing } from './priceCart.js';
 import { COMMERCE } from './config.js';
 import { cutoffFor, formatDeliveryDate } from './delivery.js';
 
@@ -47,6 +47,16 @@ export function progressMessage(p: CartPricing, lang: Lang = 'es'): string {
   return `Ya tienes envío gratis. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
 }
 
+// Aviso "te falta poco" (tienda y aviso al agregar): "¡Agrega 1 sopa más y tu envío es gratis!"
+export function nudgeMessage(nudge: CartNudge, lang: Lang = 'es'): string {
+  if (!nudge) return '';
+  if (nudge.type === 'freeShipping') return lang === 'es' ? '¡Agrega 1 sopa más y tu envío es gratis!' : 'Add 1 more soup for free shipping!';
+  const pct = COMMERCE.bulkDiscountPercent;
+  return lang === 'es'
+    ? `¡Agrega ${nudge.count} más y tienes ${pct}% de descuento!`
+    : `Add ${nudge.count} more for ${pct}% off!`;
+}
+
 // Línea bajo el precio de la caja: "+ envío, o gratis si agregas 1 sopa". Vacío si la caja sola ya llega.
 export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es'): string {
   const gap = COMMERCE.freeShippingMinAmount - boxPriceCents;
@@ -84,12 +94,19 @@ export function blockerMessage(b: CheckoutBlocker, lang: Lang = 'es'): string {
   return b ? (lang === 'es' ? es : en)[b] : '';
 }
 
-// Ficha de producto: "Pide antes del domingo 23:59 y llega el lunes 2 de noviembre"
-export function deliveryPromise(iso: string, lang: Lang = 'es'): string {
+// Ficha de producto: "Pide hasta el domingo 23:59 y llega el lunes 2 de noviembre"
+// (el minuto del corte aún cuenta, por eso "hasta el" y no "antes del")
+export function deliveryPromise(iso: string, lang: Lang = 'es', short = false): string {
   const { day, time } = cutoffFor(iso, lang);
   return lang === 'es'
-    ? `Pide antes del ${day} ${time} y llega el ${formatDeliveryDate(iso, 'es')}`
-    : `Order by ${day} ${time} and it arrives ${formatDeliveryDate(iso, 'en')}`;
+    ? `Pide hasta el ${day} ${time} y llega el ${formatDeliveryDate(iso, 'es', short)}`
+    : `Order by ${day} ${time} and it arrives ${formatDeliveryDate(iso, 'en', short)}`;
+}
+
+// Barra de anuncio de la home: "Pide hasta el domingo 23:59 y llega el lunes 2 de nov · Envío gratis desde $725"
+export function announcementText(iso: string, lang: Lang = 'es'): string {
+  const ship = formatMXN(COMMERCE.freeShippingMinAmount);
+  return `${deliveryPromise(iso, lang, true)} · ${lang === 'es' ? `Envío gratis desde ${ship}` : `Free shipping from ${ship}`}`;
 }
 
 // Ficha de producto: "Envío gratis desde $725 · 20% menos desde 10 sopas" (de settings.json)

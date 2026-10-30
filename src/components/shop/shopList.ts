@@ -30,3 +30,21 @@ export function shopList<P extends Product>(products: P[], filter: ShopFilter | 
   const items = [...soups].sort((a, b) => Number(!!a.onlySubscriptions) - Number(!!b.onlySubscriptions) || compare(a, b));
   return { box, items };
 }
+
+// Carrito: "Agrega otra sopa", fotos con scroll lateral. Aparece con menos de 4 sopas distintas y se va con 5;
+// con 4 se queda solo si ya se veía (`wasShown`), para que no parpadee al quitar o agregar una.
+// Sugiere hasta `max` sopas que no están en el carrito, en el orden "Destacadas" (sin caja, agotadas ni solo suscriptores).
+export function cartSuggestions<P extends Product & { soldOut?: boolean | null }>(
+  products: P[], cartIds: string[], wasShown: boolean, max = 5,
+): { show: boolean; items: P[] } {
+  const inCart = new Set(cartIds);
+  const distinctSoups = products.filter(p => !p.isBox && inCart.has(p._id)).length;
+  const show = cartIds.length > 0 && (distinctSoups < 4 || (distinctSoups === 4 && wasShown));
+  if (!show) return { show, items: [] };
+  const rank = (p: P) => p.featuredRank ?? products.indexOf(p);
+  const items = products
+    .filter(p => !p.isBox && !p.soldOut && !p.onlySubscriptions && !inCart.has(p._id))
+    .sort((a, b) => rank(a) - rank(b))
+    .slice(0, max);
+  return { show: items.length > 0, items };
+}

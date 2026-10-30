@@ -12,7 +12,7 @@
     <title>ONDO - sopas apapachosas a domicilio</title>
 
     <!-- SEO básico -->
-    <meta name="description" content="ONDO es tu marca de sopas frescas y nutritivas entregadas a domicilio en México. Elige tus favoritas, recíbelas cada semana y disfruta de sabor real sin estrés." />
+    <meta name="description" content="Sopas de temporada hechas en CDMX con ingredientes locales, congeladas en su punto y entregadas a domicilio. Arma tu caja o empieza con la Caja de bienvenida." />
     <meta name="keywords" content="sopas frescas, sopas a domicilio, nutrición, comida saludable, suscripción de sopas, ONDO, México, Roma Norte" />
     <meta name="author" content="ONDO" />
     <meta name="robots" content="index, follow" />
@@ -35,16 +35,12 @@
     <meta name="twitter:description" content="Sopas frescas y nutritivas entregadas cada semana en tu puerta. Sin compromiso, sin estrés — solo sabor real." />
     <meta name="twitter:image" content="/images/ondo-logo-orange.png" />
 
-    <!-- Fuentes -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Preload critical custom fonts -->
-    <link rel="preload" href="/fonts/Raisonne/RaisonnePro-Bold.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-    <link rel="preload" href="/fonts/Raisonne/RaisonnePro-Regular.ttf" as="font" type="font/ttf" crossorigin="anonymous">
-    <link rel="preload" href="/fonts/Ronzino/Ronzino-Bold.otf" as="font" type="font/otf" crossorigin="anonymous">
-    <link rel="preload" href="/fonts/Ronzino/Ronzino-Regular.otf" as="font" type="font/otf" crossorigin="anonymous">
+    <!-- Foto del hero de la home: se pide junto con el HTML (las demás páginas la quitan, src/seo.ts) -->
+    <link rel="preload" as="image" href="/images/home/hero-960.webp" imagesrcset="/images/home/hero-640.webp 640w, /images/home/hero-960.webp 960w, /images/home/hero-1400.webp 1400w" imagesizes="(min-width: 768px) 50vw, 100vw" fetchpriority="high" data-hero>
+
+    <!-- Fuentes propias (woff2, src/index.css). Solo se precargan las del primer pantallazo. -->
+    <link rel="preload" href="/fonts/Raisonne/RaisonnePro-ExtraBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" href="/fonts/Ronzino/Ronzino-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->

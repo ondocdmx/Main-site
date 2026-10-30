@@ -1,0 +1,33 @@
+{
+  "_ayuda": "Testimonios reales de la home (sección \"Lo que dice quien ya probó\"). Solo testimonios reales, nunca inventados. Si la lista queda vacía, la sección no se muestra. \"destacado\" es la línea de abajo (vacía = no se muestra).",
+  "testimonios": [
+    {
+      "cita": {
+        "es": "¡Son increíbles! Yo trabajo mucho y me ayudan un montón en mis comidas y con mi hijo.",
+        "en": "They're amazing! I work a lot, and they help me so much with my meals and with my son."
+      },
+      "autor": {
+        "es": "SOUPscriber premium · 10 sopas por quincena",
+        "en": "Premium SOUPscriber · 10 soups every two weeks"
+      }
+    },
+    {
+      "cita": {
+        "es": "¡Estoy obsesionada con las sopas de Ondo! No hay ninguna que no me encante.",
+        "en": "I'm obsessed with Ondo's soups! There isn't one I don't love."
+      },
+      "autor": { "es": "Empresaria, 34 años", "en": "Business owner, 34" }
+    },
+    {
+      "cita": {
+        "es": "Siempre tengo sopas de Ondo en mi congelador. Las uso mucho para mis comidas y reuniones que tengo en casa.",
+        "en": "I always have Ondo soups in my freezer. I use them a lot for my meals and when I have people over."
+      },
+      "autor": { "es": "Artista independiente, 42 años", "en": "Independent artist, 42" }
+    }
+  ],
+  "destacado": {
+    "es": "Servidas en Bar Mini durante dos semanas de octubre",
+    "en": "Served at Bar Mini for two weeks in October"
+  }
+}

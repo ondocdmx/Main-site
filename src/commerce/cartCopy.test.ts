@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { blockerMessage, boxShippingNote, cartCountLabel, cartTitle, deliveryPromise, offerLine, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
+import { announcementText, blockerMessage, nudgeMessage, boxShippingNote, cartCountLabel, cartTitle, deliveryPromise, offerLine, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
 import { priceCart, type PricedProduct } from './priceCart.js';
 
 const veg: PricedProduct = { _id: 'veg', price: 125 };
@@ -50,6 +50,15 @@ describe('progressMessage', () => {
   });
 });
 
+describe('nudgeMessage', () => {
+  it('envío gratis y 20%', () => {
+    expect(nudgeMessage(null)).toBe('');
+    expect(nudgeMessage({ type: 'freeShipping', count: 1 })).toBe('¡Agrega 1 sopa más y tu envío es gratis!');
+    expect(nudgeMessage({ type: 'bulk', count: 2 })).toBe('¡Agrega 2 más y tienes 20% de descuento!');
+    expect(nudgeMessage({ type: 'bulk', count: 1 }, 'en')).toBe('Add 1 more for 20% off!');
+  });
+});
+
 describe('boxShippingNote', () => {
   it('caja de $600: le falta 1 sopa para el envío gratis', () => {
     expect(boxShippingNote(60000)).toBe('+ envío, o gratis si agregas 1 sopa');
@@ -73,8 +82,12 @@ describe('checkoutBlocker', () => {
 
 describe('ficha de producto', () => {
   it('corte y fecha de entrega', () => {
-    expect(deliveryPromise('2026-11-02')).toBe('Pide antes del domingo 23:59 y llega el lunes 2 de noviembre');
+    expect(deliveryPromise('2026-11-02')).toBe('Pide hasta el domingo 23:59 y llega el lunes 2 de noviembre');
     expect(deliveryPromise('2026-11-02', 'en')).toBe('Order by Sunday 23:59 and it arrives Monday, November 2');
+  });
+  it('barra de anuncio de la home', () => {
+    expect(announcementText('2026-11-02')).toBe('Pide hasta el domingo 23:59 y llega el lunes 2 de nov · Envío gratis desde $725');
+    expect(announcementText('2026-11-02', 'en')).toBe('Order by Sunday 23:59 and it arrives Monday, Nov 2 · Free shipping from $725');
   });
   it('línea de ofertas desde settings.json', () => {
     expect(offerLine()).toBe('Envío gratis desde $725 · 20% menos desde 10 sopas');

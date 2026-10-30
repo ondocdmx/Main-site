@@ -3,9 +3,9 @@ import react from '@vitejs/plugin-react';
 import fs from 'fs';
 import path from 'path';
 import {defineConfig, type Plugin} from 'vite';
-import {applyMetaToHtml, productMeta} from './src/seo';
+import {applyMetaToHtml, productMeta, shopMeta} from './src/seo';
 
-// Escribe dist/sopas/<slug>/index.html con el título, la descripción y la foto de cada sopa:
+// Escribe dist/tienda/index.html y dist/sopas/<slug>/index.html con el título, la descripción y la foto de cada sopa:
 // WhatsApp, Facebook y compañía no ejecutan JavaScript, así que necesitan estas etiquetas en el HTML.
 function productPages(): Plugin {
   return {
@@ -16,6 +16,8 @@ function productPages(): Plugin {
       const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
       const products = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/content/products.json'), 'utf8'));
       const images = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/content/productImages.json'), 'utf8'));
+      fs.mkdirSync(path.join(dist, 'tienda'), {recursive: true});
+      fs.writeFileSync(path.join(dist, 'tienda', 'index.html'), applyMetaToHtml(html, shopMeta()));
       for (const p of products) {
         const dir = path.join(dist, 'sopas', p.slug);
         fs.mkdirSync(dir, {recursive: true});

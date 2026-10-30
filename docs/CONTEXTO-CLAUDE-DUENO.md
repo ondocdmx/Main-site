@@ -184,9 +184,10 @@ La app lee `window.location.pathname`:
 
 | Ruta | Qué muestra |
 |---|---|
-| `/` | Home: hero, banners, tienda (`#shop`), cómo funciona, nosotros, footer |
-| `/sopas/:slug` | Home + ficha del producto abierta en modal (dispara `view_item`) |
-| `/sopas` | Redirige a `/#shop` y hace scroll a la tienda cuando termina la carga |
+| `/` | Home (fase 3): anuncio, hero, así de fácil, caja, favoritas, congelada, testimonios, tres formas, huerto, fundadores, preguntas, footer |
+| `/tienda` | Catálogo completo con filtros. Constante `SHOP_ROUTE` |
+| `/sopas/:slug` | Ficha del producto, página propia (dispara `view_item`) |
+| `/sopas` | Redirige a `/tienda` (`vercel.json`); `/#shop` también |
 | `/soupscripciones` | Home + funnel de suscripción abierto. Constante `SOUPSCRIPTION_ROUTE` |
 | `?payment=success&session_id=…` | Vuelta de Stripe tras compra → evento `purchase` |
 | `?subscription=success&session_id=…` | Vuelta de Stripe tras alta de suscripción |
@@ -210,9 +211,7 @@ bundle; no hay peticiones a ningún CMS):
 - Textos bilingües: objetos `{ es, en }` resueltos con `resolveText()`.
 - Imágenes: rutas en texto (`/images/cms/<nombre>.webp`) resueltas con
   `resolveImage()`.
-- Hay una pantalla de carga de **~1 segundo** a propósito (diseño); el
-  scroll de `/sopas` espera a que termine (`isLoading`). Si el dueño
-  prefiere quitarla, es decisión suya.
+- Ya no hay pantalla de carga (el dueño la quitó en la fase 3).
 
 ---
 

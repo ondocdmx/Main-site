@@ -130,8 +130,10 @@ describe('cartNudge (aviso en la tienda: a 1 sopa del envío gratis)', () => {
     expect(cartNudge(priceCart([soups(4, meat)]))).toEqual({ type: 'freeShipping', count: 1 }); // faltan $125
     expect(cartNudge(priceCart([boxes()]))).toEqual({ type: 'freeShipping', count: 1 }); // caja sola
   });
-  it('con envío gratis: sin aviso hasta que falta 1 para el 20%', () => {
+  it('con envío gratis: sin aviso hasta que faltan 2 para el 20%', () => {
     expect(cartNudge(priceCart([soups(6)]))).toBeNull();
+    expect(cartNudge(priceCart([soups(7)]))).toBeNull();
+    expect(cartNudge(priceCart([soups(8)]))).toEqual({ type: 'bulk', count: 2 });
     expect(cartNudge(priceCart([soups(9)]))).toEqual({ type: 'bulk', count: 1 });
   });
 });

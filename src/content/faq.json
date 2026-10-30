@@ -1,0 +1,93 @@
+{
+  "_ayuda": "Preguntas frecuentes de la home, en el orden en que se muestran. Para añadir una, copia un bloque {pregunta, respuesta} con es y en. Lo que va entre llaves se llena solo desde settings.json: {entrega} próxima fecha de entrega, {dias} días de reparto, {franjas} horarios, {corteDia} y {corteHora} corte de pedidos, {envio} costo de envío, {envioGratis} mínimo para envío gratis, {minVolumen} y {descuento} descuento por volumen. Si falta un dato, escríbelo entre corchetes, ej. [DATO], y se verá así en la web hasta que lo cambies. Las colonias salen de los códigos postales de deliveryZones.json (SEPOMEX): si cambias los códigos, actualiza también esta lista.",
+  "preguntas": [
+    {
+      "id": "zonas",
+      "pregunta": { "es": "¿A qué colonias entregan?", "en": "Which neighbourhoods do you deliver to?" },
+      "respuesta": {
+        "es": "Por ahora entregamos en Condesa, Hipódromo, Hipódromo Condesa, Roma Norte, Roma Sur, Doctores, Juárez, San Rafael, Tabacalera, Santa María la Ribera, Cuauhtémoc, parte del Centro, Escandón, San Miguel Chapultepec, Anzures, Verónica Anzures, Tlaxpana, Anáhuac, Granada, Polanco (III, IV y V Sección), Nápoles, Del Valle Norte, Del Valle Centro, Insurgentes San Borja, Narvarte Poniente, Narvarte Oriente, Piedad Narvarte y Esperanza. Escribe tu código postal en el carrito y te confirmamos al momento. ¿No llegamos a tu colonia? Escríbenos por WhatsApp.",
+        "en": "For now we deliver to Condesa, Hipódromo, Hipódromo Condesa, Roma Norte, Roma Sur, Doctores, Juárez, San Rafael, Tabacalera, Santa María la Ribera, Cuauhtémoc, part of Centro, Escandón, San Miguel Chapultepec, Anzures, Verónica Anzures, Tlaxpana, Anáhuac, Granada, Polanco (III, IV and V Sección), Nápoles, Del Valle Norte, Del Valle Centro, Insurgentes San Borja, Narvarte Poniente, Narvarte Oriente, Piedad Narvarte and Esperanza. Enter your postal code in the cart and we'll confirm right away. Not in your area yet? Message us on WhatsApp."
+      }
+    },
+    {
+      "id": "cuando-llega",
+      "pregunta": { "es": "¿Cuándo llega mi pedido?", "en": "When will my order arrive?" },
+      "respuesta": {
+        "es": "Entregamos los {dias} en tres horarios: {franjas}. Si pides hasta el {corteDia} a las {corteHora}, tu pedido llega el {entrega}. Eliges el horario en el carrito.",
+        "en": "We deliver on {dias} in three time slots: {franjas}. Order by {corteDia} at {corteHora} and it arrives {entrega}. You choose the slot in the cart."
+      }
+    },
+    {
+      "id": "envio",
+      "pregunta": { "es": "¿Cuánto cuesta el envío?", "en": "How much is shipping?" },
+      "respuesta": {
+        "es": "El envío cuesta {envio}. Es gratis si tu pedido suma {envioGratis} o más (por ejemplo, la Caja de bienvenida y 1 sopa). Desde {minVolumen} sopas, además, tienes {descuento}% de descuento automático.",
+        "en": "Shipping is {envio}. It's free when your order adds up to {envioGratis} or more (for example, the Welcome box plus 1 soup). From {minVolumen} soups you also get {descuento}% off automatically."
+      }
+    },
+    {
+      "id": "congeladas",
+      "pregunta": { "es": "¿Todas las sopas están congeladas? ¿Por qué?", "en": "Are all the soups frozen? Why?" },
+      "respuesta": {
+        "es": "Congelamos para conservar sabor y calidad sin añadir conservadores. Así podemos usar ingredientes frescos y tú puedes tener siempre una buena sopa a la mano.",
+        "en": "We freeze them to keep flavour and quality without adding preservatives. That way we can use fresh ingredients, and you always have a good soup at hand."
+      }
+    },
+    {
+      "id": "congelador",
+      "pregunta": { "es": "¿Cuánto duran en el congelador?", "en": "How long do they keep in the freezer?" },
+      "respuesta": {
+        "es": "Recomendamos consumirlas dentro de los 3 meses posteriores a su compra, siempre que se mantengan congeladas.",
+        "en": "We recommend eating them within 3 months of purchase, as long as they stay frozen."
+      }
+    },
+    {
+      "id": "calentar",
+      "pregunta": { "es": "¿Cómo se preparan?", "en": "How do I heat them?" },
+      "respuesta": {
+        "es": "¡Facilísimo! Puedes descongelarlas en el refri o a baño maría unos 10 min y vaciarlas en una olla a fuego medio-bajo, revolviendo hasta que estén calientes (~4 min).",
+        "en": "Super easy! Thaw them in the fridge or in a water bath for about 10 min, then pour into a pot over medium-low heat, stirring until hot (~4 min)."
+      }
+    },
+    {
+      "id": "pagos",
+      "pregunta": { "es": "¿Cómo puedo pagar?", "en": "How can I pay?" },
+      "respuesta": {
+        "es": "Con tarjeta de crédito o débito, en la página de pago segura de Stripe. Las soup-scripciones se cobran con tarjeta y se renuevan cada 3 meses.",
+        "en": "By credit or debit card, on Stripe's secure checkout page. Soup-scriptions are charged to your card and renew every 3 months."
+      }
+    },
+    {
+      "id": "veganas",
+      "pregunta": { "es": "¿Tienen opciones veganas y vegetarianas?", "en": "Do you have vegan and vegetarian options?" },
+      "respuesta": {
+        "es": "¡Claro! Tenemos opciones veganas, vegetarianas y con proteína animal. Buscamos ofrecer variedad, buena nutrición y recetas llenas de sabor para todos los gustos.",
+        "en": "Of course! We have vegan, vegetarian and animal-protein options. We aim for variety, good nutrition and recipes full of flavour for every taste."
+      }
+    },
+    {
+      "id": "ninos",
+      "pregunta": { "es": "¿Son aptas para niños?", "en": "Are they good for kids?" },
+      "respuesta": {
+        "es": "Muchas de nuestras sopas son ideales para toda la familia. Algunas tienen sabores más atrevidos, pero contamos con varias opciones que les encantan a los pequeños.",
+        "en": "Many of our soups are great for the whole family. Some have bolder flavours, but we have several options little ones love."
+      }
+    },
+    {
+      "id": "menu",
+      "pregunta": { "es": "¿Siempre tienen las mismas sopas?", "en": "Do you always have the same soups?" },
+      "respuesta": {
+        "es": "¡No! Tenemos algunas favoritas de siempre, pero nuestro catálogo sigue creciendo con nuevas recetas, sabores y opciones de temporada.",
+        "en": "No! We have some all-time favourites, but our menu keeps growing with new recipes, flavours and seasonal options."
+      }
+    },
+    {
+      "id": "catering",
+      "pregunta": { "es": "¿Hacen catering y eventos?", "en": "Do you do catering and events?" },
+      "respuesta": {
+        "es": "¡Por supuesto! Ofrecemos catering para reuniones, oficinas y eventos privados. También hacemos pop-ups para compartir nuestras sopas en persona. ¡Escríbenos y platicamos!",
+        "en": "Absolutely! We cater meetings, offices and private events. We also do pop-ups to share our soups in person. Message us and let's talk!"
+      }
+    }
+  ]
+}

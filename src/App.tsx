@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { ShoppingCart, Search, User, X, Menu, Plus, Minus, Mail, CheckCircle, AlertTriangle } from 'lucide-react';
 // Contenido de la web (textos, sopas, fotos, zonas de reparto): se edita en estos JSON.
 // Exportado de Sanity en la migración (scripts/export-sanity.mjs); ver AGENTS.md.
@@ -12,16 +12,26 @@ import {
 import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
 import { formatDeliveryDate, nextDeliveryDate } from './commerce/delivery';
-import { formatMXN } from './commerce/cartCopy';
-import CartDrawer, { type CheckoutRequest, type CheckoutResult } from './components/CartDrawer';
-import OrderSuccess, { type OrderSummary } from './components/OrderSuccess';
+import { formatMXN, nudgeMessage } from './commerce/cartCopy';
+import type { CheckoutRequest, CheckoutResult } from './components/CartDrawer';
+import type { OrderSummary } from './components/OrderSuccess';
 import ShopSection from './components/shop/ShopSection';
-import ProductPage from './components/shop/ProductPage';
+// Se cargan aparte, solo cuando hacen falta: la home pinta antes (Lighthouse, fase 3).
+const CartDrawer = lazy(() => import('./components/CartDrawer'));
+const OrderSuccess = lazy(() => import('./components/OrderSuccess'));
+const ProductPage = lazy(() => import('./components/shop/ProductPage'));
 import { StickyCartBar, AddedToast } from './components/shop/CartBar';
 import type { ShopFilter } from './components/shop/shopList';
+import HomePage, { type Testimonials } from './components/home/HomePage';
+import { AnnouncementBar, SiteFooter, SiteHeader, WhatsAppFloat, useNextDelivery } from './components/home/SiteChrome';
+import type { FaqItem } from './components/home/Faq';
+import { fillTokens, homeTokens } from './components/home/homeCopy';
+import { shopMeta } from './seo';
+import faqContent from './content/faq.json';
+import testimonialsContent from './content/testimonials.json';
 
 // Dónde se agregó al carrito (add_to_cart → add_location en GA4; ver docs/TRACKING.md).
-export type AddLocation = 'grid' | 'product_page' | 'completa_tu_caja';
+export type AddLocation = 'grid' | 'product_page' | 'completa_tu_caja' | 'carrito';
 
 // Próxima entrega (hora de Ciudad de México, corte en settings.json). El funnel la calcula al cargar la página;
 // el carrito la recalcula cada minuto.
@@ -44,8 +54,6 @@ function loadSavedCart(): { product: any; quantity: number }[] {
 
 const t = {
   es: {
-    banner: "APAPÁCHATE | ENVÍO GRATIS EN 12+ CARTONES",
-    midBanner: "¡Aprovecha un regalo con tu primer pedido usando código: ONDOFIRST!",
     navShop: "TIENDA",
     navSubs: "SUSCRIPCIÓN",
     navSteps: "CÓMO FUNCIONA",
@@ -93,8 +101,6 @@ const t = {
     deliveryContactRequired: "Introduce un teléfono o email para que podamos avisarte de la entrega.",
   },
   en: {
-    banner: "APAPÁCHATE | FREE SHIPPING 12+ CARTONS",
-    midBanner: "Get a free gift with your first order using code: ONDOFIRST!",
     navShop: "SHOP",
     navSubs: "SUBSCRIPTION",
     navSteps: "HOW IT WORKS",
@@ -145,16 +151,19 @@ const t = {
 
 // Ruta del funnel de suscripción (usada en nav, routing y vercel.json)
 const SOUPSCRIPTION_ROUTE = '/soupscripciones';
+// Catálogo completo con filtros (antes /sopas y /#shop, que redirigen aquí)
+const SHOP_ROUTE = '/tienda';
 
 export default function App() {
   const [lang, setLang] = useState<'es' | 'en'>('es');
   const [purchaseMode, setPurchaseMode] = useState<'subscription' | 'single'>('subscription');
   const [cart, setCart] = useState<{product: any, quantity: number}[]>(loadSavedCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  // El carrito se monta la primera vez que se abre (y se queda montado para su animación).
+  const [cartMounted, setCartMounted] = useState(false);
+  useEffect(() => { if (isCartOpen) setCartMounted(true); }, [isCartOpen]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const settings: any = settingsContent;
-  // Pantalla de carga de ~1 s (diseño). El scroll de /sopas espera a que termine.
-  const [isLoading, setIsLoading] = useState(true);
   // Productos ya ordenados por `order` (asc)
   const displayProducts: any[] = productsContent;
 
@@ -193,13 +202,6 @@ export default function App() {
   const [funnelContingencies, setFunnelContingencies] = useState('');
   const [funnelSlot, setFunnelSlot] = useState<'slot_9_13' | 'slot_13_17' | 'slot_17_21' | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-
-  // Soup Request Popup
-  const [showSoupModal, setShowSoupModal] = useState(false);
-  const [soupIdea, setSoupIdea] = useState('');
-  const [soupEmail, setSoupEmail] = useState('');
-  const [soupSubmitted, setSoupSubmitted] = useState(false);
-  const [isSubmittingSoup, setIsSubmittingSoup] = useState(false);
 
   // Payment success confirmation
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -253,6 +255,7 @@ export default function App() {
   const productSlugFromRoute = productRouteMatch ? decodeURIComponent(productRouteMatch[1]) : null;
   const isProductRoute = !!productSlugFromRoute;
   const isSoupcripcionesRoute = route === SOUPSCRIPTION_ROUTE || route === `${SOUPSCRIPTION_ROUTE}/`;
+  const isShopRoute = route.replace(/\/+$/, '') === SHOP_ROUTE;
   const routeProduct = productSlugFromRoute
     ? (displayProducts.find((p: any) => p.slug === productSlugFromRoute) ?? null)
     : null;
@@ -277,6 +280,23 @@ export default function App() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
+  // URLs viejas de la tienda: /sopas y /#shop -> /tienda (Vercel ya redirige /sopas; esto cubre el resto)
+  useEffect(() => {
+    const path = window.location.pathname.replace(/\/+$/, '');
+    if (path === '/sopas' || (path === '' && window.location.hash === '#shop')) {
+      window.history.replaceState({}, '', SHOP_ROUTE + window.location.search);
+      setRoute(SHOP_ROUTE);
+    }
+  }, []);
+
+  // Título de /tienda (el HTML del build ya lo trae; esto cubre la navegación dentro de la web)
+  useEffect(() => {
+    if (!isShopRoute) return;
+    const old = document.title;
+    document.title = shopMeta(lang).title;
+    return () => { document.title = old; };
+  }, [isShopRoute, lang]);
+
   // URLs legacy ?product=slug -> /sopas/slug
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get('product');
@@ -297,10 +317,10 @@ export default function App() {
         setSelectedProduct(product);
         pushEcommerce('view_item', [productToItem(product)]);
       }
-    } else if (!isLoading) {
+    } else {
       setSelectedProduct(null);
     }
-  }, [productSlugFromRoute, displayProducts, isLoading]);
+  }, [productSlugFromRoute, displayProducts]);
 
   useEffect(() => {
     if (routeProduct || homeScrollY.current === null) return;
@@ -314,21 +334,10 @@ export default function App() {
     if (isSoupcripcionesRoute) openFunnel();
   }, [isSoupcripcionesRoute]);
 
-  // /sopas (sin slug) -> home anclado a la tienda
-  // Espera al fin de la carga: durante la pantalla de loading #shop aún no existe en el DOM
-  // y el scroll fallaba en silencio (carga directa de ondoclub.com/sopas dejaba en el hero)
+  // Al llegar con un ancla (/#preguntas), baja a esa sección.
   useEffect(() => {
-    if (isLoading) return;
-    if (route.replace(/\/+$/, '') === '/sopas') {
-      window.history.replaceState({}, '', '/#shop');
-      setRoute('/');
-      requestAnimationFrame(() => document.getElementById('shop')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior }));
-    }
-  }, [route, isLoading]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
+    const id = window.location.hash.slice(1);
+    if (id) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView());
   }, []);
 
   const getSetting = (key: string, defaultVal: any = null) => {
@@ -401,22 +410,19 @@ export default function App() {
     pushEvent('view_item_list', { item_list_name: 'soupscripciones', item_list_id: 'soupscripciones' });
   };
 
-  // Fallback: scroll a la sección de productos (#shop)
-  const scrollToShop = () => {
-    document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // CTA desde settings.json (heroCTALink): URL vacía -> fallback (funnel o #shop)
-  const handleCTA = (url: string | null | undefined, fallback: () => void) => {
-    const link = (url || '').trim();
-    if (!link) { fallback(); return; }
-    if (link.startsWith('#')) {
-      document.getElementById(link.slice(1))?.scrollIntoView({ behavior: 'smooth' });
-    } else if (link.startsWith('/')) {
-      navigate(link);
-    } else {
-      window.open(link, '_blank', 'noopener,noreferrer');
+  // Enlaces internos de cabecera, home y footer: '/tienda', '/soupscripciones' o una sección de la home ('/#preguntas').
+  const goTo = (href: string) => {
+    const [path, hash] = href.split('#');
+    const target = path || '/';
+    if (hash) {
+      if (route !== '/' || target !== '/') navigate(`/#${hash}`);
+      else window.history.replaceState({}, '', `/#${hash}`);
+      requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({ behavior: 'smooth' }));
+      return;
     }
+    if (target === SOUPSCRIPTION_ROUTE) { navigate(target); return; } // el funnel se abre sobre la página actual
+    if (target !== route) navigate(target);
+    window.scrollTo(0, 0);
   };
 
   // Selección de plan confirmada (paso plan -> sopas)
@@ -450,20 +456,13 @@ export default function App() {
   const closeProductPage = () => {
     if (cameFromSite.current) { window.history.back(); return; }
     homeScrollY.current = null;
-    navigate('/');
-    requestAnimationFrame(() => document.getElementById('shop')?.scrollIntoView({ behavior: 'instant' as ScrollBehavior }));
+    navigate(SHOP_ROUTE);
+    window.scrollTo(0, 0);
   };
 
   const closeFunnelModal = () => {
     setShowPopupModal(false);
     if (isSoupcripcionesRoute) navigate('/');
-  };
-
-  const openSoupModal = () => {
-    setSoupIdea('');
-    setSoupEmail('');
-    setSoupSubmitted(false);
-    setShowSoupModal(true);
   };
 
   const handleCheckout = async () => {
@@ -600,11 +599,8 @@ export default function App() {
       ? { now: formatMXN(productUnitPrice(product)), before: formatMXN(toCents(product.price)), percent: pct }
       : { now: formatMXN(toCents(product.price)) };
   };
-  // Aviso "te falta poco" bajo las tarjetas y en el popup de producto.
-  const nudge = cartNudge(pricing);
-  const nudgeText = !nudge ? '' : nudge.type === 'freeShipping'
-    ? (lang === 'es' ? '¡Agrega 1 sopa más y tu envío es gratis!' : 'Add 1 more soup for free shipping!')
-    : (lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`);
+  // Aviso "te falta poco": sobre la rejilla y en el aviso que sale al agregar.
+  const nudgeText = nudgeMessage(cartNudge(pricing), lang);
   const handleCartCheckout = async ({ slot, postal, deliveryDate }: CheckoutRequest): Promise<CheckoutResult> => {
     const genericError = lang === 'es' ? 'No pudimos abrir el pago. Inténtalo de nuevo.' : "We couldn't open checkout. Please try again.";
     // begin_checkout + snapshot (value con descuento aplicado, sin envío)
@@ -637,121 +633,49 @@ export default function App() {
     }
   };
 
-  const handleSoupSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!soupIdea || !soupEmail) return;
-    setIsSubmittingSoup(true);
-    try {
-      const res = await fetch('/api/submit-soup-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ soupIdea, email: soupEmail }),
-      });
-      if (!res.ok) throw new Error('API error');
-      setSoupSubmitted(true);
-    } catch (err) {
-      console.error('Soup request error:', err);
-      alert(lang === 'es' ? 'Error al enviar tu sugerencia. Inténtalo de nuevo.' : 'Error sending your suggestion. Please try again.');
-    } finally {
-      setIsSubmittingSoup(false);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-ondo-beige flex flex-col items-center justify-center gap-6 z-50">
-        <img
-          src="/images/ondo-logo-orange.png"
-          alt="ONDO"
-          className="h-16 animate-bounce"
-        />
-        <div className="w-10 h-10 rounded-full border-4 border-ondo-orange/30 border-t-ondo-orange animate-spin" />
-        <p className="font-title text-sm tracking-widest uppercase text-ondo-black/50">
-          {lang === 'es' ? 'Cargando...' : 'Loading...'}
-        </p>
-      </div>
-    );
-  }
+  // Home y cabecera: próxima entrega (se recalcula sola) y textos con sus datos de settings.json.
+  const nextDeliveryIso = useNextDelivery();
+  const copyTokens = homeTokens(nextDeliveryIso, lang, settings);
+  const homeText = (key: string) => fillTokens(getSettingText(key, ''), copyTokens);
+  const es = lang === 'es';
+  const navLinks = [
+    { href: SHOP_ROUTE, label: es ? 'Tienda' : 'Shop' },
+    { href: SOUPSCRIPTION_ROUTE, label: es ? 'Soup-scripción' : 'Soup-scription' },
+    { href: '/#preguntas', label: es ? 'Preguntas' : 'FAQ' },
+  ];
+  const footerLinks = [
+    { href: '/#faq-zonas', label: es ? 'Envíos y zonas' : 'Delivery areas' },
+    { href: '/#preguntas', label: es ? 'Preguntas' : 'FAQ' },
+  ];
+  const quantityOf = (id: string) => cart.find(item => item.product._id === id)?.quantity || 0;
 
   return (
     <div className="min-h-screen bg-ondo-beige text-ondo-black font-body">
-      {/* Top Banner (ROJO BANNER) */}
-      <div className="bg-ondo-red text-white py-2 text-xs md:text-sm font-bold tracking-wider uppercase font-title leading-none overflow-hidden whitespace-nowrap">
-        <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSettingText('bannerText', content.banner)}</span>
-          <span>{getSettingText('bannerText', content.banner)}</span>
-        </div>
-      </div>
-      
-      {/* Navbar (Crema Suave) */}
-      <nav className="bg-ondo-beige border-b border-black/5 sticky top-0 z-30">
-        <div className="w-full mx-auto px-4 sm:px-6 py-4 md:py-7 flex items-center justify-between relative">
-          <div className="flex items-center gap-8 hidden md:flex font-title font-semibold text-[19px] tracking-wide">
-            <a href="#shop" className="hover:text-ondo-orange transition-colors">{getSettingText('navShop', content.navShop)}</a>
-            <a href={SOUPSCRIPTION_ROUTE} onClick={(e) => { e.preventDefault(); navigate(SOUPSCRIPTION_ROUTE); }} className="hover:text-ondo-orange transition-colors">{getSettingText('navSubs', content.navSubs)}</a>
-          </div>
-          <button className="md:hidden p-1" onClick={() => setIsMobileMenuOpen((o: boolean) => !o)}>
-            {isMobileMenuOpen ? <X className="w-6 h-6 text-ondo-green" /> : <Menu className="w-6 h-6 text-ondo-green" />}
-          </button>
-          
-          <a href="#" className="absolute left-1/2 transform -translate-x-1/2">
-            <img src="/images/ondo-logo-orange.png" alt="ONDO Logo" className="h-[38px] sm:h-[52px] md:h-[68px] object-contain transition-all" />
-          </a>
-        
-        <div className="flex items-center gap-3 sm:gap-6">
-           {/* Lang Toggle */}
-           <div className="flex items-center gap-1 sm:gap-2 font-title font-bold text-xs uppercase bg-white/40 px-1.5 sm:px-2 py-1 border border-ondo-black/5">
-              <button 
-                onClick={() => setLang('es')} 
-                className={`${lang === 'es' ? 'text-ondo-orange' : 'text-gray-400 hover:text-ondo-black'}`}
-              >
-                ES
-              </button>
-              <span className="text-gray-300">|</span>
-              <button 
-                onClick={() => setLang('en')} 
-                className={`${lang === 'en' ? 'text-ondo-orange' : 'text-gray-400 hover:text-ondo-black'}`}
-              >
-                EN
-              </button>
-           </div>
-
-           <button type="button" aria-label={lang === 'es' ? `Ver carrito (${cartItemCount})` : `View cart (${cartItemCount})`} className="relative cursor-pointer group text-ondo-green hover:text-ondo-orange transition-colors" onClick={openCart}>
-             <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8" />
-             {cartItemCount > 0 && (
-               <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-ondo-red text-white text-[10px] w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center font-bold shadow group-hover:bg-ondo-orange transition-colors rounded-full">
-                 {cartItemCount}
-               </span>
-             )}
-           </button>
-        </div>
-        </div>
-        {/* Mobile Menu natively embedded inside sticky header */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-ondo-beige border-t border-black/5 flex flex-col font-title font-semibold text-[17px] tracking-wide">
-            <a href="#shop" className="px-6 py-4 border-b border-black/5 hover:text-ondo-orange transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-              {getSettingText('navShop', content.navShop)}
-            </a>
-            <a href={SOUPSCRIPTION_ROUTE} className="px-6 py-4 hover:text-ondo-orange transition-colors" onClick={(e) => { e.preventDefault(); setIsMobileMenuOpen(false); navigate(SOUPSCRIPTION_ROUTE); }}>
-              {getSettingText('navSubs', content.navSubs)}
-            </a>
-          </div>
-        )}
-      </nav>
+      <a href="#contenido" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-brand-card focus:px-4 focus:py-2 focus:rounded-lg">
+        {es ? 'Saltar al contenido' : 'Skip to content'}
+      </a>
+      <AnnouncementBar deliveryIso={nextDeliveryIso} lang={lang} />
+      <SiteHeader lang={lang} setLang={setLang} links={navLinks} cartCount={cartItemCount} onOpenCart={openCart} onNavigate={goTo} />
 
       {/* Carrito: src/components/CartDrawer.tsx */}
+      {cartMounted && (
+      <Suspense fallback={null}>
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
-        onBrowse={() => { setIsCartOpen(false); document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' }); }}
+        onBrowse={() => { setIsCartOpen(false); goTo(SHOP_ROUTE); }}
         cart={cart}
         pricing={pricing}
         lang={lang}
         resolveText={resolveText}
         resolveImage={resolveImage}
         onChangeQuantity={updateQuantity}
+        products={products}
+        onAddProduct={(product: any) => addToCart(product, 'carrito')}
         onCheckout={handleCartCheckout}
       />
+      </Suspense>
+      )}
 
       {/* Barra del carrito (móvil) y aviso al agregar: src/components/shop/CartBar.tsx */}
       {!isCartOpen && <StickyCartBar pricing={pricing} lang={lang} onOpenCart={openCart} />}
@@ -759,11 +683,13 @@ export default function App() {
         stamp={isCartOpen ? 0 : toastStamp}
         lang={lang}
         raised={pricing.itemCount > 0}
+        message={nudgeText}
         onOpenCart={() => { setToastStamp(0); openCart(); }}
         onDone={() => setToastStamp(0)}
       />
 
       {routeProduct ? (
+        <Suspense fallback={<div className="min-h-screen" />}>
         <ProductPage
           product={routeProduct}
           products={products}
@@ -778,382 +704,76 @@ export default function App() {
           onOpenFunnel={openFunnel}
           onSelect={(product: any, index: number) => selectProduct(product, index, 'completa_tu_caja')}
         />
+        </Suspense>
       ) : (
       <>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden flex items-center h-[calc(100vh-98px)] bg-ondo-beige pb-10">
-        <div className="absolute inset-0 bg-ondo-beige/10 z-0 transition-opacity duration-300"></div>
-        
-        {/* Foto del hero: llena el lado derecho y se funde con el beige (máscaras
-            horizontal + vertical anidadas). En móvil va abajo, tenue, tras el texto. */}
-        <div className="hero-fade-y absolute bottom-0 right-0 pointer-events-none z-0 h-[50vh] w-full md:inset-y-0 md:h-auto md:w-[58%] opacity-35 md:opacity-100 transition-opacity">
-          <div className="hero-fade-x h-full w-full">
-            <img
-              src={resolveImage(getSetting('heroImages', null)?.[0]) || '/images/green-soup.png'}
-              alt="Sopas ONDO en el congelador"
-              className="h-full w-full object-cover object-center"
-            />
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6 w-full relative z-10 py-16 h-full flex flex-col justify-center">
-          <div className="max-w-[500px] w-full flex flex-col justify-center bg-transparent mt-[-5vh] md:mt-[-10vh]">
-             <h1 className="text-[36px] sm:text-[42px] md:text-[85px] lg:text-[110px] font-title leading-[0.85] tracking-tight mb-6 md:mb-8 text-ondo-green uppercase w-full md:w-[150%] max-w-[800px] relative z-20 mix-blend-multiply text-shadow-sm font-black text-left break-words md:whitespace-nowrap">
-              {resolveText(getSetting('heroTitle', content.heroTitle))}
-            </h1>
-            <div>
-              <p className="text-[16px] sm:text-[17px] md:text-[20px] font-body mb-6 md:mb-8 text-ondo-green leading-relaxed font-bold max-w-[420px] mix-blend-multiply whitespace-pre-line">
-                 {resolveText(getSetting('heroSub', content.heroSub))}
+      {isShopRoute ? (
+        <main id="contenido">
+          {/* Tienda completa: src/components/shop/ */}
+          <ShopSection
+            products={products}
+            filters={shopFilters}
+            lang={lang}
+            resolveText={resolveText}
+            title={getSettingText('shopTitle', { es: 'El menú', en: 'The menu' })}
+            headingLevel={1}
+            boxBadge={getSettingText('boxBadge', '')}
+            nudgeText={nudgeText}
+            priceOf={shopPriceOf}
+            quantityOf={quantityOf}
+            onAdd={(product: any) => addToCart(product, 'grid')}
+            onRemove={(product: any) => updateQuantity(product._id, -1)}
+            onOpen={selectProduct}
+            onOpenFunnel={openFunnel}
+          >
+            {/* Soup-scripción bajo la rejilla (se replantea en la fase 5) */}
+            <div className="mt-12 pt-8 border-t border-brand-ink/15 flex flex-col md:flex-row items-center justify-between gap-4">
+              <p className="font-body text-[17px] text-brand-ink text-center md:text-left">
+                {homeText('shopClubText')}
               </p>
-              <div>
-                <button onClick={() => handleCTA(getSetting('heroCTALink'), scrollToShop)} className="bg-ondo-orange text-white hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3.5 sm:py-4 px-8 sm:px-10 transition-colors text-[14px] sm:text-[15px] shadow-sm">
-                  {resolveText(getSetting('heroCTA', content.shopNow))}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tienda: src/components/shop/ */}
-      <ShopSection
-        products={products}
-        filters={shopFilters}
-        lang={lang}
-        resolveText={resolveText}
-        title={getSettingText('shopTitle', { es: 'El menú', en: 'The menu' })}
-        boxBadge={getSettingText('boxBadge', '')}
-        nudgeText={nudgeText}
-        priceOf={shopPriceOf}
-        quantityOf={(id: string) => cart.find(item => item.product._id === id)?.quantity || 0}
-        onAdd={(product: any) => addToCart(product, 'grid')}
-        onRemove={(product: any) => updateQuantity(product._id, -1)}
-        onOpen={selectProduct}
-        onOpenFunnel={openFunnel}
-      >
-          {/* Soup-scription Banner — below products */}
-          <div className="mt-12 py-8 px-8 border-t border-ondo-green/20 flex flex-col md:flex-row items-center justify-between gap-6">
-            <p className="font-body text-[16px] font-bold text-ondo-green text-center md:text-left">
-              {lang === 'es' ? 'Haz tu pedido arriba. O conoce nuestros ' : 'Place your order above. Or check out our '}
-              <button
-                onClick={openFunnel}
-                className="text-ondo-orange underline underline-offset-4 hover:text-ondo-green transition-colors font-bold"
+              <a
+                href={SOUPSCRIPTION_ROUTE}
+                onClick={(e) => { e.preventDefault(); goTo(SOUPSCRIPTION_ROUTE); }}
+                className="shrink-0 min-h-[48px] px-6 inline-flex items-center rounded-xl border-2 border-brand-ink text-brand-ink font-title font-bold text-[17px]"
               >
-                {lang === 'es' ? 'planes de soup-scription' : 'soup-scription plans'}
-              </button>
-            </p>
-            <button
-              onClick={() => handleCTA(getSetting('clubBannerCTALink'), openFunnel)}
-              className="bg-ondo-orange text-white hover:bg-ondo-green font-title font-bold uppercase tracking-widest py-4 px-8 text-base transition-all shadow-sm hover:scale-105 active:scale-95 shrink-0"
-            >
-              {resolveText(getSetting('clubBannerCTA', { es: '¡LO QUIERO!', en: 'I WANT IT!' }))}
-            </button>
-          </div>
-      </ShopSection>
-
-      {/* Mid Banner — before products */}
-      {getSetting('showMidBanner', true) !== false && (
-      <div className="bg-ondo-red text-white py-3 md:py-4 text-center font-title text-sm md:text-base uppercase tracking-widest font-bold overflow-hidden whitespace-nowrap shrink-0">
-        <div className="animate-marquee inline-flex w-[200%] justify-around">
-          <span>{getSettingText('midBannerText', content.midBanner)}</span>
-          <span>{getSettingText('midBannerText', content.midBanner)}</span>
-        </div>
-      </div>
+                {es ? 'Conocer planes' : 'See the plans'}
+              </a>
+            </div>
+          </ShopSection>
+        </main>
+      ) : (
+        <HomePage
+          lang={lang}
+          text={homeText}
+          tokens={copyTokens}
+          onNavigate={goTo}
+          onOpenFunnel={openFunnel}
+          products={products}
+          filters={shopFilters}
+          resolveText={resolveText}
+          boxBadge={getSettingText('boxBadge', '')}
+          nudgeText={nudgeText}
+          priceOf={shopPriceOf}
+          quantityOf={quantityOf}
+          onAdd={(product: any) => addToCart(product, 'grid')}
+          onRemove={(product: any) => updateQuantity(product._id, -1)}
+          onOpen={selectProduct}
+          faq={faqContent.preguntas as FaqItem[]}
+          testimonials={testimonialsContent as Testimonials}
+        />
       )}
-
-      {/* Manifesto Section */}
-      {getSetting('showManifesto', true) && (
-        <section id="manifesto" className="bg-ondo-beige py-8 lg:py-16 px-4 lg:px-6">
-          <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            
-            {/* Panel 1 — CTA Column */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
-                 style={{ backgroundColor: getSetting('panel1BgColor', '#6ca53a'), containerType: 'inline-size' } as React.CSSProperties}>
-               {/* Top eyebrow */}
-               <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-6 z-10"
-                  style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.75 }}>
-                 {getSettingText('panel1Eyebrow', { es: 'EL CLUB · MEMBRESÍA', en: 'THE CLUB · MEMBERSHIP' })}
-               </p>
-
-               {/* Main Title */}
-               <div className="z-10 flex-1">
-                 <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), fontSize: 'clamp(40px, 11vw, 90px)' }}>
-                   {(getSettingText('panel1TitleLine1', { es: 'EL\nCLUB', en: 'THE\nCLUB' }) || '').split('\n').map((line: string, i: number) => <React.Fragment key={i}>{i > 0 && <br />}{line}</React.Fragment>)}
-                 </h2>
-                 <h2 className="font-title font-black leading-[0.85] tracking-tighter uppercase"
-                     style={{ color: getSetting('panel1TextColor2', '#e8632a'), fontSize: 'clamp(40px, 11vw, 90px)' }}>
-                   {getSettingText('panel1TitleLine2', { es: 'ONDO.', en: 'ONDO.' })}
-                 </h2>
-
-                 {/* Divider */}
-                 <div className="w-10 h-[3px] my-6" style={{ backgroundColor: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.4 }} />
-
-                 {/* Custom multi-size intro */}
-                 <p className="font-title font-black leading-[1.0] mb-4" style={{ color: getSetting('panel1TextColor1', '#f1f3b0') }}>
-                   <span style={{ fontSize: '20px' }}>Échate un </span>
-                   <span style={{ fontSize: '32px', color: getSetting('panel1TextColor2', '#e8632a') }}>clavado </span>
-                   <span style={{ fontSize: '20px' }}>a la </span>
-                   <br />
-                   <span style={{ fontSize: '46px', color: getSetting('panel1TextColor2', '#e8632a') }}>SOUP-SCRIPCIÓN </span>
-                   <br />
-                   <span style={{ fontSize: '20px' }}>de </span>
-                   <span style={{ fontSize: '46px' }}>ONDO</span>
-                 </p>
-
-                 {/* Tagline */}
-                 <p className="font-body font-bold text-[18px] leading-snug mt-4 mb-8"
-                    style={{ color: getSetting('panel1TextColor1', '#f1f3b0'), opacity: 0.9 }}>
-                   {getSettingText('panel1Tagline', { es: 'De lo mejor, siempre en tu refri.', en: 'The best, always in your fridge.' })}
-                 </p>
-               </div>
-
-               {/* CTA at bottom */}
-               <div className="z-10 mt-auto">
-                   <button
-                     onClick={() => handleCTA(getSetting('panel1CTALink'), openFunnelToDelivery)}
-                     className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-max bg-ondo-orange text-white hover:bg-ondo-green"
-                   >
-                   {getSettingText('panel1CTAText', { es: 'ÚNETE AL CLUB', en: 'JOIN THE CLUB' })}
-                   <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                 </button>
-               </div>
-
-               {/* Center Logo shape via mask */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[120px] opacity-10" 
-                    style={{ 
-                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')", 
-                      maskImage: "url('/images/ondo-logo-orange.png')", 
-                      WebkitMaskSize: "contain", 
-                      maskSize: "contain", 
-                      WebkitMaskRepeat: "no-repeat", 
-                      maskRepeat: "no-repeat", 
-                      WebkitMaskPosition: "center", 
-                      maskPosition: "center",
-                      backgroundColor: getSetting('panel1TextColor1', '#f1f3b0')
-                    }} />
-            </div>
-            
-            {/* Panel 2 — Lo que incluye */}
-            <div className="min-h-[500px] md:h-[600px] lg:h-[750px] flex flex-col p-8 relative overflow-hidden"
-                 style={{ backgroundColor: getSetting('panel2BgColor', '#2d4a1e') }}>
-               {/* Eyebrow */}
-               <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-6 z-10"
-                  style={{ color: '#f1f3b0', opacity: 0.65 }}>
-                 {getSettingText('panel2Eyebrow', { es: 'LO QUE INCLUYE', en: "WHAT'S INCLUDED" })}
-               </p>
-
-               {/* Headline */}
-               <div className="z-10 mb-8">
-                 <h2 className="font-title font-black text-[42px] lg:text-[56px] leading-[0.9] tracking-tight">
-                   <span style={{ color: '#f1f3b0' }}>{getSettingText('panel2HeadlinePrimary', { es: 'Todo lo que necesitas.', en: 'Everything you need.' })}</span>{' '}
-                   <span style={{ color: getSetting('panel1TextColor2', '#e8632a') }}>{getSettingText('panel2HeadlineAccent', { es: 'Nada que no.', en: "Nothing you don't." })}</span>
-                 </h2>
-               </div>
-
-               {/* Benefits list */}
-               <div className="z-10 flex flex-col gap-5 flex-1">
-                 {(getSetting('panel2Benefits', null) || [
-                   { es: 'Envío incluido', en: 'Shipping included', subtitleEs: 'sin sorpresas ni cargos ocultos', subtitleEn: 'no surprises or hidden charges' },
-                   { es: 'Sopas exclusivas de socio', en: 'Member-exclusive soups', subtitleEs: 'nunca en el menú regular', subtitleEn: 'never on the regular menu' },
-                   { es: 'Primero en probar lo nuevo', en: 'First to try what\'s new', subtitleEs: 'beta taster oficial', subtitleEn: 'official beta taster' },
-                   { es: 'Recetas de temporada', en: 'Seasonal recipes', subtitleEs: 'cada semana en tu correo', subtitleEn: 'every week in your inbox' },
-                 ]).map((item: any, i: number) => (
-                   <div key={i} className="flex gap-4 items-start">
-                     <span className="font-title font-bold text-[14px] mt-1 shrink-0" style={{ color: '#f1f3b0', opacity: 0.45 }}>{String(i + 1).padStart(2, '0')}</span>
-                     <div>
-                       <p className="font-title font-bold text-[19px] leading-tight" style={{ color: '#f1f3b0' }}>{lang === 'en' && item.en ? item.en : (item.es || item.title || '')}</p>
-                       <p className="font-body text-[16px] leading-relaxed" style={{ color: '#f1f3b0', opacity: 0.6 }}>{lang === 'en' && item.subtitleEn ? item.subtitleEn : (item.subtitleEs || item.subtitle || item.sub || '')}</p>
-                     </div>
-                   </div>
-                 ))}
-               </div>
-
-               {/* Subtle logo watermark */}
-               <div className="absolute bottom-[-2%] right-[-5%] w-[55%] h-[110px] opacity-5"
-                    style={{
-                      WebkitMaskImage: "url('/images/ondo-logo-orange.png')",
-                      maskImage: "url('/images/ondo-logo-orange.png')",
-                      WebkitMaskSize: "contain",
-                      maskSize: "contain",
-                      WebkitMaskRepeat: "no-repeat",
-                      maskRepeat: "no-repeat",
-                      WebkitMaskPosition: "bottom right",
-                      maskPosition: "bottom right",
-                      backgroundColor: '#f1f3b0'
-                    }} />
-            </div>
-            
-            {/* Panel 3 — Quiénes Somos / Tú Decides */}
-            <div className="min-h-[660px] sm:min-h-[600px] md:h-[600px] lg:h-[750px] flex flex-col gap-4">
-               {/* Top: Orange — Quiénes Somos */}
-               <div className="flex-1 flex flex-col relative overflow-hidden"
-                    style={{ backgroundColor: getSetting('panel3OrangeBg', '#e8632a') }}>
-                 {/* Full-panel image, not clipped */}
-                 <img
-                   src={resolveImage(getSetting('panel3IllustrationImage', null)) || '/images/Group 1597787.png'}
-                   alt=""
-                   className="absolute inset-0 w-full h-full object-cover object-top"
-                 />
-
-                 {/* Gradient overlay so text is readable */}
-                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.45) 100%)' }} />
-
-                 {/* Eyebrow */}
-                 <p className="relative z-10 font-title text-[14px] uppercase tracking-[0.25em] p-4 sm:p-6 md:p-7"
-                    style={{ color: '#f1f3b0', opacity: 0.85 }}>
-                   {getSettingText('panel3Eyebrow', { es: 'QUIÉNES SOMOS', en: 'WHO WE ARE' })}
-                 </p>
-
-                 {/* Quote pinned to bottom */}
-                 <blockquote className="relative z-10 mt-auto p-4 sm:p-6 md:p-7">
-                   <p className="font-body font-bold italic text-[17px] lg:text-[19px] leading-snug mb-2"
-                      style={{ color: '#f1f3b0' }}>
-                     {getSettingText('panel4Quote', { es: '"Hacemos estas sopas porque creemos que comer bien no debería ser complicado."', en: '"We make these soups because we believe eating well shouldn\'t be complicated."' })}
-                   </p>
-                   <footer className="font-title font-bold text-[14px] uppercase tracking-widest"
-                           style={{ color: '#f1f3b0', opacity: 0.85 }}>
-                     {getSetting('panel4QuoteAuthor', '— Ana & Omar')}
-                   </footer>
-                 </blockquote>
-               </div>
-
-               {/* Bottom: White — Tú Decides */}
-               <div className="flex-1 p-4 sm:p-6 md:p-7 bg-ondo-white flex flex-col relative overflow-hidden">
-                 {/* Eyebrow */}
-                 <p className="font-title text-[14px] uppercase tracking-[0.25em] mb-4"
-                    style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.65 }}>
-                   {getSettingText('panel3OrangeEyebrow', { es: 'TÚ DECIDES', en: 'YOU DECIDE' })}
-                 </p>
-
-                 {/* Headline */}
-                 <h3 className="font-title font-black text-[30px] lg:text-[36px] leading-[0.9] tracking-tight mb-4"
-                     style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f') }}>
-                   {getSettingText('panel3OrangeHeadline', { es: 'CUANDO TÚ LO QUIERAS MÁS.', en: 'WHENEVER YOU NEED IT MOST.' })}
-                 </h3>
-
-                 {/* Description */}
-                 <p className="font-body text-[16px] leading-relaxed flex-1"
-                    style={{ color: getSetting('panel3BottomTextColor', '#1a2e0f'), opacity: 0.7 }}>
-                   {getSettingText('panel3Description', { es: 'En familia, con amigos, en la oficina, cuando llueve, te da frío o no ves la vida o cuando necesitas un apapacho.', en: 'With family, with friends, at the office — whenever it rains, you get cold, or you just need a hug.' })}
-                 </p>
-
-                 {/* CTA */}
-                 <div className="mt-auto pt-4">
-                   <button
-                     onClick={() => handleCTA(getSetting('panel4CTALink'), openFunnelToDelivery)}
-                     className="inline-flex items-center justify-center gap-3 font-title font-bold text-[17px] uppercase tracking-widest py-4 px-8 transition-colors shadow-sm group w-full bg-ondo-orange text-white hover:bg-ondo-green"
-                   >
-                     {getSettingText('panel4CTAText', { es: '¡SOUPSCRÍBEME!', en: 'JOIN NOW' })}
-                     <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-                   </button>
-                 </div>
-               </div>
-            </div>
-            
-          </div>
-        </section>
-      )}
-
-      {/* Steps Section */}
-      {getSetting('showSteps', true) !== false && (
-      <section id="steps" className="py-28 px-6 bg-ondo-beige">
-         <div className="max-w-6xl mx-auto text-center">
-            <h2 className="font-title text-[36px] md:text-[48px] font-bold text-ondo-black uppercase tracking-tight mb-16">{getSettingText('stepsTitle', content.stepsTitle)}</h2>
-            <div className="grid md:grid-cols-3 gap-12">
-
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step1Image', null)) || '/images/cms/step1image.webp'} alt="Step 1" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step1Title', content.step1Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step1Desc', content.step1Desc)}</p>
-               </div>
-
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step2Image', null)) || '/images/cms/step2image.webp'} alt="Step 2" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step2Title', content.step2Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step2Desc', content.step2Desc)}</p>
-               </div>
-
-               <div className="flex flex-col items-center text-center group cursor-default">
-                 <div className="w-[85%] mx-auto aspect-square overflow-hidden mb-8 shadow-lg border-8 border-ondo-beige group-hover:scale-105 transition-transform duration-500 relative">
-                    <img src={resolveImage(getSetting('step3Image', null)) || '/images/cms/step3image.webp'} alt="Step 3" loading="lazy" decoding="async" className="w-full h-full object-cover absolute inset-0" />
-                 </div>
-                 <h3 className="font-title font-bold text-2xl uppercase tracking-wide mb-4 text-ondo-green">{getSettingText('step3Title', content.step3Title)}</h3>
-                 <p className="font-body text-gray-500 text-[17px] leading-relaxed font-medium px-4">{getSettingText('step3Desc', content.step3Desc)}</p>
-               </div>
-
-            </div>
-         </div>
-      </section>
-      )}
-
-      {/* Best Sellers deleted. We jump directly to Manifesto Section */}
-
-      {/* Brand Text Section */}
-      <section className="bg-ondo-beige py-20 px-6 md:px-12">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-12 lg:gap-24">
-          <div className="hidden md:block w-32 shrink-0">
-             {/* Spacing for typography layout look */}
-          </div>
-          <div className="flex-1">
-             <h2 className="text-[#6ca53a] font-title text-[40px] md:text-[50px] lg:text-[65px] font-bold leading-[0.95] tracking-tight mb-16 whitespace-pre-line">
-               {getSettingText('aboutTitle', content.aboutTitle)}
-             </h2>
-
-             <h4 className="text-[#6ca53a] font-title text-[12px] font-bold uppercase tracking-[0.2em] mb-6">{getSettingText('aboutHeader', { es: 'ABOUT', en: 'ABOUT' })}</h4>
-
-             <p className="text-[#5b9538] font-body text-[16px] md:text-[18px] font-bold leading-relaxed mb-12 max-w-[80%] whitespace-pre-line">
-               {getSettingText('aboutSub', content.aboutSub)}
-             </p>
-             
-             <div className="flex items-center gap-8 border-t border-[#6ca53a]/20 pt-8">
-               <a href="#" className="text-[#6ca53a] font-title font-bold text-[13px] tracking-widest uppercase underline underline-offset-8 hover:text-ondo-orange transition-colors">
-                 {getSettingText('aboutLink', { es: 'LEARN MORE', en: 'LEARN MORE' })}
-               </a>
-               <button onClick={() => handleCTA(getSetting('aboutCTALink'), scrollToShop)} className="border border-[#6ca53a] text-[#6ca53a] uppercase font-title font-bold text-xs tracking-widest px-6 py-3 hover:bg-[#6ca53a] hover:text-white transition-colors">
-                 {getSettingText('aboutCTA', { es: '¡APAPÁCHATE!', en: '¡APAPÁCHATE!' })}
-               </button>
-             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
       </>
       )}
 
-      <footer className="bg-ondo-beige text-ondo-black py-20 px-6 border-t border-black/5">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
-           <div className="flex flex-col items-center md:items-start gap-4">
-             <img src={resolveImage(getSetting('footerLogo', null)) || '/images/ondo-logo-orange.png'} alt="ONDO Logo" className="h-12 object-contain" />
-             <div className="text-gray-500 font-body text-sm font-medium">
-               {getSetting('copyrightText', '© 2026 ONDO. All rights reserved.')}
-             </div>
-           </div>
-           
-           <div className="flex flex-col items-center gap-6">
-             {getSetting('showInstagram', true) !== false && (
-             <div className="flex gap-8">
-               <a href={getSetting('instagramUrl', 'https://instagram.com')} target="_blank" rel="noopener noreferrer" className="bg-ondo-orange p-3 text-white hover:bg-ondo-green transition-all hover:scale-110">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-instagram"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-               </a>
-             </div>
-             )}
-             <div className="flex flex-col items-center gap-2 text-ondo-green font-title font-bold uppercase tracking-widest text-sm text-center">
-               <a href={`mailto:${getSetting('contactEmail', 'hola@ondo.mx')}`} className="hover:text-ondo-orange transition-colors flex items-center gap-2">
-                 <Mail className="w-4 h-4" /> {(getSetting('contactEmail', 'hola@ondo.mx') || '').toUpperCase()}
-               </a>
-               {getSetting('contactPhone', '+52 1 234 567 890') && (
-                 <a href={`tel:${(getSetting('contactPhone', '+52 1 234 567 890') || '').replace(/\s/g, '')}`} className="hover:text-ondo-orange transition-colors">{getSetting('contactPhone', '+52 1 234 567 890')}</a>
-               )}
-             </div>
-           </div>
-         </div>
-      </footer>
+      <SiteFooter
+        lang={lang}
+        tagline={homeText('footerTagline')}
+        links={footerLinks}
+        instagramUrl={getSetting('instagramUrl', '')}
+        email={getSetting('contactEmail', '')}
+        onNavigate={goTo}
+        raised={!isCartOpen && pricing.itemCount > 0}
+      />
 
       {/* ── MODAL: Cart Mix Warning ── */}
       {showMixWarning && (
@@ -1194,7 +814,7 @@ export default function App() {
       )}
 
       {/* ── 404: producto no encontrado ── */}
-      {isProductRoute && !routeProduct && !isLoading && (
+      {isProductRoute && !routeProduct && (
         <div className="fixed inset-0 z-[65] flex items-center justify-center bg-ondo-beige p-4">
           <div className="text-center max-w-md">
             <h2 className="font-title font-black text-[56px] uppercase text-ondo-green mb-4 leading-none">404</h2>
@@ -1202,7 +822,7 @@ export default function App() {
               {lang === 'es' ? 'No encontramos esa sopa. Puede que ya no esté disponible.' : 'We could not find that soup. It may no longer be available.'}
             </p>
             <button
-              onClick={() => navigate('/')}
+              onClick={() => navigate(SHOP_ROUTE)}
               className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3 px-8 transition-colors text-[13px]"
             >
               {lang === 'es' ? 'VOLVER A LA TIENDA' : 'BACK TO SHOP'}
@@ -1211,21 +831,8 @@ export default function App() {
         </div>
       )}
 
-      {/* ── STATIC FLOATING BUTTON (BOTTOM RIGHT) ── */}
-      {getSetting('enabled', true) !== false && (
-        <button
-          onClick={openSoupModal}
-          className={`flex fixed ${pricing.itemCount > 0 ? 'bottom-24 md:bottom-5' : 'bottom-5'} right-5 z-[45] bg-ondo-orange text-white font-title font-bold uppercase tracking-widest p-3.5 md:px-6 md:py-4 shadow-2xl hover:bg-ondo-light-green hover:text-ondo-black transition-all items-center gap-3 border-2 border-transparent hover:border-ondo-black rounded-full md:rounded-none`}
-        >
-          <Mail className="w-5 h-5 shrink-0" />
-          <span className="hidden md:flex flex-col text-left leading-tight">
-            <span>{getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })?.es || '¿Qué sopa amas?'}</span>
-            <span className="text-[10px] font-normal normal-case tracking-normal opacity-80">
-              {getSetting('buttonText', { es: '¿Qué sopa amas?', en: 'What soup do you love?' })?.en || 'What soup do you love?'}
-            </span>
-          </span>
-        </button>
-      )}
+      {/* WhatsApp flotante (móvil): no en la ficha, que tiene su propia barra; se oculta mientras sale el aviso "Agregada" */}
+      {!routeProduct && !isCartOpen && !toastStamp && <WhatsAppFloat lang={lang} raised={pricing.itemCount > 0} />}
       {/* ── MODAL: Subscription Funnel Popup ── */}
       {showPopupModal && (
         <div
@@ -1908,116 +1515,10 @@ export default function App() {
       )}
 
 
-      {/* ── MODAL: Soup Request Popup ── */}
-      {showSoupModal && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          onClick={() => setShowSoupModal(false)}
-        >
-          <div
-            className="bg-ondo-white shadow-2xl w-full max-w-lg overflow-hidden flex flex-col relative"
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setShowSoupModal(false)}
-              className="absolute top-4 right-4 z-10 p-2 hover:opacity-60 transition-opacity"
-            >
-              <X className="w-5 h-5 text-ondo-green" />
-            </button>
-
-            <div className="p-8 md:p-10 flex flex-col bg-ondo-white">
-               {!soupSubmitted ? (
-                 <>
-                   <p className="font-title text-[11px] uppercase tracking-[0.25em] text-ondo-green border-b border-ondo-green/20 pb-3 mb-6 inline-block self-start pr-6">
-                     {lang === 'es' ? 'ONDO SOUPS' : 'ONDO SOUPS'}
-                   </p>
-                   
-                   <h2 className="font-title font-black text-[32px] md:text-[42px] uppercase leading-[0.9] text-ondo-green mb-6 tracking-tight">
-                     {resolveText(getSetting('popupTitle', { es: '¿Qué sopa amas?', en: 'What soup do you love?' }))}
-                   </h2>
-
-                   <p className="font-body text-ondo-green text-[15px] leading-relaxed mb-8">
-                     {resolveText(getSetting('popupMessage', {
-                       es: '¿Cuál es la sopa que te gustaría probar? Déjanos tu correo y te avisaremos cuando salga, además de otras novedades.',
-                       en: "Which soup would you like to try? Leave your email and we'll let you know when it launches, plus other news."
-                     }))}
-                   </p>
-
-                   <form onSubmit={handleSoupSubmit} className="flex flex-col gap-4">
-                     <div>
-                       <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
-                         {resolveText(getSetting('field1Label', { es: '¿Qué sopa te gustaría probar?', en: 'Which soup would you like to try?' }))}
-                       </label>
-                       <textarea
-                         required
-                         rows={3}
-                         value={soupIdea}
-                         onChange={e => setSoupIdea(e.target.value)}
-                         placeholder={lang === 'es' ? 'Ej: Crema de alcachofa, Sopa de cebolla...' : 'e.g. Artichoke cream, Onion soup...'}
-                         className="w-full px-4 py-3 border border-ondo-green/20 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30 resize-none"
-                       />
-                     </div>
-
-                     <div>
-                       <label className="font-title text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block">
-                         {resolveText(getSetting('field2Label', { es: 'Tu Correo', en: 'Your Email' }))}
-                       </label>
-                       <input
-                         required
-                         type="email"
-                         value={soupEmail}
-                         onChange={e => setSoupEmail(e.target.value)}
-                         placeholder={lang === 'es' ? 'tu@correo.com' : 'your@email.com'}
-                         className="w-full px-4 py-3 border border-ondo-green/20 font-body text-sm focus:outline-none focus:border-ondo-green bg-ondo-beige/30"
-                       />
-                     </div>
-
-                     <p className="font-body text-[11px] text-gray-400 italic mb-2">
-                       {resolveText(getSetting('footerNote', { 
-                         es: '*al enviar aceptas recibir comunicaciones ligeras del equipo Ondo', 
-                         en: '*by submitting you agree to receive light communication from team Ondo' 
-                       }))}
-                     </p>
-
-                     <button
-                       type="submit"
-                       disabled={isSubmittingSoup}
-                       className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-4 px-8 transition-colors text-[14px] self-start disabled:opacity-50"
-                     >
-                       {isSubmittingSoup ? (lang === 'es' ? 'ENVIANDO...' : 'SENDING...') : (lang === 'es' ? 'ENVIAR' : 'SUBMIT')} &rarr;
-                     </button>
-                   </form>
-                 </>
-               ) : (
-                 <div className="py-12 flex flex-col items-center text-center">
-                   <div className="w-16 h-16 bg-ondo-green flex items-center justify-center mb-6">
-                     <CheckCircle className="w-8 h-8 text-white" />
-                   </div>
-                   <h2 className="font-title font-black text-[28px] uppercase leading-tight text-ondo-green mb-4">
-                     {resolveText(getSetting('successMessage', { es: '¡GRACIAS!', en: 'THANK YOU!' }))}
-                   </h2>
-                   <p className="font-body text-ondo-green text-[15px] leading-relaxed mb-8">
-                     {lang === 'es' 
-                       ? 'Hemos recibido tu idea. ¡Te avisaremos pronto!' 
-                       : 'We have received your idea. We will let you know soon!'}
-                   </p>
-                   <button
-                     onClick={() => setShowSoupModal(false)}
-                     className="border-[3px] border-ondo-green text-ondo-green hover:bg-ondo-green hover:text-white font-title font-bold uppercase tracking-widest py-3 px-8 transition-colors text-[13px]"
-                   >
-                     {lang === 'es' ? 'CERRAR' : 'CLOSE'}
-                   </button>
-                 </div>
-               )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── PAYMENT SUCCESS POPUP ─────────────────────────────────── */}
       {showPaymentSuccess && paymentSuccessType === 'payment' && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <OrderSuccess summary={orderSummary} lang={lang} onClose={() => setShowPaymentSuccess(false)} />
+          <Suspense fallback={null}><OrderSuccess summary={orderSummary} lang={lang} onClose={() => setShowPaymentSuccess(false)} /></Suspense>
         </div>
       )}
       {showPaymentSuccess && paymentSuccessType === 'subscription' && (
@@ -2064,11 +1565,11 @@ export default function App() {
                     : "Didn't receive the email? Check your spam folder or contact us directly:"}
                 </p>
                 <a
-                  href={`mailto:${getSetting('contactEmail', 'hola@ondo.mx')}`}
+                  href={`mailto:${getSetting('contactEmail', 'ondocdmx@gmail.com')}`}
                   className="inline-flex items-center gap-2 mt-3 font-title font-bold text-[13px] uppercase tracking-widest text-ondo-green hover:text-ondo-orange transition-colors"
                 >
                   <Mail className="w-4 h-4" />
-                  {getSetting('contactEmail', 'hola@ondo.mx')}
+                  {getSetting('contactEmail', 'ondocdmx@gmail.com')}
                 </a>
               </div>
 
