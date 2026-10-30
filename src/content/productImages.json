@@ -2,9 +2,9 @@
   "ondo-box": {
     "plated": {
       "src": "/images/soups/web/ondo-box-plated-800.webp",
-      "srcset": "/images/soups/web/ondo-box-plated-400.webp 400w, /images/soups/web/ondo-box-plated-800.webp 800w",
-      "width": 800,
-      "height": 800,
+      "srcset": "/images/soups/web/ondo-box-plated-400.webp 400w, /images/soups/web/ondo-box-plated-800.webp 800w, /images/soups/web/ondo-box-plated-1200.webp 1200w",
+      "width": 1200,
+      "height": 1200,
       "og": "/images/soups/web/ondo-box-plated-og.jpg"
     },
     "pack": {
