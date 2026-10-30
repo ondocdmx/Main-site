@@ -1,4 +1,5 @@
 // Tienda: chips de filtro (una fila con scroll lateral), "Ordenar", la caja primero y la rejilla de sopas.
+// La home la usa recortada ("Las favoritas"): `limit` sopas, sin caja ni "Ordenar", con un enlace junto al título.
 import React, { useState } from 'react';
 import ProductCard, { type CardPrice } from './ProductCard';
 import BoxCard from './BoxCard';
@@ -6,7 +7,8 @@ import { shopList, type ShopFilter, type SortKey } from './shopList';
 
 type Lang = 'es' | 'en';
 
-export default function ShopSection({ products, filters, lang, resolveText, title, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen, onOpenFunnel, children }: {
+export default function ShopSection({ id = 'shop', products, filters, lang, resolveText, title, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen, onOpenFunnel, limit, showBox = true, showSort = true, action, headingLevel = 2, children }: {
+  id?: string;
   products: any[];
   filters: ShopFilter[];
   lang: Lang;
@@ -20,20 +22,30 @@ export default function ShopSection({ products, filters, lang, resolveText, titl
   onRemove: (product: any) => void;
   onOpen: (product: any, index: number) => void;
   onOpenFunnel: () => void;
+  limit?: number; // máximo de sopas (la home muestra 6)
+  showBox?: boolean;
+  showSort?: boolean;
+  action?: React.ReactNode; // junto al título (ej. "Ver las 13")
+  headingLevel?: 1 | 2; // /tienda: h1
   children?: React.ReactNode; // lo que va debajo de la rejilla
 }) {
   const es = lang === 'es';
   const [filterId, setFilterId] = useState(filters[0]?.id || '');
   const [sort, setSort] = useState<SortKey>('featured');
-  const { box, items } = shopList(products, filters.find(f => f.id === filterId), sort);
+  const list = shopList(products, filters.find(f => f.id === filterId), sort);
+  const box = showBox ? list.box : null;
+  const items = limit ? list.items.slice(0, limit) : list.items;
+  const Heading = headingLevel === 1 ? 'h1' : 'h2';
   // Índice para GA4 (select_item): la caja es el 0 cuando se ve.
   const offset = box ? 1 : 0;
 
   return (
-    <section className="py-12 md:py-20 px-4 md:px-6 bg-brand-cream scroll-mt-16 md:scroll-mt-28" id="shop" aria-labelledby="shop-title">
+    <section className="py-12 md:py-20 px-4 md:px-6 bg-brand-cream scroll-mt-16 md:scroll-mt-28" id={id} aria-labelledby={`${id}-title`}>
       <div className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between gap-4 mb-4">
-          <h2 id="shop-title" className="font-title font-bold text-[32px] md:text-[44px] leading-none text-brand-ink whitespace-nowrap">{title}</h2>
+          <Heading id={`${id}-title`} className="font-title font-bold text-[32px] md:text-[44px] leading-none text-brand-ink whitespace-nowrap">{title}</Heading>
+          {action}
+          {showSort && (
           <label className="shrink-0 flex items-center gap-2 font-body text-[14px] text-brand-ink">
             <span>{es ? 'Ordenar' : 'Sort'}</span>
             <select
@@ -46,6 +58,7 @@ export default function ShopSection({ products, filters, lang, resolveText, titl
               <option value="priceDesc">{es ? 'Precio: mayor a menor' : 'Price: high to low'}</option>
             </select>
           </label>
+          )}
         </div>
 
         <div className="-mx-4 px-4 md:mx-0 md:px-0 overflow-x-auto [scrollbar-width:none] mb-6" role="group" aria-label={es ? 'Filtrar sopas' : 'Filter soups'}>
@@ -73,7 +86,7 @@ export default function ShopSection({ products, filters, lang, resolveText, titl
           <p className="mb-4 font-body font-semibold text-[14px] text-brand-deep" aria-live="polite">{nudgeText}</p>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
+        <div className={`grid grid-cols-2 md:grid-cols-3 ${limit ? '' : 'lg:grid-cols-4'} gap-3 md:gap-6`}>
           {box && (
             <BoxCard
               product={box}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COMMERCE } from './config.js';
-import { deliveryLabel, findSlot, formatDeliveryDate, isPostalInZone, isValidPostal, nextDeliveryDate, normalizePostal } from './delivery.js';
+import { deliveryLabel, deliveryWeekdays, findSlot, formatDeliveryDate, isPostalInZone, isValidPostal, nextDeliveryDate, normalizePostal } from './delivery.js';
 
 // Ciudad de México es UTC-6 todo el año (sin horario de verano desde 2022).
 const mx = (iso: string) => new Date(`${iso}-06:00`);
@@ -29,6 +29,13 @@ describe('formato y franjas', () => {
   it('fecha en español e inglés', () => {
     expect(formatDeliveryDate('2026-11-02')).toBe('lunes 2 de noviembre');
     expect(formatDeliveryDate('2026-11-02', 'en')).toBe('Monday, November 2');
+    expect(formatDeliveryDate('2026-11-02', 'es', true)).toBe('lunes 2 de nov');
+  });
+
+  it('días de reparto en texto', () => {
+    expect(deliveryWeekdays()).toBe('lunes');
+    expect(deliveryWeekdays('es', { ...COMMERCE, deliveryDays: ['monday', 'thursday'] })).toBe('lunes y jueves');
+    expect(deliveryWeekdays('en', { ...COMMERCE, deliveryDays: ['monday', 'thursday'] })).toBe('Monday and Thursday');
   });
   it('texto de la opción de envío en Stripe', () => {
     expect(deliveryLabel('2026-11-02', findSlot('slot_9_13')!)).toBe('Entrega lunes 2 de noviembre, 9–13 h');

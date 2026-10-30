@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyMetaToHtml, productMeta } from './seo.js';
+import { applyMetaToHtml, productMeta, shopMeta } from './seo.js';
 import products from './content/products.json' with { type: 'json' };
 
 const megaVerde = (products as any[]).find(p => p.slug === 'mega-verde');
@@ -27,5 +27,16 @@ describe('applyMetaToHtml', () => {
     expect(out).toContain('<meta property="og:title" content="Sopa &quot;rica&quot;" />');
     expect(out).toContain('<meta property="og:url" content="https://x/sopas/a" />');
     expect(out).toContain('<link rel="canonical" href="https://x/sopas/a" />');
+  });
+});
+
+describe('/tienda', () => {
+  it('su HTML tiene su propio título, og:type website y no precarga la foto del hero', () => {
+    const html = '<head><title>Home</title><link rel="preload" as="image" href="/images/home/hero-960.webp" data-hero><meta property="og:type" content="website" /></head>';
+    const out = applyMetaToHtml(html, shopMeta());
+    expect(out).toContain('<title>Tienda · Sopas Ondo a domicilio en CDMX</title>');
+    expect(out).toContain('<meta property="og:type" content="website" />');
+    expect(out).toContain('<link rel="canonical" href="https://www.ondoclub.com/tienda" />');
+    expect(out).not.toContain('data-hero');
   });
 });

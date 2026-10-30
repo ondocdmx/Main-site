@@ -85,12 +85,19 @@ export function blockerMessage(b: CheckoutBlocker, lang: Lang = 'es'): string {
   return b ? (lang === 'es' ? es : en)[b] : '';
 }
 
-// Ficha de producto: "Pide antes del domingo 23:59 y llega el lunes 2 de noviembre"
-export function deliveryPromise(iso: string, lang: Lang = 'es'): string {
+// Ficha de producto: "Pide hasta el domingo 23:59 y llega el lunes 2 de noviembre"
+// (el minuto del corte aún cuenta, por eso "hasta el" y no "antes del")
+export function deliveryPromise(iso: string, lang: Lang = 'es', short = false): string {
   const { day, time } = cutoffFor(iso, lang);
   return lang === 'es'
-    ? `Pide antes del ${day} ${time} y llega el ${formatDeliveryDate(iso, 'es')}`
-    : `Order by ${day} ${time} and it arrives ${formatDeliveryDate(iso, 'en')}`;
+    ? `Pide hasta el ${day} ${time} y llega el ${formatDeliveryDate(iso, 'es', short)}`
+    : `Order by ${day} ${time} and it arrives ${formatDeliveryDate(iso, 'en', short)}`;
+}
+
+// Barra de anuncio de la home: "Pide hasta el domingo 23:59 y llega el lunes 2 de nov · Envío gratis desde $725"
+export function announcementText(iso: string, lang: Lang = 'es'): string {
+  const ship = formatMXN(COMMERCE.freeShippingMinAmount);
+  return `${deliveryPromise(iso, lang, true)} · ${lang === 'es' ? `Envío gratis desde ${ship}` : `Free shipping from ${ship}`}`;
 }
 
 // Ficha de producto: "Envío gratis desde $725 · 20% menos desde 10 sopas" (de settings.json)

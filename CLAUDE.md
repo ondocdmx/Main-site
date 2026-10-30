@@ -72,10 +72,11 @@ Where things live:
   The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
 * Shipping: `shippingPrice` ($50) in `settings.json`, sent to Stripe as a shipping option (no Price ID since Phase 1.2).
   Free when the cart subtotal before discounts reaches `freeShippingMinAmount` ($725, owner decision 28 Oct 2026):
-  6 veggie soups, 5 meat soups, or the box + 1 soup. The box alone pays shipping; its card and page say
-  "+ envío, o gratis si agregas 1 sopa". The free-shipping zone is not checked on the server yet (Phase 3).
+  6 veggie soups, 5 meat soups, or the box + 1 soup. Any order with the box ships free too (owner, 30 Oct 2026:
+  `boxShipsFree: true` in settings.json, read by `priceCart()`); its card and page say "Envío gratis".
+  The free-shipping zone is not checked on the server yet.
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
-  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount` or empty).
+  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount`, `box` or empty).
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%. The server
   creates the Stripe coupon itself (`api/_lib/catalog.ts`, id `ondo_bulk_20_<hash>`) for every individual
   soup, never the box (shipping is never discounted: it's a shipping option). A new soup or a new % gives a
@@ -122,7 +123,17 @@ Where things live:
   cart's, is out of zone, or OXXO is confirmed after the cutoff. Idempotent (PaymentIntent metadata
   `ondo_order_status` + one row per session). Subscriptions are still read in the Stripe Dashboard.
 
+* Homepage (Phase 3, 30 Oct 2026): `src/components/home/` in the order Omar set (announcement bar, header,
+  hero, Así de fácil, Empieza aquí (box), Las favoritas (6 soups), ¿Por qué congelada?, testimonials, Tres formas,
+  Desde el huerto, Ana y Omar, FAQ, footer). Copy: `home*` keys in settings.json, with `{tokens}` filled from config
+  (`src/components/home/homeCopy.ts`); FAQ in `src/content/faq.json`; testimonials in `src/content/testimonials.json`
+  (empty list = section hidden). Full catalog with filters: `/tienda` (`/sopas` and `/#shop` redirect there).
+  No loading screen. Home photos: `public/images/home/` (`node scripts/build-home-images.mjs`).
+* The gift option ("Regala sopa") isn't built: its card links to WhatsApp until the gift funnel exists.
+
 Do not change how prominent subscriptions are on the site until Omar asks in a specific Phase 5 task.
+(Phase 3 removed the subscription marquee and manifesto at Omar's request; subscriptions now live in
+"Tres formas de Ondo", the header and under the /tienda grid.)
 
 ## 3. TARGET STATE (NOT built yet)
 
@@ -130,7 +141,7 @@ Do not assume any of this exists, and do not refactor toward it unless Omar asks
 
 Rules:
 
-* Caja de bienvenida (5-soup box): $600 MXN + shipping (owner, 28 Oct 2026: the box alone does NOT ship free).
+* Caja de bienvenida (5-soup box): $600 MXN with free shipping (owner, 30 Oct 2026; replaces the 28 Oct "box pays shipping"). Built: `boxShipsFree`.
 * Shipping: $50 MXN. Free when the subtotal before discounts is $725 or more (box + 1 soup, 6 veggie or
   5 meat soups). The shop shows "free shipping" hints when one more soup would get there.
 * 10+ items: 20% off AND free shipping. The box counts as ONE item toward the 10, never as 5.

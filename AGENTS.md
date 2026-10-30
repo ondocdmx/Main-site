@@ -55,10 +55,11 @@ las funciones de `api/`).
   - `/sopas/:slug` → ficha de producto (página propia, `src/components/shop/ProductPage.tsx`; la flecha
     vuelve a la tienda en el mismo scroll). El build escribe `dist/sopas/<slug>/index.html` con título,
     descripción y og:image de la sopa (`src/seo.ts`, plugin en `vite.config.ts`) para Google y WhatsApp.
-  - `/sopas` → redirige a `/#shop` y hace scroll a la tienda (espera a que
-    termine `isLoading`; la pantalla de carga dura mínimo 1s por diseño)
-  - `/soupscripciones` → abre el funnel de suscripción sobre la home
-- `vercel.json` reescribe esas rutas a `/index.html`.
+  - `/` → home (`src/components/home/HomePage.tsx`; cabecera, barra de anuncio y footer en `SiteChrome.tsx`)
+  - `/tienda` → catálogo completo con filtros (`SHOP_ROUTE`). `/sopas` redirige aquí (`vercel.json`, 308) y
+    `/#shop` también (en el navegador). El build escribe `dist/tienda/index.html` con su título.
+  - `/soupscripciones` → abre el funnel de suscripción sobre la página actual
+- `vercel.json` reescribe esas rutas a `/index.html` (y `/tienda` a `/tienda/index.html`).
 - El contenido se importa estático desde `src/content/` (ver sección
   Contenido). Los ajustes se leen con `getSetting(clave, default)` /
   `getSettingText(...)`; si una clave no existe se usa el default (muchos
@@ -67,8 +68,10 @@ las funciones de `api/`).
 - Tienda y ficha: `src/components/shop/` (tarjetas, filtros, caja, barra del carrito, ficha).
 - Imágenes: rutas en texto (`/images/cms/x.webp`), resueltas con
   `resolveImage()`.
-- Pantalla de carga de ~1 s a propósito (diseño); el scroll de `/sopas`
-  espera a `isLoading`.
+- Sin pantalla de carga (se quitó en la fase 3). La foto del hero se precarga en `index.html` (`data-hero`;
+  `src/seo.ts` la quita del HTML de las demás páginas). Carrito, ficha y popup de éxito se cargan aparte (`lazy`).
+- Textos de la home: claves `home*` de `settings.json`; lo que va entre llaves (`{envioGratis}`, `{porSopa}`,
+  `{dias}`…) se llena desde la configuración (`src/components/home/homeCopy.ts`).
 - El checkout de suscripción manda la selección de sopas en metadata de
   Stripe (`selected_soups`), no como line items.
 
@@ -83,6 +86,8 @@ como referencia: Sanity se da de baja tras la migración). Se edita a mano:
 | `products.json` | Array de sopas **en el orden en que se muestran** en la tienda |
 | `tags.json` | Filtros de la tienda (`name {es,en}`, `slug.current`, `icon`, `color` = clase Tailwind) |
 | `deliveryZones.json` | `allowedPostalCodes` (lista vacía = acepta todos) y mensajes dentro/fuera de zona |
+| `faq.json` | Preguntas frecuentes de la home (acordeón). Instrucciones dentro del archivo (`_ayuda`) |
+| `testimonials.json` | Testimonios reales de la home; lista vacía = la sección no se muestra |
 
 Imágenes en `public/images/cms/` (webp, ~800 px las de producto, ~1600 px
 hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
@@ -142,7 +147,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
   `npm run images` (corre solo antes de dev/build) genera las versiones webp cuadradas y
   `src/content/productImages.json`, que es lo que leen tienda y ficha. No editar ese JSON a mano.
 - Textos comunes de la ficha en `settings.json`: `productHeating`, `productStorage`, `boxBadge`.
-- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Sola paga envío.
+- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Con `boxShipsFree` (settings.json), el pedido con caja no paga envío.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.
 

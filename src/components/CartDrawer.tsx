@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, Minus, Plus, X } from 'lucide-react';
 import type { CartPricing } from '../commerce/priceCart';
 import { COMMERCE } from '../commerce/config';
+import { whatsappLink } from '../commerce/whatsapp';
 import { blockerMessage, cartTitle, checkoutBlocker, formatMXN, progressMessage } from '../commerce/cartCopy';
 import { formatDeliveryDate, isPostalInZone, isValidPostal, nextDeliveryDate, normalizePostal } from '../commerce/delivery';
 import { productToItem, pushEcommerce } from '../analytics';
@@ -19,7 +20,6 @@ const POSTAL_KEY = 'ondo_cart_postal';
 const readStore = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 const writeStore = (key: string, value: string) => { try { localStorage.setItem(key, value); } catch { /* noop */ } };
 
-const whatsappLink = (text: string) => `https://wa.me/${COMMERCE.whatsappNumber}?text=${encodeURIComponent(text)}`;
 
 interface Props {
   isOpen: boolean;

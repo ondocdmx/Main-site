@@ -413,5 +413,153 @@
         "en": "Spicy"
       }
     }
-  ]
+  ],
+  "homeKicker": {
+    "es": "Sopas apapachosas · hechas en CDMX",
+    "en": "Comforting soups · made in Mexico City"
+  },
+  "homeTitle": {
+    "es": "Sopa de verdad, lista en minutos.",
+    "en": "Real soup, ready in minutes."
+  },
+  "homeSub": {
+    "es": "Sopas de temporada con ingredientes locales. Las cocinamos, las congelamos en su punto y te las llevamos. Tú solo calientas.",
+    "en": "Seasonal soups made with local ingredients. We cook them, freeze them at their best and bring them to you. You just heat them up."
+  },
+  "homeCtaPrimary": {
+    "es": "Arma tu caja",
+    "en": "Build your box"
+  },
+  "homeCtaSecondary": {
+    "es": "Ver el menú",
+    "en": "See the menu"
+  },
+  "homeTrustDelivery": {
+    "es": "Entrega cada {dias} en CDMX",
+    "en": "Delivered every {dias} in Mexico City"
+  },
+  "homeTrustLocal": {
+    "es": "Ingredientes locales, sin agroquímicos",
+    "en": "Local ingredients, no agrochemicals"
+  },
+  "homeTrustFreezer": {
+    "es": "Dura hasta 3 meses congelada",
+    "en": "Keeps up to 3 months frozen"
+  },
+  "homeStepsTitle": {
+    "es": "Así de fácil",
+    "en": "That easy"
+  },
+  "homeStep1Title": {
+    "es": "Elige tus sopas",
+    "en": "Pick your soups"
+  },
+  "homeStep1Desc": {
+    "es": "Arma tu caja o deja que nosotros elijamos las favoritas de la temporada.",
+    "en": "Build your box or let us pick the season’s favourites."
+  },
+  "homeStep2Title": {
+    "es": "Llegan congeladas el {dias}",
+    "en": "They arrive frozen on {dias}"
+  },
+  "homeStep2Desc": {
+    "es": "Elige tu horario. Las guardas en el congelador y listo.",
+    "en": "Pick your time slot. Pop them in the freezer and you’re set."
+  },
+  "homeStep3Title": {
+    "es": "Calienta y apapáchate",
+    "en": "Heat and enjoy"
+  },
+  "homeStep3Desc": {
+    "es": "En olla, en unos 4–5 minutos. Un tazón de sopa de verdad, cualquier día.",
+    "en": "In a pot, in about 4–5 minutes. A bowl of real soup, any day."
+  },
+  "homeBoxKicker": {
+    "es": "¿Primera vez? Empieza aquí",
+    "en": "First time? Start here"
+  },
+  "homeFavoritesTitle": {
+    "es": "Las favoritas",
+    "en": "Favourites"
+  },
+  "homeFrozenTitle": {
+    "es": "¿Por qué congelada?",
+    "en": "Why frozen?"
+  },
+  "homeFrozenText": {
+    "es": "Porque congelar en su punto conserva el sabor y los nutrientes sin trucos. Cocinamos en lotes pequeños, congelamos y la sopa llega a tu mesa igual que salió de la olla.\n\nSiempre hay algo rico en tu congelador para los días de prisa, de frío o de apapacho.",
+    "en": "Because freezing at the right moment keeps flavour and nutrients, no tricks. We cook in small batches, freeze, and the soup reaches your table just as it left the pot.\n\nThere’s always something good in your freezer for busy days, cold days or days that need a hug."
+  },
+  "homeTestimonialsTitle": {
+    "es": "Lo que dice quien ya probó",
+    "en": "What people who tried it say"
+  },
+  "homeWaysTitle": {
+    "es": "Tres formas de Ondo",
+    "en": "Three ways to Ondo"
+  },
+  "homeWay1Title": {
+    "es": "Pide cuando quieras",
+    "en": "Order whenever you like"
+  },
+  "homeWay1Desc": {
+    "es": "Sin compromiso. Envío gratis desde {envioGratis} o con la Caja de bienvenida; desde {minVolumen} sopas, además, {descuento}% de descuento automático.",
+    "en": "No commitment. Free shipping from {envioGratis} or with the Welcome box; from {minVolumen} soups, {descuento}% off automatically."
+  },
+  "homeWay1Link": {
+    "es": "Ver el menú",
+    "en": "See the menu"
+  },
+  "homeWay2Title": {
+    "es": "Soup-scripción",
+    "en": "Soup-scription"
+  },
+  "homeWay2Desc": {
+    "es": "4, 6 o 10 sopas cada quincena o cada mes, con envío incluido. Desde {porSopa} por sopa; el plan se renueva cada 3 meses.",
+    "en": "4, 6 or 10 soups every two weeks or every month, delivery included. From {porSopa} per soup; the plan renews every 3 months."
+  },
+  "homeWay2Link": {
+    "es": "Conocer planes",
+    "en": "See the plans"
+  },
+  "homeWay3Title": {
+    "es": "Regala sopa",
+    "en": "Give soup"
+  },
+  "homeWay3Desc": {
+    "es": "Muy pronto podrás regalar 1, 2 o 3 meses de sopa. ¿Quieres regalar ya? Escríbenos y lo armamos.",
+    "en": "Soon you’ll be able to give 1, 2 or 3 months of soup. Want to give some now? Message us and we’ll put it together."
+  },
+  "homeWay3Link": {
+    "es": "Escríbenos por WhatsApp",
+    "en": "Message us on WhatsApp"
+  },
+  "homeWay3Message": {
+    "es": "Hola Ondo, quiero regalar sopa.",
+    "en": "Hi Ondo, I’d like to give soup as a gift."
+  },
+  "homeOriginTitle": {
+    "es": "Desde el huerto",
+    "en": "From the garden"
+  },
+  "homeOriginText": {
+    "es": "Ingredientes de temporada, libres de agroquímicos, de productores locales. Recetas propias, de aquí y de fuera, hechas con oficio.",
+    "en": "Seasonal ingredients, free of agrochemicals, from local growers. Our own recipes, from here and abroad, made with craft."
+  },
+  "homeFoundersQuote": {
+    "es": "Hacemos estas sopas porque creemos que comer bien no debería ser complicado.",
+    "en": "We make these soups because we believe eating well shouldn’t be complicated."
+  },
+  "homeFoundersName": {
+    "es": "Ana y Omar, fundadores",
+    "en": "Ana and Omar, founders"
+  },
+  "homeFaqTitle": {
+    "es": "Preguntas frecuentes",
+    "en": "Frequently asked questions"
+  },
+  "footerTagline": {
+    "es": "Nutrición para un mundo acelerado. Sopas con alma, de temporada, hechas en Ciudad de México.",
+    "en": "Nourishment for a rushed world. Soulful, seasonal soups made in Mexico City."
+  }
 }
