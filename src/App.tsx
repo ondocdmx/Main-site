@@ -1568,11 +1568,11 @@ export default function App() {
                     : "Didn't receive the email? Check your spam folder or contact us directly:"}
                 </p>
                 <a
-                  href={`mailto:${getSetting('contactEmail', 'hola@ondo.mx')}`}
+                  href={`mailto:${getSetting('contactEmail', 'ondocdmx@gmail.com')}`}
                   className="inline-flex items-center gap-2 mt-3 font-title font-bold text-[13px] uppercase tracking-widest text-ondo-green hover:text-ondo-orange transition-colors"
                 >
                   <Mail className="w-4 h-4" />
-                  {getSetting('contactEmail', 'hola@ondo.mx')}
+                  {getSetting('contactEmail', 'ondocdmx@gmail.com')}
                 </a>
               </div>
 

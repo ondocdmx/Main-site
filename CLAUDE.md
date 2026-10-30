@@ -95,7 +95,7 @@ Where things live:
 * Cart (Phase 1.2, `src/components/CartDrawer.tsx`): one screen with the soups, the benefits bar, the delivery
   block (date, slot, postal code) and "Pagar $X" straight to Stripe. Cart, slot and postal code are saved in
   localStorage (`ondo_cart`, `ondo_cart_slot`, `ondo_cart_postal`). Cart thumbnails use `platedImage` (products.json).
-* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 28 codes. Checked live in the cart
+* Postal codes: `src/content/deliveryZones.json` → `allowedPostalCodes`, 26 codes (03120, which does not exist, and a duplicate 06030 removed 30 Oct 2026). Checked live in the cart
   (no pop-up before adding to cart any more) and again on the server. Out of zone: no checkout, a WhatsApp
   button, and an optional email; the postal code (and email) become a lead in Google Sheets. The subscription
   funnel keeps its own postal-code step.
