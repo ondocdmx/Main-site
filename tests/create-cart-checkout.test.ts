@@ -134,10 +134,9 @@ describe('api/create-cart-checkout', () => {
     expect(params().metadata.free_shipping_reason).toBe('minAmount');
   });
 
-  it('caja sola ($600): envío $0 por la caja; caja + 1 sopa ($725): $0', async () => {
+  it('caja sola ($600): envío $50; caja + 1 sopa ($725): $0', async () => {
     await call({ items: [{ id: BOX, quantity: 1 }] });
-    expect(shippingAmount()).toBe(0);
-    expect(params().metadata.free_shipping_reason).toBe('box');
+    expect(shippingAmount()).toBe(5000);
     create.mockClear();
     await call({ items: [{ id: BOX, quantity: 1 }, { id: VEG, quantity: 1 }] });
     expect(shippingAmount()).toBe(0);

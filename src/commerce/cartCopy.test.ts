@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COMMERCE } from './config.js';
-import { announcementText, blockerMessage, boxShippingNote, cartCountLabel, cartTitle, deliveryPromise, offerLine, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
+import { announcementText, blockerMessage, nudgeMessage, boxShippingNote, cartCountLabel, cartTitle, deliveryPromise, offerLine, checkoutBlocker, formatMXN, progressMessage } from './cartCopy.js';
 import { priceCart, type PricedProduct } from './priceCart.js';
 
 const veg: PricedProduct = { _id: 'veg', price: 125 };
@@ -38,7 +37,7 @@ describe('progressMessage', () => {
   });
   it('a 1 sopa del envío gratis', () => {
     expect(progressMessage(cart(5))).toBe('Agrega 1 sopa más y tu envío es gratis');
-    expect(progressMessage(cart(0, 1))).toBe('Ya tienes envío gratis. Te faltan 9 para 20% menos');
+    expect(progressMessage(cart(0, 1))).toBe('Agrega 1 sopa más y tu envío es gratis');
   });
   it('con envío gratis, camino al 20%', () => {
     expect(progressMessage(cart(8))).toBe('Ya tienes envío gratis. Te faltan 2 para 20% menos');
@@ -51,16 +50,22 @@ describe('progressMessage', () => {
   });
 });
 
-describe('boxShippingNote', () => {
-  it('la caja lleva envío gratis (boxShipsFree)', () => {
-    expect(boxShippingNote(60000)).toBe('Envío gratis');
-    expect(boxShippingNote(60000, 'en')).toBe('Free shipping');
+describe('nudgeMessage', () => {
+  it('envío gratis y 20%', () => {
+    expect(nudgeMessage(null)).toBe('');
+    expect(nudgeMessage({ type: 'freeShipping', count: 1 })).toBe('¡Agrega 1 sopa más y tu envío es gratis!');
+    expect(nudgeMessage({ type: 'bulk', count: 2 })).toBe('¡Agrega 2 más y tienes 20% de descuento!');
+    expect(nudgeMessage({ type: 'bulk', count: 1 }, 'en')).toBe('Add 1 more for 20% off!');
   });
-  it('con boxShipsFree apagado: a la caja de $600 le falta 1 sopa', () => {
-    const config = { ...COMMERCE, boxShipsFree: false };
-    expect(boxShippingNote(60000, 'es', config)).toBe('+ envío, o gratis si agregas 1 sopa');
-    expect(boxShippingNote(60000, 'en', config)).toBe('+ shipping, or free if you add 1 soup');
-    expect(boxShippingNote(80000, 'es', config)).toBe('Envío gratis');
+});
+
+describe('boxShippingNote', () => {
+  it('caja de $600: le falta 1 sopa para el envío gratis', () => {
+    expect(boxShippingNote(60000)).toBe('+ envío, o gratis si agregas 1 sopa');
+    expect(boxShippingNote(60000, 'en')).toBe('+ shipping, or free if you add 1 soup');
+  });
+  it('si la caja sola llega al mínimo, no hay nota', () => {
+    expect(boxShippingNote(80000)).toBe('');
   });
 });
 

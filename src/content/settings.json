@@ -312,7 +312,6 @@
   "instagramUrl": "https://instagram.com/ondo_cdmx",
   "showInstagram": true,
   "freeShippingMinAmount": 725,
-  "boxShipsFree": true,
   "welcomeCode": "ONDOFIRST",
   "welcomePercent": 10,
   "deliveryDays": [
@@ -351,8 +350,8 @@
   "oxxoExpiresAfterDays": 1,
   "reviewEmail": "ondocdmx@gmail.com",
   "boxBadge": {
-    "es": "Más pedida",
-    "en": "Most ordered"
+    "es": "Chef's picks",
+    "en": "Chef's picks"
   },
   "productHeating": {
     "es": "En olla (recomendado): 4–5 minutos desde congelada, revolviendo constantemente. También en microondas, pero nunca en la bolsa: pásala antes a un recipiente apto.",
@@ -459,8 +458,8 @@
     "en": "Build your box or let us pick the season’s favourites."
   },
   "homeStep2Title": {
-    "es": "Llegan congeladas el {dias}",
-    "en": "They arrive frozen on {dias}"
+    "es": "Llegan congeladas a tu casa",
+    "en": "They arrive frozen at your door"
   },
   "homeStep2Desc": {
     "es": "Elige tu horario. Las guardas en el congelador y listo.",
@@ -503,8 +502,8 @@
     "en": "Order whenever you like"
   },
   "homeWay1Desc": {
-    "es": "Sin compromiso. Envío gratis desde {envioGratis} o con la Caja de bienvenida; desde {minVolumen} sopas, además, {descuento}% de descuento automático.",
-    "en": "No commitment. Free shipping from {envioGratis} or with the Welcome box; from {minVolumen} soups, {descuento}% off automatically."
+    "es": "Sin compromiso. Envío gratis desde {envioGratis}; desde {minVolumen} sopas, además, {descuento}% de descuento automático.",
+    "en": "No commitment. Free shipping from {envioGratis}; from {minVolumen} soups, {descuento}% off automatically."
   },
   "homeWay1Link": {
     "es": "Ver el menú",
@@ -561,5 +560,9 @@
   "footerTagline": {
     "es": "Nutrición para un mundo acelerado. Sopas con alma, de temporada, hechas en Ciudad de México.",
     "en": "Nourishment for a rushed world. Soulful, seasonal soups made in Mexico City."
+  },
+  "shopClubText": {
+    "es": "¡Únete a nuestro soup-er club! Recibe sopa cada quincena o cada mes desde {porSopa} c/u con nuestra soup-scripción.",
+    "en": "Join our soup-er club! Get soups delivered every fortnight or monthly from {porSopa} each with our soup-scription."
   }
 }

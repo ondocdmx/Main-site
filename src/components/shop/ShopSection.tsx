@@ -1,13 +1,14 @@
 // Tienda: chips de filtro (una fila con scroll lateral), "Ordenar", la caja primero y la rejilla de sopas.
 // La home la usa recortada ("Las favoritas"): `limit` sopas, sin caja ni "Ordenar", con un enlace junto al título.
 import React, { useState } from 'react';
+import { Star } from 'lucide-react';
 import ProductCard, { type CardPrice } from './ProductCard';
 import BoxCard from './BoxCard';
 import { shopList, type ShopFilter, type SortKey } from './shopList';
 
 type Lang = 'es' | 'en';
 
-export default function ShopSection({ id = 'shop', products, filters, lang, resolveText, title, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen, onOpenFunnel, limit, showBox = true, showSort = true, action, headingLevel = 2, children }: {
+export default function ShopSection({ id = 'shop', products, filters, lang, resolveText, title, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen, onOpenFunnel, limit, showBox = true, showSort = true, allAsIcon = false, action, headingLevel = 2, children }: {
   id?: string;
   products: any[];
   filters: ShopFilter[];
@@ -25,6 +26,7 @@ export default function ShopSection({ id = 'shop', products, filters, lang, reso
   limit?: number; // máximo de sopas (la home muestra 6)
   showBox?: boolean;
   showSort?: boolean;
+  allAsIcon?: boolean; // el filtro "Todas" como estrella (home)
   action?: React.ReactNode; // junto al título (ej. "Ver las 13")
   headingLevel?: 1 | 2; // /tienda: h1
   children?: React.ReactNode; // lo que va debajo de la rejilla
@@ -71,11 +73,13 @@ export default function ShopSection({ id = 'shop', products, filters, lang, reso
                   type="button"
                   aria-pressed={active}
                   onClick={() => setFilterId(f.id)}
-                  className={`min-h-[44px] px-4 rounded-full whitespace-nowrap font-body font-semibold text-[15px] border-2 transition-colors ${
+                  className={`min-h-[44px] min-w-[44px] px-4 flex items-center justify-center rounded-full whitespace-nowrap font-body font-semibold text-[15px] border-2 transition-colors ${
                     active ? 'bg-brand-deep border-brand-deep text-brand-cream' : 'bg-brand-card border-brand-ink/20 text-brand-ink hover:border-brand-ink'
                   }`}
                 >
-                  {f.name[lang] || f.name.es}
+                  {allAsIcon && f.tags.length === 0
+                    ? <><Star className="w-5 h-5" fill="currentColor" aria-hidden="true" /><span className="sr-only">{f.name[lang] || f.name.es}</span></>
+                    : (f.name[lang] || f.name.es)}
                 </button>
               );
             })}

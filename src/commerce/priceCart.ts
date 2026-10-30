@@ -15,7 +15,7 @@ export interface CartItem {
 }
 
 export type DiscountType = 'bulk' | 'welcome' | null;
-export type FreeShippingReason = 'minAmount' | 'box' | null;
+export type FreeShippingReason = 'minAmount' | null;
 
 export interface PricedLine {
   productId: string;
@@ -87,11 +87,7 @@ export function priceCart(
   const discountAmount = lines.reduce((n, l) => n + l.lineDiscount, 0);
 
   // Envío gratis por monto, contado ANTES de descuentos: usar ONDOFIRST no quita el envío gratis.
-  // Con boxShipsFree, cualquier pedido con caja tampoco paga envío.
-  const freeShippingReason: FreeShippingReason =
-    itemCount > 0 && subtotal >= config.freeShippingMinAmount ? 'minAmount'
-    : boxCount > 0 && config.boxShipsFree ? 'box'
-    : null;
+  const freeShippingReason: FreeShippingReason = itemCount > 0 && subtotal >= config.freeShippingMinAmount ? 'minAmount' : null;
   const shipping = itemCount === 0 || freeShippingReason ? 0 : config.shippingFee;
 
   return {
@@ -105,7 +101,7 @@ export function priceCart(
     shipping,
     total: subtotal - discountAmount + shipping,
     freeShippingReason,
-    amountToFreeShipping: freeShippingReason ? 0 : Math.max(0, config.freeShippingMinAmount - subtotal),
+    amountToFreeShipping: Math.max(0, config.freeShippingMinAmount - subtotal),
     soupsToBulkDiscount: bulkOn ? Math.max(0, config.bulkDiscountMinItems - itemCount) : 0,
   };
 }
@@ -113,11 +109,12 @@ export function priceCart(
 export type CartNudge = { type: 'freeShipping' | 'bulk'; count: number } | null;
 
 // Aviso en la tienda cuando falta poco para un beneficio: envío gratis cuando cualquier sopa
-// cierra la diferencia (1 sopa de distancia); el 20% cuando falta 1 artículo.
+// cierra la diferencia (1 sopa de distancia); el 20% cuando faltan 1 o 2 artículos.
 export function cartNudge(pricing: CartPricing, config: CommerceConfig = COMMERCE): CartNudge {
   if (pricing.itemCount > 0 && pricing.amountToFreeShipping > 0 && pricing.amountToFreeShipping <= config.cheapestSoupPrice) {
     return { type: 'freeShipping', count: 1 };
   }
-  if (pricing.soupsToBulkDiscount === 1) return { type: 'bulk', count: 1 };
+  const toBulk = pricing.soupsToBulkDiscount;
+  if (pricing.itemCount > 0 && toBulk >= 1 && toBulk <= 2) return { type: 'bulk', count: toBulk };
   return null;
 }

@@ -1,5 +1,5 @@
 // Textos del carrito que dependen del resultado de priceCart(). Puros, para poder probarlos.
-import type { CartPricing } from './priceCart.js';
+import type { CartNudge, CartPricing } from './priceCart.js';
 import { COMMERCE } from './config.js';
 import { cutoffFor, formatDeliveryDate } from './delivery.js';
 
@@ -47,12 +47,21 @@ export function progressMessage(p: CartPricing, lang: Lang = 'es'): string {
   return `Ya tienes envío gratis. ${toBulk === 1 ? 'Te falta 1' : `Te faltan ${toBulk}`} para ${pct}% menos`;
 }
 
-// Etiqueta junto al precio de la caja: "Envío gratis" (boxShipsFree o si la caja sola llega al mínimo);
-// si no, "+ envío, o gratis si agregas 1 sopa".
-export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es', config = COMMERCE): string {
-  const gap = config.freeShippingMinAmount - boxPriceCents;
-  if (config.boxShipsFree || gap <= 0) return lang === 'es' ? 'Envío gratis' : 'Free shipping';
-  const n = Math.ceil(gap / config.cheapestSoupPrice);
+// Aviso "te falta poco" (tienda y aviso al agregar): "¡Agrega 1 sopa más y tu envío es gratis!"
+export function nudgeMessage(nudge: CartNudge, lang: Lang = 'es'): string {
+  if (!nudge) return '';
+  if (nudge.type === 'freeShipping') return lang === 'es' ? '¡Agrega 1 sopa más y tu envío es gratis!' : 'Add 1 more soup for free shipping!';
+  const pct = COMMERCE.bulkDiscountPercent;
+  return lang === 'es'
+    ? `¡Agrega ${nudge.count} más y tienes ${pct}% de descuento!`
+    : `Add ${nudge.count} more for ${pct}% off!`;
+}
+
+// Línea bajo el precio de la caja: "+ envío, o gratis si agregas 1 sopa". Vacío si la caja sola ya llega.
+export function boxShippingNote(boxPriceCents: number, lang: Lang = 'es'): string {
+  const gap = COMMERCE.freeShippingMinAmount - boxPriceCents;
+  if (gap <= 0) return '';
+  const n = Math.ceil(gap / COMMERCE.cheapestSoupPrice);
   return lang === 'es'
     ? `+ envío, o gratis si agregas ${n === 1 ? '1 sopa' : `${n} sopas`}`
     : `+ shipping, or free if you add ${n === 1 ? '1 soup' : `${n} soups`}`;

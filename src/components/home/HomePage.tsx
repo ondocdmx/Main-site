@@ -43,7 +43,7 @@ export const HERO_SIZES = '(min-width: 768px) 50vw, 100vw';
 
 export default function HomePage({
   lang, text, tokens, onNavigate, onOpenFunnel,
-  products, filters, catalogCount, resolveText, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen,
+  products, filters, resolveText, boxBadge, nudgeText, priceOf, quantityOf, onAdd, onRemove, onOpen,
   faq, testimonials,
 }: {
   lang: Lang;
@@ -53,7 +53,6 @@ export default function HomePage({
   onOpenFunnel: () => void;
   products: any[];
   filters: ShopFilter[];
-  catalogCount: number;
   resolveText: (v: any) => string;
   boxBadge: string;
   nudgeText: string;
@@ -88,10 +87,10 @@ export default function HomePage({
             <h1 id="hero-title" className="mt-3 font-title font-extrabold text-[44px] md:text-[64px] leading-[1.02] tracking-tight text-brand-ink">{text('homeTitle')}</h1>
             <p className="mt-4 font-body text-[18px] leading-relaxed text-brand-ink/90 max-w-xl">{text('homeSub')}</p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <a href="/tienda" onClick={go('/tienda')} className="min-h-[52px] px-8 flex items-center justify-center rounded-xl bg-brand-cta text-white font-title font-bold text-[18px]">
+              <a href="#empieza" onClick={go('/#empieza')} className="min-h-[52px] px-8 flex items-center justify-center rounded-xl bg-brand-cta text-white font-title font-bold text-[18px]">
                 {text('homeCtaPrimary')}
               </a>
-              <a href="#favoritas" onClick={go('/#favoritas')} className="min-h-[52px] px-8 flex items-center justify-center rounded-xl border-2 border-brand-ink text-brand-ink font-title font-bold text-[18px]">
+              <a href="/tienda" onClick={go('/tienda')} className="min-h-[52px] px-8 flex items-center justify-center rounded-xl border-2 border-brand-ink text-brand-ink font-title font-bold text-[18px]">
                 {text('homeCtaSecondary')}
               </a>
             </div>
@@ -127,7 +126,7 @@ export default function HomePage({
 
       {/* 5 · Empieza aquí: la caja */}
       {box && (
-        <section id="empieza" className="bg-brand-cream px-4 md:px-6 pt-12 md:pt-20" aria-labelledby="empieza-title">
+        <section id="empieza" className="bg-brand-cream px-4 md:px-6 pt-12 md:pt-20 scroll-mt-4 md:scroll-mt-8" aria-labelledby="empieza-title">
           <div className="max-w-7xl mx-auto">
             <h2 id="empieza-title" className="mb-4 font-body font-semibold text-[14px] tracking-[0.12em] uppercase text-brand-deep">{text('homeBoxKicker')}</h2>
             <BoxCard
@@ -163,7 +162,8 @@ export default function HomePage({
         limit={6}
         showBox={false}
         showSort={false}
-        action={<a href="/tienda" onClick={go('/tienda')} className={`${LINK} text-brand-ink`}>{es ? `Ver las ${catalogCount}` : `See all ${catalogCount}`}</a>}
+        allAsIcon
+        action={<a href="/tienda" onClick={go('/tienda')} className={`${LINK} md:text-[22px] text-brand-ink`}>{es ? 'Ver todas' : 'See all'}</a>}
       />
 
       {/* 7 · ¿Por qué congelada? */}

@@ -21,8 +21,8 @@
       "id": "envio",
       "pregunta": { "es": "¿Cuánto cuesta el envío?", "en": "How much is shipping?" },
       "respuesta": {
-        "es": "El envío cuesta {envio}. Es gratis si tu pedido suma {envioGratis} o más, o si incluye la Caja de bienvenida. Desde {minVolumen} sopas, además, tienes {descuento}% de descuento automático.",
-        "en": "Shipping is {envio}. It's free when your order adds up to {envioGratis} or more, or when it includes the Welcome box. From {minVolumen} soups you also get {descuento}% off automatically."
+        "es": "El envío cuesta {envio}. Es gratis si tu pedido suma {envioGratis} o más (por ejemplo, la Caja de bienvenida y 1 sopa). Desde {minVolumen} sopas, además, tienes {descuento}% de descuento automático.",
+        "en": "Shipping is {envio}. It's free when your order adds up to {envioGratis} or more (for example, the Welcome box plus 1 soup). From {minVolumen} soups you also get {descuento}% off automatically."
       }
     },
     {

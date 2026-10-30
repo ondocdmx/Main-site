@@ -12,7 +12,7 @@ import {
 import { priceCart, discountPercentFor, applyPercent, cartNudge } from './commerce/priceCart';
 import { COMMERCE, toCents } from './commerce/config';
 import { formatDeliveryDate, nextDeliveryDate } from './commerce/delivery';
-import { formatMXN } from './commerce/cartCopy';
+import { formatMXN, nudgeMessage } from './commerce/cartCopy';
 import type { CheckoutRequest, CheckoutResult } from './components/CartDrawer';
 import type { OrderSummary } from './components/OrderSuccess';
 import ShopSection from './components/shop/ShopSection';
@@ -31,7 +31,7 @@ import faqContent from './content/faq.json';
 import testimonialsContent from './content/testimonials.json';
 
 // Dónde se agregó al carrito (add_to_cart → add_location en GA4; ver docs/TRACKING.md).
-export type AddLocation = 'grid' | 'product_page' | 'completa_tu_caja';
+export type AddLocation = 'grid' | 'product_page' | 'completa_tu_caja' | 'carrito';
 
 // Próxima entrega (hora de Ciudad de México, corte en settings.json). El funnel la calcula al cargar la página;
 // el carrito la recalcula cada minuto.
@@ -599,11 +599,8 @@ export default function App() {
       ? { now: formatMXN(productUnitPrice(product)), before: formatMXN(toCents(product.price)), percent: pct }
       : { now: formatMXN(toCents(product.price)) };
   };
-  // Aviso "te falta poco" bajo las tarjetas y en el popup de producto.
-  const nudge = cartNudge(pricing);
-  const nudgeText = !nudge ? '' : nudge.type === 'freeShipping'
-    ? (lang === 'es' ? '¡Agrega 1 sopa más y tu envío es gratis!' : 'Add 1 more soup for free shipping!')
-    : (lang === 'es' ? `¡Añade 1 más para -${COMMERCE.bulkDiscountPercent}%!` : `Add 1 more for -${COMMERCE.bulkDiscountPercent}%!`);
+  // Aviso "te falta poco": sobre la rejilla y en el aviso que sale al agregar.
+  const nudgeText = nudgeMessage(cartNudge(pricing), lang);
   const handleCartCheckout = async ({ slot, postal, deliveryDate }: CheckoutRequest): Promise<CheckoutResult> => {
     const genericError = lang === 'es' ? 'No pudimos abrir el pago. Inténtalo de nuevo.' : "We couldn't open checkout. Please try again.";
     // begin_checkout + snapshot (value con descuento aplicado, sin envío)
@@ -643,15 +640,13 @@ export default function App() {
   const es = lang === 'es';
   const navLinks = [
     { href: SHOP_ROUTE, label: es ? 'Tienda' : 'Shop' },
-    { href: SOUPSCRIPTION_ROUTE, label: 'Soup-scripción' },
+    { href: SOUPSCRIPTION_ROUTE, label: es ? 'Soup-scripción' : 'Soup-scription' },
     { href: '/#preguntas', label: es ? 'Preguntas' : 'FAQ' },
   ];
   const footerLinks = [
     { href: '/#faq-zonas', label: es ? 'Envíos y zonas' : 'Delivery areas' },
     { href: '/#preguntas', label: es ? 'Preguntas' : 'FAQ' },
   ];
-  // "Ver las 13": lo que muestra /tienda sin filtro (la caja + las sopas)
-  const catalogCount = products.length;
   const quantityOf = (id: string) => cart.find(item => item.product._id === id)?.quantity || 0;
 
   return (
@@ -675,6 +670,8 @@ export default function App() {
         resolveText={resolveText}
         resolveImage={resolveImage}
         onChangeQuantity={updateQuantity}
+        products={products}
+        onAddProduct={(product: any) => addToCart(product, 'carrito')}
         onCheckout={handleCartCheckout}
       />
       </Suspense>
@@ -686,6 +683,7 @@ export default function App() {
         stamp={isCartOpen ? 0 : toastStamp}
         lang={lang}
         raised={pricing.itemCount > 0}
+        message={nudgeText}
         onOpenCart={() => { setToastStamp(0); openCart(); }}
         onDone={() => setToastStamp(0)}
       />
@@ -731,7 +729,7 @@ export default function App() {
             {/* Soup-scripción bajo la rejilla (se replantea en la fase 5) */}
             <div className="mt-12 pt-8 border-t border-brand-ink/15 flex flex-col md:flex-row items-center justify-between gap-4">
               <p className="font-body text-[17px] text-brand-ink text-center md:text-left">
-                {es ? `¿Sopa cada quincena o cada mes? Desde ${copyTokens.porSopa} por sopa con una soup-scripción.` : `Soup every two weeks or every month? From ${copyTokens.porSopa} per soup with a soup-scription.`}
+                {homeText('shopClubText')}
               </p>
               <a
                 href={SOUPSCRIPTION_ROUTE}
@@ -752,7 +750,6 @@ export default function App() {
           onOpenFunnel={openFunnel}
           products={products}
           filters={shopFilters}
-          catalogCount={catalogCount}
           resolveText={resolveText}
           boxBadge={getSettingText('boxBadge', '')}
           nudgeText={nudgeText}

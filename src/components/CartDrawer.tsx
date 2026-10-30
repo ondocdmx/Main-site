@@ -9,6 +9,7 @@ import { blockerMessage, cartTitle, checkoutBlocker, formatMXN, progressMessage 
 import { formatDeliveryDate, isPostalInZone, isValidPostal, nextDeliveryDate, normalizePostal } from '../commerce/delivery';
 import { productToItem, pushEcommerce } from '../analytics';
 import { SoupImage, imagesFor } from './shop/media';
+import { cartSuggestions } from './shop/shopList';
 
 type Lang = 'es' | 'en';
 export type CartLine = { product: any; quantity: number };
@@ -31,10 +32,12 @@ interface Props {
   resolveText: (v: any) => string;
   resolveImage: (v: any) => string;
   onChangeQuantity: (productId: string, delta: number) => void;
+  products: any[]; // catálogo, para "Agrega otra sopa"
+  onAddProduct: (product: any) => void;
   onCheckout: (req: CheckoutRequest) => Promise<CheckoutResult>;
 }
 
-export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, lang, resolveText, resolveImage, onChangeQuantity, onCheckout }: Props) {
+export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, lang, resolveText, resolveImage, onChangeQuantity, products, onAddProduct, onCheckout }: Props) {
   const es = lang === 'es';
   const [slot, setSlot] = useState<string | null>(() => {
     const saved = readStore(SLOT_KEY);
@@ -123,6 +126,11 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
     : bulkOn ? `${COMMERCE.bulkDiscountMinItems} ${es ? 'sopas' : 'soups'} · ${COMMERCE.bulkDiscountPercent}% ${es ? 'menos' : 'off'}` : '';
   const dateText = formatDeliveryDate(deliveryDate, lang);
 
+  // "Agrega otra sopa": regla en shopList.ts (cartSuggestions)
+  const suggestionsShown = useRef(false);
+  const suggestions = cartSuggestions(products, cart.map(l => l.product._id), suggestionsShown.current);
+  suggestionsShown.current = suggestions.show;
+
   return (
     <>
       {isOpen && <div className="fixed inset-0 bg-brand-ink/40 z-40 backdrop-blur-sm" onClick={onClose} />}
@@ -179,7 +187,7 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
-                        <h3 className="font-title font-bold text-[16px] leading-tight">{name}</h3>
+                        <h3 className="font-title font-bold text-[16px] leading-tight first-letter:uppercase">{name}</h3>
                         <div className="text-right shrink-0">
                           {line?.lineDiscount ? (
                             <span className="block font-body text-[12px] text-brand-ink/60 line-through">{formatMXN(line.lineSubtotal)}</span>
@@ -201,6 +209,32 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
                   </div>
                 );
               })}
+
+              {/* Agrega otra sopa: un toque = 1 al carrito */}
+              {suggestions.show && (
+                <section className="mt-2" aria-labelledby="cart-more-title">
+                  <h3 id="cart-more-title" className="font-title font-bold text-[16px] mb-2">{es ? 'Agrega otra sopa' : 'Add another soup'}</h3>
+                  <ul className="-mx-4 px-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none]">
+                    {suggestions.items.map(p => {
+                      const title = resolveText(p.title);
+                      const name = title.charAt(0).toUpperCase() + title.slice(1);
+                      return (
+                        <li key={p._id} className="shrink-0 w-20">
+                          <button type="button" onClick={() => onAddProduct(p)} aria-label={es ? `Agregar ${name}` : `Add ${name}`} className="w-20 flex flex-col items-center gap-1 text-center">
+                            <span className="relative block">
+                              <SoupImage image={imagesFor(p.slug).plated} alt="" sizes="80px" className="w-20 h-20 rounded-xl bg-brand-card" />
+                              <span aria-hidden="true" className="absolute top-1 right-1 w-6 h-6 rounded-full bg-brand-deep text-white flex items-center justify-center shadow">
+                                <Plus className="w-4 h-4" />
+                              </span>
+                            </span>
+                            <span className="font-body font-semibold text-[13px] leading-tight text-brand-ink line-clamp-2">{name}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
+              )}
 
               {/* Entrega */}
               <section className="mt-3" aria-labelledby="cart-delivery-title">

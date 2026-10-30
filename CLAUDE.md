@@ -72,11 +72,13 @@ Where things live:
   The browser sends only product `_id`s and quantities; the server looks up prices in products.json.
 * Shipping: `shippingPrice` ($50) in `settings.json`, sent to Stripe as a shipping option (no Price ID since Phase 1.2).
   Free when the cart subtotal before discounts reaches `freeShippingMinAmount` ($725, owner decision 28 Oct 2026):
-  6 veggie soups, 5 meat soups, or the box + 1 soup. Any order with the box ships free too (owner, 30 Oct 2026:
-  `boxShipsFree: true` in settings.json, read by `priceCart()`); its card and page say "Envío gratis".
-  The free-shipping zone is not checked on the server yet.
+  6 veggie soups, 5 meat soups, or the box + 1 soup. The box alone pays shipping (owner, confirmed 30 Oct 2026);
+  its card and page say "+ envío, o gratis si agregas 1 sopa". The free-shipping zone is not checked on the server yet.
+  "Te falta poco" prompts (`cartNudge()` + `nudgeMessage()`): 1 soup from free shipping, or 1–2 items from the 20%;
+  shown above the grid and in the "Agregada" toast. The cart suggests up to 5 soups not yet in it (tap = +1) while it
+  has fewer than 4 different soups, until it has 5 (`cartSuggestions()` in `src/components/shop/shopList.ts`).
 * No pickup (owner decision 28 Oct 2026): Ondo does not do pickups, and the site has no pickup option.
-  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount`, `box` or empty).
+  Orders are saved with `delivery_type: home_delivery` and `free_shipping_reason` (`minAmount` or empty).
 * Discounts: one volume tier, `cartDiscount2*` in `settings.json`: 10+ items in the cart → 20%. The server
   creates the Stripe coupon itself (`api/_lib/catalog.ts`, id `ondo_bulk_20_<hash>`) for every individual
   soup, never the box (shipping is never discounted: it's a shipping option). A new soup or a new % gives a
@@ -141,7 +143,7 @@ Do not assume any of this exists, and do not refactor toward it unless Omar asks
 
 Rules:
 
-* Caja de bienvenida (5-soup box): $600 MXN with free shipping (owner, 30 Oct 2026; replaces the 28 Oct "box pays shipping"). Built: `boxShipsFree`.
+* Caja de bienvenida (5-soup box): $600 MXN + shipping (owner, 28 Oct 2026, confirmed 30 Oct: the box alone does NOT ship free).
 * Shipping: $50 MXN. Free when the subtotal before discounts is $725 or more (box + 1 soup, 6 veggie or
   5 meat soups). The shop shows "free shipping" hints when one more soup would get there.
 * 10+ items: 20% off AND free shipping. The box counts as ONE item toward the 10, never as 5.

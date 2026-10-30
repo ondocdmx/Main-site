@@ -23,27 +23,31 @@ export function StickyCartBar({ pricing, lang, onOpenCart }: { pricing: CartPric
   );
 }
 
-// `stamp` cambia en cada agregado (0 = cerrado), así que cada toque reinicia los 3 s.
-export function AddedToast({ stamp, lang, onOpenCart, onDone, raised }: {
-  stamp: number; lang: Lang; onOpenCart: () => void; onDone: () => void; raised: boolean;
+// `stamp` cambia en cada agregado (0 = cerrado), así que cada toque reinicia el tiempo.
+// `message`: el aviso "te falta poco" (envío gratis o 20%), si lo hay; entonces dura un poco más.
+export function AddedToast({ stamp, lang, onOpenCart, onDone, raised, message = '' }: {
+  stamp: number; lang: Lang; onOpenCart: () => void; onDone: () => void; raised: boolean; message?: string;
 }) {
   const open = stamp > 0;
   useEffect(() => {
     if (!stamp) return;
-    const id = setTimeout(onDone, 3000);
+    const id = setTimeout(onDone, message ? 4500 : 3000);
     return () => clearTimeout(id);
   }, [stamp]);
   const es = lang === 'es';
   return (
-    <div aria-live="polite" className={`fixed left-1/2 -translate-x-1/2 z-50 ${raised ? 'bottom-24 md:bottom-6' : 'bottom-6'}`}>
+    <div aria-live="polite" className={`fixed left-1/2 -translate-x-1/2 z-50 w-max max-w-[calc(100vw-32px)] ${raised ? 'bottom-24 md:bottom-6' : 'bottom-6'}`}>
       {open && (
-        <div className="flex items-center gap-3 bg-brand-ink text-brand-cream rounded-full pl-4 pr-2 py-1.5 shadow-lg font-body text-[15px] whitespace-nowrap">
-          <Check className="w-4 h-4" aria-hidden="true" />
-          <span>{es ? 'Agregada' : 'Added'}</span>
-          <span aria-hidden="true">·</span>
-          <button type="button" onClick={onOpenCart} className="min-h-[44px] px-2 font-semibold underline underline-offset-4">
-            {es ? 'Ver carrito' : 'View cart'}
-          </button>
+        <div className="bg-brand-ink text-brand-cream rounded-2xl pl-4 pr-2 py-1.5 shadow-lg font-body text-[15px]">
+          {message && <p className="pt-1.5 pr-2 font-semibold text-brand-light-orange">{message}</p>}
+          <div className="flex items-center gap-3 whitespace-nowrap">
+            <Check className="w-4 h-4" aria-hidden="true" />
+            <span>{es ? 'Agregada' : 'Added'}</span>
+            <span aria-hidden="true">·</span>
+            <button type="button" onClick={onOpenCart} className="min-h-[44px] px-2 font-semibold underline underline-offset-4">
+              {es ? 'Ver carrito' : 'View cart'}
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { shopList, type ShopFilter } from './shopList.js';
+import { cartSuggestions, shopList, type ShopFilter } from './shopList.js';
 import products from '../../content/products.json' with { type: 'json' };
 import settings from '../../content/settings.json' with { type: 'json' };
 
@@ -60,5 +60,30 @@ describe('caja', () => {
       expect(soup, slug).toBeTruthy();
       expect(soup.allergens?.es).toBeTruthy();
     }
+  });
+});
+
+describe('cartSuggestions (carrito: agrega otra sopa)', () => {
+  const soup = (id: string, featuredRank: number, extra = {}) => ({ _id: id, price: 125, featuredRank, ...extra });
+  const catalog = [
+    soup('box', 0, { isBox: true }), soup('a', 1), soup('b', 2), soup('c', 3), soup('d', 4), soup('e', 5),
+    soup('f', 6), soup('g', 7), soup('agotada', 8, { soldOut: true }), soup('solo-subs', 9, { onlySubscriptions: true }),
+  ];
+  it('carrito vacío: no se muestra', () => {
+    expect(cartSuggestions(catalog, [], false).show).toBe(false);
+  });
+  it('sugiere 5 que no están en el carrito, en orden destacadas, sin caja, agotadas ni solo suscriptores', () => {
+    const r = cartSuggestions(catalog, ['box', 'b'], false);
+    expect(r.show).toBe(true);
+    expect(r.items.map(p => p._id)).toEqual(['a', 'c', 'd', 'e', 'f']);
+  });
+  it('aparece con menos de 4 sopas distintas, sigue con 4 si ya se veía y se va con 5', () => {
+    expect(cartSuggestions(catalog, ['a', 'b', 'c'], false).show).toBe(true);
+    expect(cartSuggestions(catalog, ['a', 'b', 'c', 'd'], false).show).toBe(false);
+    expect(cartSuggestions(catalog, ['a', 'b', 'c', 'd'], true).show).toBe(true);
+    expect(cartSuggestions(catalog, ['a', 'b', 'c', 'd', 'e'], true).show).toBe(false);
+  });
+  it('la caja no cuenta como sopa distinta', () => {
+    expect(cartSuggestions(catalog, ['box', 'a', 'b', 'c'], false).show).toBe(true);
   });
 });

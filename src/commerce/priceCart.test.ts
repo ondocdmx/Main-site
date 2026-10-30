@@ -17,7 +17,6 @@ describe('config (settings.json)', () => {
     expect(COMMERCE.bulkDiscountPercent).toBe(20);
     expect(COMMERCE.welcomeCode).toBe('ONDOFIRST');
     expect(COMMERCE.welcomePercent).toBe(10);
-    expect(COMMERCE.boxShipsFree).toBe(true);
   });
 });
 
@@ -67,14 +66,8 @@ describe('priceCart: envío gratis desde $725 (antes de descuentos)', () => {
     expect(priceCart([soups(6), soups(6, meat)])).toMatchObject({ subtotal: 165000, discountType: 'bulk', discountAmount: 33000, shipping: 0, total: 132000 });
   });
 
-  it('caja sola ($600): envío gratis por la caja', () => {
-    expect(priceCart([boxes()])).toMatchObject({ soupCount: 0, itemCount: 1, subtotal: 60000, shipping: 0, total: 60000, freeShippingReason: 'box', amountToFreeShipping: 0 });
-  });
-
-  it('caja sola con boxShipsFree apagado: paga envío, faltan $125', () => {
-    const config = { ...COMMERCE, boxShipsFree: false };
-    expect(priceCart([boxes()], {}, config)).toMatchObject({ shipping: 5000, total: 65000, freeShippingReason: null, amountToFreeShipping: 12500 });
-    expect(cartNudge(priceCart([boxes()], {}, config), config)).toEqual({ type: 'freeShipping', count: 1 });
+  it('caja sola ($600): paga envío, faltan $125', () => {
+    expect(priceCart([boxes()])).toMatchObject({ soupCount: 0, itemCount: 1, subtotal: 60000, shipping: 5000, total: 65000, freeShippingReason: null, amountToFreeShipping: 12500 });
   });
 
   it('caja + 1 vegetariana ($725): envío gratis', () => {
@@ -112,8 +105,8 @@ describe('priceCart: ONDOFIRST (10%)', () => {
     expect(priceCart([soups(10)], { welcomeCode: 'ONDOFIRST' })).toMatchObject({ discountType: 'bulk', discountPercent: 20, discountAmount: 25000, total: 100000 });
   });
 
-  it('caja sola: 10% a la caja y envío gratis (no es un descuento)', () => {
-    expect(priceCart([boxes()], { welcomeCode: 'ondofirst ' })).toMatchObject({ discountType: 'welcome', discountAmount: 6000, shipping: 0, total: 54000 });
+  it('caja sola: 10% a la caja, envío se cobra', () => {
+    expect(priceCart([boxes()], { welcomeCode: 'ondofirst ' })).toMatchObject({ discountType: 'welcome', discountAmount: 6000, shipping: 5000, total: 59000 });
   });
 
   it('código desconocido: no hace nada', () => {
@@ -135,10 +128,12 @@ describe('cartNudge (aviso en la tienda: a 1 sopa del envío gratis)', () => {
   it('avisa cuando cualquier sopa cierra la diferencia', () => {
     expect(cartNudge(priceCart([soups(5)]))).toEqual({ type: 'freeShipping', count: 1 }); // faltan $100
     expect(cartNudge(priceCart([soups(4, meat)]))).toEqual({ type: 'freeShipping', count: 1 }); // faltan $125
-    expect(cartNudge(priceCart([boxes()]))).toBeNull(); // caja sola: ya tiene envío gratis
+    expect(cartNudge(priceCart([boxes()]))).toEqual({ type: 'freeShipping', count: 1 }); // caja sola
   });
-  it('con envío gratis: sin aviso hasta que falta 1 para el 20%', () => {
+  it('con envío gratis: sin aviso hasta que faltan 2 para el 20%', () => {
     expect(cartNudge(priceCart([soups(6)]))).toBeNull();
+    expect(cartNudge(priceCart([soups(7)]))).toBeNull();
+    expect(cartNudge(priceCart([soups(8)]))).toEqual({ type: 'bulk', count: 2 });
     expect(cartNudge(priceCart([soups(9)]))).toEqual({ type: 'bulk', count: 1 });
   });
 });

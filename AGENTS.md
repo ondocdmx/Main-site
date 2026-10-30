@@ -147,7 +147,7 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
   `npm run images` (corre solo antes de dev/build) genera las versiones webp cuadradas y
   `src/content/productImages.json`, que es lo que leen tienda y ficha. No editar ese JSON a mano.
 - Textos comunes de la ficha en `settings.json`: `productHeating`, `productStorage`, `boxBadge`.
-- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Con `boxShipsFree` (settings.json), el pedido con caja no paga envío.
+- `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Sola paga envío.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.
 

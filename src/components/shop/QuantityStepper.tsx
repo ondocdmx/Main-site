@@ -18,7 +18,7 @@ export default function QuantityStepper({ quantity, onAdd, onRemove, lang, name,
   const base = 'min-h-[44px] w-full rounded-xl font-title font-bold text-[16px] transition-colors';
   if (quantity === 0) {
     const look = tone === 'cta'
-      ? 'bg-brand-cta text-white hover:bg-brand-deep'
+      ? 'bg-brand-cta text-white hover:bg-[#A8451A]'
       : tone === 'dark'
         ? 'bg-brand-cream text-brand-ink hover:bg-white'
         : 'border-2 border-brand-ink text-brand-ink bg-transparent hover:bg-brand-ink hover:text-brand-card';
