@@ -50,3 +50,15 @@ describe('shopList', () => {
     for (const f of filters) for (const t of f.tags) expect(tags).toContain(t);
   });
 });
+
+describe('caja', () => {
+  it('cada sopa de boxContents existe y tiene alérgenos propios', () => {
+    const box = all.find(p => p.isBox);
+    expect(box.boxContents).toHaveLength(box.soupsInBox);
+    for (const slug of box.boxContents) {
+      const soup = all.find(p => p.slug === slug);
+      expect(soup, slug).toBeTruthy();
+      expect(soup.allergens?.es).toBeTruthy();
+    }
+  });
+});

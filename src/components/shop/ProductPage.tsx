@@ -217,7 +217,25 @@ export default function ProductPage({ product, products, lang, resolveText, heat
             <div className="mt-6 border-t border-brand-ink/15">
               <Row title={es ? 'Ingredientes y alérgenos' : 'Ingredients and allergens'}>
                 {product.ingredients && <p>{resolveText(product.ingredients).trim()}</p>}
-                <p><strong className="font-semibold">{es ? 'Alérgenos' : 'Allergens'}:</strong> {resolveText(product.allergens) || (es ? '[ALÉRGENOS]' : '[ALLERGENS]')}</p>
+                {product.isBox && Array.isArray(product.boxContents) ? (
+                  // Caja: los alérgenos de cada sopa, leídos de esa sopa (así no se desincronizan).
+                  <>
+                    <p><strong className="font-semibold">{es ? 'Alérgenos por sopa' : 'Allergens by soup'}:</strong></p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {product.boxContents.map((slug: string) => {
+                        const soup = products.find(p => p.slug === slug);
+                        if (!soup) return null;
+                        return (
+                          <li key={slug}>
+                            <span className="first-letter:uppercase inline-block">{resolveText(soup.title)}</span>: {resolveText(soup.allergens) || (es ? '[ALÉRGENOS]' : '[ALLERGENS]')}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                ) : (
+                  <p><strong className="font-semibold">{es ? 'Alérgenos' : 'Allergens'}:</strong> {resolveText(product.allergens) || (es ? '[ALÉRGENOS]' : '[ALLERGENS]')}</p>
+                )}
               </Row>
               <Row title={es ? 'Cómo calentarla' : 'How to heat it'}><p>{heatingText}</p></Row>
               <Row title={es ? 'Conservación' : 'Storage'}><p>{storageText}</p></Row>

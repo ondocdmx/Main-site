@@ -1,11 +1,14 @@
 [
   {
     "_id": "8ceb6e4e-f0ba-4c24-a9f4-32899bd3ebd2",
-    "allergens": {
-      "es": "[ALÉRGENOS DE LA CAJA]",
-      "en": "[BOX ALLERGENS]"
-    },
     "bgColor": null,
+    "boxContents": [
+      "mega-verde",
+      "coliflor-avellanada",
+      "calabaza-de-castilla-dahl",
+      "garbanzo-y-rabo",
+      "salchispatzle"
+    ],
     "description": {
       "en": "The easiest way to meet Ondo. Five soups that cover everything we do: Mega Verde for the days you want to feel good, Coliflor Avellanada for effortless luxury, Pumpkin Dahl to show off, Garbanzo y Rabo for real hunger, and Salchispätzle because comfort doesn't ask permission. Stock the freezer and you're set for the week.",
       "es": "La forma más fácil de conocer Ondo. Cinco sopas que cubren todo lo que hacemos: Mega Verde para los días que quieres sentirte bien, Coliflor Avellanada cuando quieres lujo sin esfuerzo, Calabaza Dahl para presumir, Garbanzo y Rabo para el hambre de verdad, y Salchispätzle porque el confort no pide permiso. Llena el congelador y estás cubierto toda la semana."
