@@ -52,7 +52,9 @@ las funciones de `api/`).
 
 - Es una SPA con **routing por pathname** (sin react-router). Ver constante
   `SOUPSCRIPTION_ROUTE = '/soupscripciones'`:
-  - `/sopas/:slug` → ficha de producto (modal)
+  - `/sopas/:slug` → ficha de producto (página propia, `src/components/shop/ProductPage.tsx`; la flecha
+    vuelve a la tienda en el mismo scroll). El build escribe `dist/sopas/<slug>/index.html` con título,
+    descripción y og:image de la sopa (`src/seo.ts`, plugin en `vite.config.ts`) para Google y WhatsApp.
   - `/sopas` → redirige a `/#shop` y hace scroll a la tienda (espera a que
     termine `isLoading`; la pantalla de carga dura mínimo 1s por diseño)
   - `/soupscripciones` → abre el funnel de suscripción sobre la home
@@ -62,6 +64,7 @@ las funciones de `api/`).
   `getSettingText(...)`; si una clave no existe se usa el default (muchos
   textos tienen default en el objeto `t` de `App.tsx`).
 - Textos bilingües: objetos `{es, en}`; resolver con `resolveText()`.
+- Tienda y ficha: `src/components/shop/` (tarjetas, filtros, caja, barra del carrito, ficha).
 - Imágenes: rutas en texto (`/images/cms/x.webp`), resueltas con
   `resolveImage()`.
 - Pantalla de carga de ~1 s a propósito (diseño); el scroll de `/sopas`
@@ -128,6 +131,17 @@ hero/pasos; < 300 KB). Al añadir fotos, optimizarlas igual.
 - `onlySubscriptions` → solo se vende vía suscripción (overlay naranja).
 - `excludeFromFunnel` → no aparece en el selector de sopas del plan (boxes).
 - `platedImage` → foto de la sopa servida (miniatura del carrito). Al añadir una sopa, rellenarlo.
+- `descriptor` (3 palabras en femenino, "especiada · vigorizante · sedosa"), `size` ("500 ml"), `servings`
+  ("1–2 porciones"), `allergens` → `{es, en}`. `ingredients` y `allergens` salen del catálogo de sopas
+  del dueño (docx, oct 2026); si falta un dato, placeholder visible `[ALÉRGENOS]`.
+- `featuredRank` → orden "Destacadas" de la tienda (0 = primero).
+- Tags: `tags.json` tiene la etiqueta (`name`) y el tono del chip (`tone`); los filtros de la tienda
+  están en `settings.json` → `shopFilters` (cada filtro = lista de tags). Nuevo filtro = nueva entrada.
+- Fotos: el dueño sube `public/images/soups/<slug>-plated|pack|ingredients|gallery-N.jpg` (ver README ahí).
+- Tags de sabor: `picante` = chile (filtro Picante); `especiada` = jengibre/especias, no apta para niños chicos (solo chip).
+  `npm run images` (corre solo antes de dev/build) genera las versiones webp cuadradas y
+  `src/content/productImages.json`, que es lo que leen tienda y ficha. No editar ese JSON a mano.
+- Textos comunes de la ficha en `settings.json`: `productHeating`, `productStorage`, `boxBadge`.
 - `isBox` → la caja: cuenta como 1 artículo para el 20% pero nunca lo recibe. Sola paga envío.
 - `soldOut` → overlay AGOTADO, bloquea compra.
 - `purchaseType` → single/subscription; el carrito no permite mezclar.

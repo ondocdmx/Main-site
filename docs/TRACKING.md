@@ -16,8 +16,9 @@ Implementación completa en `src/analytics.ts`. Todos los eventos se envían a
 
 | Evento | Cuándo se dispara | Parámetros |
 |---|---|---|
+| `select_item` | Toque en una tarjeta de la tienda (abre la ficha) | `ecommerce.items[]` con `index` (posición; la caja es 0) e `item_list_name: "tienda"` (o `"completa_tu_caja"` desde el carrusel de la ficha) |
 | `view_item` | Se abre la ficha de un producto (URL `/sopas/{slug}`, desde el grid o carga directa) | `ecommerce.items[]`, `value`, `currency` |
-| `add_to_cart` | Se añade una unidad al carrito (grid o ficha) | ídem |
+| `add_to_cart` | Se añade una unidad al carrito ("Agregar" o el + del contador) | ídem + `ecommerce.add_location`: `grid` (tienda), `product_page` (ficha), `completa_tu_caja` (carrusel de la ficha) |
 | `view_cart` | Se abre el panel del carrito (con items) | ídem |
 | `add_shipping_info` | En el carrito ya hay franja elegida y código postal dentro de zona (una vez por combinación) | ídem + `shipping_tier` (id de la franja) |
 | `begin_checkout` | Se inicia el pago en Stripe: carrito completo o plan de suscripción | ídem (+ `value` ya con descuento aplicado, sin envío) |

@@ -348,5 +348,69 @@
   ],
   "oxxoEnabled": false,
   "oxxoExpiresAfterDays": 1,
-  "reviewEmail": "ondocdmx@gmail.com"
+  "reviewEmail": "ondocdmx@gmail.com",
+  "boxBadge": {
+    "en": "Founder picks",
+    "es": "Founder picks"
+  },
+  "productHeating": {
+    "es": "En olla (recomendado): [TIEMPO DE CALENTADO]. También en microondas, pero nunca en la bolsa: pásala antes a un recipiente apto.",
+    "en": "In a pot (recommended): [HEATING TIME]. The microwave works too, but never in the pouch: move it to a microwave-safe container first."
+  },
+  "productStorage": {
+    "es": "Congelada dura hasta 3 meses. [UNA VEZ DESCONGELADA: X DÍAS EN REFRIGERADOR]",
+    "en": "Keeps up to 3 months frozen. [ONCE THAWED: X DAYS IN THE FRIDGE]"
+  },
+  "shopFilters": [
+    {
+      "id": "todas",
+      "tags": [],
+      "name": {
+        "es": "Todas",
+        "en": "All"
+      }
+    },
+    {
+      "id": "vegana",
+      "tags": [
+        "vegano"
+      ],
+      "name": {
+        "es": "Vegana",
+        "en": "Vegan"
+      }
+    },
+    {
+      "id": "vegetariana",
+      "tags": [
+        "vegetariano",
+        "vegano"
+      ],
+      "name": {
+        "es": "Vegetariana",
+        "en": "Vegetarian"
+      }
+    },
+    {
+      "id": "proteina-animal",
+      "tags": [
+        "carne",
+        "pescado"
+      ],
+      "name": {
+        "es": "Proteína Animal",
+        "en": "Animal protein"
+      }
+    },
+    {
+      "id": "picante",
+      "tags": [
+        "picante"
+      ],
+      "name": {
+        "es": "Picante",
+        "en": "Spicy"
+      }
+    }
+  ]
 }

@@ -7,6 +7,7 @@ import { COMMERCE } from '../commerce/config';
 import { blockerMessage, cartTitle, checkoutBlocker, formatMXN, progressMessage } from '../commerce/cartCopy';
 import { formatDeliveryDate, isPostalInZone, isValidPostal, nextDeliveryDate, normalizePostal } from '../commerce/delivery';
 import { productToItem, pushEcommerce } from '../analytics';
+import { SoupImage, imagesFor } from './shop/media';
 
 type Lang = 'es' | 'en';
 export type CartLine = { product: any; quantity: number };
@@ -166,11 +167,16 @@ export default function CartDrawer({ isOpen, onClose, onBrowse, cart, pricing, l
                 const tagline = (resolveText(product.tagline) || '').split('|')[0].replace(/\*.*/, '').trim();
                 return (
                   <div key={product._id} className="flex gap-3 p-3 rounded-2xl bg-brand-card">
-                    <img
-                      src={resolveImage(product.platedImage || product.image)}
-                      alt={name}
-                      className="w-20 h-20 rounded-xl object-cover shrink-0 bg-brand-cream"
-                    />
+                    {/* Misma foto que la tienda (public/images/soups, ver scripts/build-images.mjs) */}
+                    {imagesFor(product.slug).plated ? (
+                      <SoupImage image={imagesFor(product.slug).plated} alt={name} sizes="80px" className="w-20 h-20 rounded-xl shrink-0 bg-brand-cream" />
+                    ) : (
+                      <img
+                        src={resolveImage(product.platedImage || product.image)}
+                        alt={name}
+                        className="w-20 h-20 rounded-xl object-cover shrink-0 bg-brand-cream"
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between gap-2">
                         <h3 className="font-title font-bold text-[16px] leading-tight">{name}</h3>

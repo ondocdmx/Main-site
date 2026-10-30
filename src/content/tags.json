@@ -5,51 +5,55 @@
     "icon": "🥦",
     "name": {
       "en": "Vegetarian",
-      "es": "Vegetariano"
+      "es": "Vegetariana"
     },
     "order": 1,
     "slug": {
       "current": "vegetariano"
-    }
+    },
+    "tone": "butter"
   },
   {
     "_id": "HKnJcdg5mBoLDonMNgZ9Gu",
     "color": "bg-ondo-beige",
     "icon": "🍖",
     "name": {
-      "en": "meat",
-      "es": "carne"
+      "en": "Meat",
+      "es": "Carne"
     },
     "order": 2,
     "slug": {
       "current": "carne"
-    }
+    },
+    "tone": "clay"
   },
   {
     "_id": "pescadoTagOndo2026Oct22",
     "color": "bg-sky-700",
     "icon": "🐟",
     "name": {
-      "en": "fish",
-      "es": "pescado"
+      "en": "Fish",
+      "es": "Pescado"
     },
     "order": 3,
     "slug": {
       "current": "pescado"
-    }
+    },
+    "tone": "sky"
   },
   {
     "_id": "HKnJcdg5mBoLDonMNgZ9Q4",
     "color": "bg-ondo-orange",
     "icon": "🌶️",
     "name": {
-      "en": "spicy",
-      "es": "picante\n"
+      "en": "Spicy",
+      "es": "Picante"
     },
     "order": 4,
     "slug": {
       "current": "picante"
-    }
+    },
+    "tone": "spice"
   },
   {
     "_id": "mxAS2Q3l09qdFj5vZIYCTe",
@@ -57,11 +61,26 @@
     "icon": "🌿",
     "name": {
       "en": "Vegan",
-      "es": "Vegano"
+      "es": "Vegana"
     },
     "order": 4,
     "slug": {
       "current": "vegano"
-    }
+    },
+    "tone": "leaf"
+  },
+  {
+    "_id": "ondo-tag-especiada",
+    "color": "bg-ondo-orange",
+    "icon": "",
+    "name": {
+      "en": "Spiced",
+      "es": "Especiada"
+    },
+    "order": 5,
+    "slug": {
+      "current": "especiada"
+    },
+    "tone": "plum"
   }
 ]

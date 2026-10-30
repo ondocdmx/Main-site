@@ -64,3 +64,9 @@ export function isPostalInZone(cp: string, config: CommerceConfig = COMMERCE): b
   const zone = config.allowedPostalCodes.map(c => c.trim());
   return zone.length === 0 || zone.includes(cp);
 }
+
+// Día y hora del corte para una entrega: { day: 'domingo', time: '23:59' } (lunes con corte 1 día antes).
+export function cutoffFor(iso: string, lang: 'es' | 'en' = 'es', config: CommerceConfig = COMMERCE): { day: string; time: string } {
+  const d = new Date(fromIso(iso).getTime() - config.orderCutoff.daysBefore * DAY_MS);
+  return { day: (lang === 'es' ? DAYS_ES : DAYS_EN)[d.getUTCDay()], time: config.orderCutoff.time };
+}

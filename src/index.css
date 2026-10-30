@@ -91,6 +91,16 @@
   --color-brand-deep: #2E4419;
   --color-brand-mid: #3E5A22;
   --color-brand-cta: #C2531A;
+  --color-brand-orange: #E8711F;
+  --color-brand-light-orange: #F7A35C;
+
+  /* Chips de tags (tags.json → tone): fondo claro + texto brand-ink (contraste ≥ 10:1). */
+  --color-chip-leaf: #DCE8C4;
+  --color-chip-butter: #F3E7B5;
+  --color-chip-clay: #F3D3C2;
+  --color-chip-sky: #D5E5EE;
+  --color-chip-spice: #FAD2B0;
+  --color-chip-plum: #E6DDF0;
 
   --animate-marquee: marquee 25s linear infinite;
 }
