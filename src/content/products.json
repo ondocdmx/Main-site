@@ -334,8 +334,8 @@
   {
     "_id": "mxAS2Q3l09qdFj5vZIYDcW",
     "allergens": {
-      "es": "Lácteos (mantequilla), avellanas",
-      "en": "Dairy (butter), hazelnuts"
+      "es": "Lácteos (mantequilla, crema), avellanas",
+      "en": "Dairy (butter, cream), hazelnuts"
     },
     "bgColor": "bg-stone-100",
     "description": {
@@ -355,8 +355,8 @@
       "/images/cms/coliflor-avellanada-images-2.webp"
     ],
     "ingredients": {
-      "en": "Cauliflower, roasted hazelnuts, brown butter",
-      "es": "Coliflor, avellanas tostadas, mantequilla avellanada"
+      "en": "Cauliflower, cream, roasted hazelnuts, brown butter",
+      "es": "Coliflor, crema, avellanas tostadas, mantequilla avellanada"
     },
     "onlySubscriptions": null,
     "platedImage": "/images/cms/coliflor-avellanada-hoverimage.webp",

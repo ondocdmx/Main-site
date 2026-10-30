@@ -354,12 +354,12 @@
     "es": "Founder picks"
   },
   "productHeating": {
-    "es": "En olla (recomendado): 4–5 minutos desde congelada, revolviendo constantemente. También en microondas, pero nunca en la bolsa: pásala antes a un recipiente apto.",
-    "en": "In a pot (recommended): 4–5 minutes from frozen, stirring constantly. The microwave works too, but never in the pouch: move it to a microwave-safe container first."
+    "es": "Caliéntala ya descongelada (no recomendamos calentarla congelada). En olla (recomendado): 4–5 minutos, revolviendo constantemente. También en microondas, pero nunca en la bolsa: pásala antes a un recipiente apto.",
+    "en": "Heat it once thawed (we don't recommend heating it frozen). In a pot (recommended): 4–5 minutes, stirring constantly. The microwave works too, but never in the pouch: move it to a microwave-safe container first."
   },
   "productStorage": {
-    "es": "Congelada dura hasta 3 meses. Una vez descongelada, consúmela en máximo 4 días.",
-    "en": "Keeps up to 3 months frozen. Once thawed, eat it within 4 days."
+    "es": "Congelada dura hasta 3 meses. Una vez descongelada, guárdala en el refrigerador y consúmela en máximo 4 días.",
+    "en": "Keeps up to 3 months frozen. Once thawed, keep it in the fridge and eat it within 4 days."
   },
   "shopFilters": [
     {
