@@ -159,7 +159,7 @@
       "en": "500 ml"
     },
     "slug": "estofado-ingles",
-    "soldOut": false,
+    "soldOut": true,
     "stripePriceId": "price_1TpB8o3Xzew6cmN1buozUBgG",
     "stripeTestProductId": "prod_VWhGU7hhBQtkBU",
     "tagline": {
@@ -291,7 +291,7 @@
       "en": "500 ml"
     },
     "slug": "calabaza-de-castilla-dahl",
-    "soldOut": null,
+    "soldOut": true,
     "stripePriceId": "price_1TQYLm3Xzew6cmN1ay3gk0gr",
     "stripeTestProductId": "prod_VWhGXhIYiCsPB8",
     "tagline": {
@@ -371,7 +371,7 @@
       "en": "500 ml"
     },
     "slug": "coliflor-avellanada",
-    "soldOut": null,
+    "soldOut": true,
     "stripePriceId": "price_1TQYKT3Xzew6cmN1YKhymdIA",
     "stripeTestProductId": "prod_VWhGTE6gP2V2e3",
     "tagline": {
@@ -568,7 +568,7 @@
       "en": "500 ml"
     },
     "slug": "chowder-bacalao",
-    "soldOut": false,
+    "soldOut": true,
     "stripePriceId": "price_1TQYWw3Xzew6cmN1N4xx8ZH5",
     "stripeTestProductId": "prod_VWhGU4RG7EC9WW",
     "tagline": {
@@ -880,7 +880,7 @@
       "en": "500 ml"
     },
     "slug": "cebolla-caramelizada",
-    "soldOut": null,
+    "soldOut": true,
     "stripePriceId": "price_1TQYPs3Xzew6cmN1mDkoEWEj",
     "stripeTestProductId": "prod_VWhGa5mZIqg0ro",
     "tagline": {
