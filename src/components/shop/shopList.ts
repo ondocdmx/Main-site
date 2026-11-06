@@ -9,6 +9,7 @@ type Product = {
   price: number;
   featuredRank?: number;
   isBox?: boolean;
+  soldOut?: boolean | null;
   onlySubscriptions?: boolean | null;
   tags?: { slug?: { current?: string } }[] | null;
 };
@@ -29,6 +30,17 @@ export function shopList<P extends Product>(products: P[], filter: ShopFilter | 
     : rank(a) - rank(b);
   const items = [...soups].sort((a, b) => Number(!!a.onlySubscriptions) - Number(!!b.onlySubscriptions) || compare(a, b));
   return { box, items };
+}
+
+// Home, "Las favoritas": `limit` sopas de la lista ya ordenada. Si hay agotadas, sale exactamente UNA
+// (la mejor en "Destacadas"), en el último lugar, para que se note la demanda; el resto, disponibles en su orden.
+// Si hay pocas disponibles (ej. con un filtro) salen menos tarjetas, nunca dos agotadas. Sin agotadas: las primeras `limit`.
+// Solo si no queda ninguna disponible se muestran las agotadas tal cual, para no dejar la sección vacía.
+export function favoritesList<P extends Product>(items: P[], limit: number): P[] {
+  const available = items.filter(p => !p.soldOut);
+  const soldOut = items.find(p => p.soldOut);
+  if (!soldOut || available.length === 0) return items.slice(0, limit);
+  return [...available.slice(0, limit - 1), soldOut];
 }
 
 // Carrito: "Agrega otra sopa", fotos con scroll lateral. Aparece con menos de 4 sopas distintas y se va con 5;

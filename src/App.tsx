@@ -1269,7 +1269,7 @@ export default function App() {
                           {p.soldOut && (
                             <div className="absolute inset-0 bg-gray-500/55 flex items-center justify-center z-10">
                               <span className="font-title text-white font-bold uppercase tracking-widest text-[11px] bg-gray-800/60 px-3 py-1.5">
-                                {lang === 'es' ? 'AGOTADO' : 'SOLD OUT'}
+                                {lang === 'es' ? 'VUELVE PRONTO' : 'BACK SOON'}
                               </span>
                             </div>
                           )}

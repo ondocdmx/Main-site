@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cartSuggestions, shopList, type ShopFilter } from './shopList.js';
+import { cartSuggestions, favoritesList, shopList, type ShopFilter } from './shopList.js';
 import products from '../../content/products.json' with { type: 'json' };
 import settings from '../../content/settings.json' with { type: 'json' };
 
@@ -85,5 +85,43 @@ describe('cartSuggestions (carrito: agrega otra sopa)', () => {
   });
   it('la caja no cuenta como sopa distinta', () => {
     expect(cartSuggestions(catalog, ['box', 'a', 'b', 'c'], false).show).toBe(true);
+  });
+});
+
+describe('favoritesList (home, "Las favoritas")', () => {
+  const soup = (slug: string, soldOut = false) => ({ _id: slug, slug, price: 125, soldOut });
+  const ids = (l: { slug: string }[]) => l.map(p => p.slug);
+
+  it('sin agotadas: las primeras 6, igual que antes', () => {
+    const list = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(s => soup(s));
+    expect(ids(favoritesList(list, 6))).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+  });
+
+  it('con varias agotadas: 5 disponibles y solo la mejor agotada, al final', () => {
+    const list = [soup('a'), soup('b', true), soup('c'), soup('d', true), soup('e', true), soup('f'), soup('g'), soup('h'), soup('i')];
+    expect(ids(favoritesList(list, 6))).toEqual(['a', 'c', 'f', 'g', 'h', 'b']);
+  });
+
+  it('con una agotada fuera del top 6, igual entra (al final)', () => {
+    const list = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(s => soup(s, s === 'g'));
+    expect(ids(favoritesList(list, 6))).toEqual(['a', 'b', 'c', 'd', 'e', 'g']);
+  });
+
+  it('pocas disponibles: menos tarjetas, nunca dos agotadas', () => {
+    const list = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(s => soup(s, s !== 'a' && s !== 'c'));
+    expect(ids(favoritesList(list, 6))).toEqual(['a', 'c', 'b']);
+  });
+
+  it('todo agotado: muestra las primeras 6 para no dejar la sección vacía', () => {
+    const list = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map(s => soup(s, true));
+    expect(ids(favoritesList(list, 6))).toEqual(['a', 'b', 'c', 'd', 'e', 'f']);
+  });
+
+  it('con filtro: la regla se aplica dentro del filtro', () => {
+    for (const f of filters) {
+      const fav = favoritesList(shopList(all, f, 'featured').items, 6);
+      expect(fav.length).toBeLessThanOrEqual(6);
+      if (fav.some(p => !p.soldOut)) expect(fav.filter(p => p.soldOut).length).toBeLessThanOrEqual(1);
+    }
   });
 });

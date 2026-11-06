@@ -1,9 +1,10 @@
 // Ficha de producto (/sopas/<slug>): fotos, tags, nombre, precio, cantidad + "Agregar · $X", entrega,
 // ofertas, filas plegables y "Completa tu caja". El dinero sale de priceCart() vía App.tsx (priceOf/unitCents).
 import React, { useEffect, useState } from 'react';
-import { ChevronDown, ChevronLeft, Minus, Plus, Tag, Truck } from 'lucide-react';
+import { ChevronDown, ChevronLeft, MessageCircle, Minus, Plus, Tag, Truck } from 'lucide-react';
 import { SoupImage, TagChip, imagesFor, productTagSlugs, productTags, type WebImage } from './media';
 import type { CardPrice } from './ProductCard';
+import { backSoonLink } from './backSoon';
 import type { AddLocation } from '../../App';
 import { boxShippingNote, deliveryPromise, formatMXN, offerLine } from '../../commerce/cartCopy';
 import { toCents } from '../../commerce/config';
@@ -178,9 +179,18 @@ export default function ProductPage({ product, products, lang, resolveText, heat
             {/* Cantidad + Agregar */}
             <div className="mt-6">
               {product.soldOut ? (
-                <button type="button" disabled className="min-h-[56px] w-full rounded-xl border-2 border-brand-ink/30 text-brand-ink/50 font-title font-bold text-[18px]">
-                  {es ? 'Agotada' : 'Sold out'}
-                </button>
+                <div>
+                  <p className="font-title font-bold text-[18px] text-brand-ink">{es ? 'Vuelve pronto' : 'Back soon'}</p>
+                  <a
+                    href={backSoonLink(resolveText(product.title), lang)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 min-h-[56px] w-full rounded-xl border-2 border-brand-deep text-brand-deep hover:bg-brand-deep hover:text-white font-title font-bold text-[18px] flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5" aria-hidden="true" />
+                    {es ? 'Avísame cuando vuelva' : 'Tell me when it’s back'}
+                  </a>
+                </div>
               ) : product.onlySubscriptions ? (
                 <button type="button" onClick={onOpenFunnel} className="min-h-[56px] w-full rounded-xl bg-brand-cta text-white font-title font-bold text-[18px]">
                   {es ? 'Conocer la Soup-scripción' : 'Discover the Soup-scription'}

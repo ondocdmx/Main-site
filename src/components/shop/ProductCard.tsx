@@ -1,6 +1,8 @@
 // Tarjeta de sopa en la tienda: foto servida cuadrada, tags, nombre, una línea, precio + tamaño y "Agregar".
 import React from 'react';
+import { MessageCircle } from 'lucide-react';
 import QuantityStepper from './QuantityStepper';
+import { backSoonLink } from './backSoon';
 import { SoupImage, TagChip, imagesFor, productTags } from './media';
 
 type Lang = 'es' | 'en';
@@ -31,7 +33,7 @@ export default function ProductCard({ product, lang, resolveText, price, quantit
         <SoupImage image={imagesFor(product.slug).plated} alt="" sizes={CARD_SIZES} eager={eager} className="absolute inset-0 w-full h-full" />
         {product.soldOut && (
           <span className="absolute inset-0 bg-brand-ink/55 flex items-center justify-center font-title font-bold text-white text-[15px] tracking-wide">
-            {es ? 'Agotada' : 'Sold out'}
+            {es ? 'Vuelve pronto' : 'Back soon'}
           </span>
         )}
         {!product.soldOut && product.onlySubscriptions && (
@@ -64,9 +66,15 @@ export default function ProductCard({ product, lang, resolveText, price, quantit
 
         <div className="mt-3">
           {product.soldOut ? (
-            <button type="button" disabled className="min-h-[44px] w-full rounded-xl border-2 border-brand-ink/30 text-brand-ink/50 font-title font-bold">
-              {es ? 'Agotada' : 'Sold out'}
-            </button>
+            <a
+              href={backSoonLink(name, lang)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-[44px] w-full rounded-xl border-2 border-brand-deep text-brand-deep hover:bg-brand-deep hover:text-white font-body font-semibold text-[14px] flex items-center justify-center gap-1.5 px-2 text-center leading-tight transition-colors"
+            >
+              <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+              {es ? 'Avísame cuando vuelva' : 'Tell me when it’s back'}
+            </a>
           ) : product.onlySubscriptions ? (
             <button type="button" onClick={onOpenFunnel} className="min-h-[44px] w-full font-body font-semibold text-[14px] text-brand-deep underline underline-offset-4 text-left">
               {es ? 'Conocer la Soup-scripción' : 'Discover the Soup-scription'}

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import ProductCard, { type CardPrice } from './ProductCard';
 import BoxCard from './BoxCard';
-import { shopList, type ShopFilter, type SortKey } from './shopList';
+import { favoritesList, shopList, type ShopFilter, type SortKey } from './shopList';
 
 type Lang = 'es' | 'en';
 
@@ -36,7 +36,7 @@ export default function ShopSection({ id = 'shop', products, filters, lang, reso
   const [sort, setSort] = useState<SortKey>('featured');
   const list = shopList(products, filters.find(f => f.id === filterId), sort);
   const box = showBox ? list.box : null;
-  const items = limit ? list.items.slice(0, limit) : list.items;
+  const items = limit ? favoritesList(list.items, limit) : list.items;
   const Heading = headingLevel === 1 ? 'h1' : 'h2';
   // Índice para GA4 (select_item): la caja es el 0 cuando se ve.
   const offset = box ? 1 : 0;
