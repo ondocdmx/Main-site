@@ -48,6 +48,17 @@ Los planes de suscripción se envían como item con `item_id` = Stripe Price ID,
 | `begin_checkout` | Inicia el pago del plan |
 | `purchase` (`checkout_type: "subscription"`) | Alta de suscripción confirmada |
 
+## Sopas agotadas ("Vuelve pronto")
+
+| Evento | Cuándo | Parámetros |
+|---|---|---|
+| `back_in_stock_request` | Toque en "Avísame cuando vuelva" (abre WhatsApp con el mensaje ya escrito) en una sopa con `soldOut: true` | `item_id` (slug), `item_name` (nombre en español), `location`: `grid` (tarjeta de home o tienda) o `product_page` (ficha) |
+
+No es un evento ecommerce: va plano en el dataLayer (sin `ecommerce`). Para que llegue a GA4, GTM necesita una
+etiqueta "Evento de GA4" con nombre `back_in_stock_request`, activador "Evento personalizado" con ese mismo nombre,
+y los tres parámetros como Data Layer Variables. En GA4, registrar `item_name` y `location` como dimensiones
+personalizadas (ámbito evento) para ver el conteo por sopa. Cuenta toques, no mensajes enviados.
+
 ## Garantías técnicas
 
 - **`purchase` no se duplica**: guard en `sessionStorage` por `transaction_id`

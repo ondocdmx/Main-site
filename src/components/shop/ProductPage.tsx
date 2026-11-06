@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { ChevronDown, ChevronLeft, MessageCircle, Minus, Plus, Tag, Truck } from 'lucide-react';
 import { SoupImage, TagChip, imagesFor, productTagSlugs, productTags, type WebImage } from './media';
 import type { CardPrice } from './ProductCard';
-import { backSoonLink } from './backSoon';
+import { backSoonLink, trackBackSoon } from './backSoon';
 import type { AddLocation } from '../../App';
 import { boxShippingNote, deliveryPromise, formatMXN, offerLine } from '../../commerce/cartCopy';
 import { toCents } from '../../commerce/config';
@@ -183,6 +183,7 @@ export default function ProductPage({ product, products, lang, resolveText, heat
                   <p className="font-title font-bold text-[18px] text-brand-ink">{es ? 'Vuelve pronto' : 'Back soon'}</p>
                   <a
                     href={backSoonLink(resolveText(product.title), lang)}
+                    onClick={() => trackBackSoon(product, 'product_page')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-3 min-h-[56px] w-full rounded-xl border-2 border-brand-deep text-brand-deep hover:bg-brand-deep hover:text-white font-title font-bold text-[18px] flex items-center justify-center gap-2 transition-colors"

@@ -2,7 +2,7 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import QuantityStepper from './QuantityStepper';
-import { backSoonLink } from './backSoon';
+import { backSoonLink, trackBackSoon } from './backSoon';
 import { SoupImage, TagChip, imagesFor, productTags } from './media';
 
 type Lang = 'es' | 'en';
@@ -68,6 +68,7 @@ export default function ProductCard({ product, lang, resolveText, price, quantit
           {product.soldOut ? (
             <a
               href={backSoonLink(name, lang)}
+              onClick={() => trackBackSoon(product, 'grid')}
               target="_blank"
               rel="noopener noreferrer"
               className="min-h-[44px] w-full rounded-xl border-2 border-brand-deep text-brand-deep hover:bg-brand-deep hover:text-white font-body font-semibold text-[14px] flex items-center justify-center gap-1.5 px-2 text-center leading-tight transition-colors"
