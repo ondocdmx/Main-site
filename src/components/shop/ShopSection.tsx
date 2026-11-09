@@ -94,6 +94,7 @@ export default function ShopSection({ id = 'shop', products, filters, lang, reso
           {box && (
             <BoxCard
               product={box}
+              products={products}
               lang={lang}
               resolveText={resolveText}
               badge={boxBadge}

@@ -131,6 +131,7 @@ export default function HomePage({
             <h2 id="empieza-title" className="mb-4 font-body font-semibold text-[14px] tracking-[0.12em] uppercase text-brand-deep">{text('homeBoxKicker')}</h2>
             <BoxCard
               product={box}
+              products={products}
               lang={lang}
               resolveText={resolveText}
               badge={boxBadge}
