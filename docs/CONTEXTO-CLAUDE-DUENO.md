@@ -319,7 +319,7 @@ de la tienda):
 | 2 | garbanzo y rabo | 150 | single | |
 | 3 | Estofado inglés | 150 | single | |
 | 4 | betabespelta | 125 | single | |
-| 5 | calabaza de castilla dahl | 125 | single | |
+| 5 | calabaza dahl | 125 | single | |
 | 6 | coliflor avellanada | 125 | single | |
 | 7 | pro-gazpacho | 125 | single | |
 | 8 | mega verde | 125 | single | |
