@@ -291,7 +291,7 @@
       "en": "500 ml"
     },
     "slug": "calabaza-de-castilla-dahl",
-    "soldOut": true,
+    "soldOut": false,
     "stripePriceId": "price_1TQYLm3Xzew6cmN1ay3gk0gr",
     "stripeTestProductId": "prod_VWhGXhIYiCsPB8",
     "tagline": {
@@ -371,7 +371,7 @@
       "en": "500 ml"
     },
     "slug": "coliflor-avellanada",
-    "soldOut": true,
+    "soldOut": false,
     "stripePriceId": "price_1TQYKT3Xzew6cmN1YKhymdIA",
     "stripeTestProductId": "prod_VWhGTE6gP2V2e3",
     "tagline": {
