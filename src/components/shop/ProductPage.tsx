@@ -171,6 +171,9 @@ export default function ProductPage({ product, products, lang, resolveText, heat
             {boxNote && <p className="mt-1 font-body font-semibold text-[15px] text-brand-deep">{boxNote}</p>}
 
             {product.tagline && <p className="mt-4 font-body text-[17px] leading-relaxed first-letter:uppercase">{resolveText(product.tagline)}</p>}
+            {resolveText(product.boxSwapNote) && (
+              <p className="mt-3 rounded-xl bg-brand-light-orange/40 px-3 py-2 font-body font-semibold text-[15px] leading-snug">{resolveText(product.boxSwapNote)}</p>
+            )}
             {product.description && (
               <p className="mt-3 font-body text-[16px] leading-relaxed text-brand-ink/85 whitespace-pre-line">{resolveText(product.description).trim()}</p>
             )}

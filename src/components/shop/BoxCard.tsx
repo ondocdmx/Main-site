@@ -1,5 +1,6 @@
 // La caja: primera, verde oscuro, ocupa toda la fila. Su envío sale de boxShippingNote (la caja sola paga envío).
 // `boxContents` (products.json, slugs) = las sopas de la caja: sus nombres van en una línea bajo el tagline.
+// `boxSwapNote` {es,en}: aviso temporal de un cambio en la caja (vacío o ausente = no se muestra).
 import React from 'react';
 import QuantityStepper from './QuantityStepper';
 import { SoupImage, imagesFor } from './media';
@@ -48,6 +49,9 @@ export default function BoxCard({ product, products = [], lang, resolveText, bad
           <p className="mt-1.5 font-body font-semibold text-[14px] leading-snug text-brand-cream">
             <span className="sr-only">{es ? 'Incluye: ' : 'Includes: '}</span>{contents.join(' · ')}
           </p>
+        )}
+        {resolveText(product.boxSwapNote) && (
+          <p className="mt-1.5 font-body text-[14px] leading-snug text-brand-light-orange">{resolveText(product.boxSwapNote)}</p>
         )}
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <span className="font-title font-bold text-[32px] leading-none">{formatMXN(toCents(product.price))}</span>
