@@ -19,7 +19,10 @@ const { nextDeliveryDate } = await import('../src/commerce/delivery');
 const { resetCatalogCache } = await import('../api/_lib/catalog');
 const products = (await import('../src/content/products.json')).default as any[];
 
-const VEG = 'gk8n1Y45KbppZEAYCEfG7O'; // mega-verde, $125
+// Una sopa de $125 a la venta (no agotada): así las pruebas no se rompen cuando cambia el stock.
+const VEG: string = products.find(p => !p.isBox && !p.soldOut && !p.onlySubscriptions && Number(p.price) === 125
+  && p.stripePriceId && p.stripeTestProductId)?._id;
+if (!VEG) throw new Error('Las pruebas necesitan al menos una sopa de $125 a la venta en products.json');
 const BOX = '8ceb6e4e-f0ba-4c24-a9f4-32899bd3ebd2'; // ondo-box, $600
 const SUBS_ONLY = '426a504e-5a54-4615-b7a3-298fd51de371'; // chowder, solo suscripción
 const delivery = { deliverySlot: 'slot_9_13', deliveryPostal: '06700' };
@@ -200,9 +203,11 @@ describe('api/create-cart-checkout', () => {
     expect(create).not.toHaveBeenCalled();
   });
 
-  it('rechaza productos desconocidos, solo-suscripción y cantidades inválidas', async () => {
+  it('rechaza productos desconocidos, agotados, solo-suscripción y cantidades inválidas', async () => {
     expect((await call({ items: [{ id: 'nope', quantity: 1 }] })).statusCode).toBe(400);
     expect((await call({ items: [{ id: SUBS_ONLY, quantity: 1 }] })).statusCode).toBe(400);
+    const soldOut = products.find(p => p.soldOut && !p.onlySubscriptions);
+    if (soldOut) expect((await call({ items: [{ id: soldOut._id, quantity: 1 }] })).statusCode).toBe(400);
     expect((await call({ items: [{ id: VEG, quantity: 0 }] })).statusCode).toBe(400);
     expect((await call({ items: [{ id: VEG, quantity: 2.5 }] })).statusCode).toBe(400);
     expect((await call({ items: [] })).statusCode).toBe(400);
