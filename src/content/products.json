@@ -95,7 +95,7 @@
       "en": "500 ml"
     },
     "slug": "garbanzo-y-rabo",
-    "soldOut": false,
+    "soldOut": true,
     "stripePriceId": "price_1TQYJQ3Xzew6cmN1nWUf5wIM",
     "stripeTestProductId": "prod_VWhGGFfb2ulDVm",
     "tagline": {
@@ -223,7 +223,7 @@
       "en": "500 ml"
     },
     "slug": "betabespelta",
-    "soldOut": false,
+    "soldOut": true,
     "stripePriceId": "price_1TQYUT3Xzew6cmN1uTb0KAL5",
     "stripeTestProductId": "prod_VWhGsbbutDKKLM",
     "tagline": {
@@ -437,7 +437,7 @@
       "en": "500 ml"
     },
     "slug": "berenjena-al-fuego",
-    "soldOut": false,
+    "soldOut": true,
     "stripePriceId": "price_1TWQ4o3Xzew6cmN1SZ5X8Sqj",
     "stripeTestProductId": "prod_VWhGex5yjP8Dx0",
     "tagline": {
@@ -504,7 +504,7 @@
       "en": "500 ml"
     },
     "slug": "mega-verde",
-    "soldOut": null,
+    "soldOut": true,
     "stripePriceId": "price_1TQYFh3Xzew6cmN1DvHLvB5H",
     "stripeTestProductId": "prod_VWhGeoe0fNCAlQ",
     "tagline": {
