@@ -227,6 +227,17 @@ export default function HomePage({
               <a href={whatsappLink(text('homeWay3Message'))} target="_blank" rel="noopener noreferrer" className={`${LINK} mt-2 text-brand-deep`}>{text('homeWay3Link')}</a>
             </li>
           </ul>
+          {/* Pop-ups: invitación a colaborar (homePopup* en settings.json; texto vacío = no se muestra) */}
+          {text('homePopupText') && (
+            <p className="mt-4 flex items-start gap-3 rounded-2xl bg-chip-leaf px-5 py-4 font-body text-[16px] leading-relaxed text-brand-ink">
+              <Coffee className="w-5 h-5 shrink-0 mt-1" aria-hidden="true" />
+              <span>
+                {text('homePopupText')}{' '}
+                <a href={whatsappLink(text('homePopupMessage'))} target="_blank" rel="noopener noreferrer"
+                  className="font-semibold underline underline-offset-4 py-2.5">{text('homePopupLink')}</a>
+              </span>
+            </p>
+          )}
         </div>
       </section>
 

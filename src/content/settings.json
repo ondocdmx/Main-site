@@ -537,6 +537,18 @@
     "es": "Hola Ondo, quiero regalar sopa.",
     "en": "Hi Ondo, I’d like to give soup as a gift."
   },
+  "homePopupText": {
+    "es": "Hacemos pop-ups varias veces al año. ¿Quieres colaborar?",
+    "en": "We do pop-ups several times a year. Want to collaborate?"
+  },
+  "homePopupLink": {
+    "es": "Mándanos un mensaje",
+    "en": "Send us a message"
+  },
+  "homePopupMessage": {
+    "es": "Hola Ondo, me gustaría colaborar con ustedes en un pop-up.",
+    "en": "Hi Ondo, I’d like to collaborate with you on a pop-up."
+  },
   "homeOriginTitle": {
     "es": "Desde el huerto",
     "en": "From the garden"
